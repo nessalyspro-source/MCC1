@@ -509,6 +509,63 @@
       }
     }
 
+    function openQrPrintable(type, url, data) {
+      const site = data.residence || data.address || 'Site';
+      const address = data.address || '';
+      const client = data.client_name || data.societe_nom || 'Client';
+      const title = type === 'pointage' ? 'QR CODE EMPLOYÉS' : 'QR CODE RÉSIDENTS';
+      const usage = type === 'pointage'
+        ? 'Ce QR code permet aux employés de pointer leur arrivée/départ sur site.'
+        : 'Ce QR code permet aux résidents ou clients de signaler un incident ou problème.';
+      const steps = type === 'pointage'
+        ? ['Ouvrez l’appareil photo de votre smartphone', 'Visez le QR code', 'Validez votre pointage']
+        : ['Ouvrez l’appareil photo de votre smartphone', 'Visez le QR code', 'Remplissez le formulaire de signalement'];
+      const win = window.open('', '_blank');
+      if (!win) { showToast('Autorisez les popups pour imprimer', 'error'); return; }
+      win.document.write(`
+        <html><head><title>${client} - ${title}</title>
+        <style>
+          body { font-family: 'Outfit', Arial, sans-serif; color:#0f304b; padding:30px; }
+          .wrap { max-width:800px; margin:0 auto; text-align:center; }
+          .header { display:flex; align-items:center; gap:16px; border-bottom:2px solid #0f304b; padding-bottom:12px; }
+          .logo { width:72px; height:72px; object-fit:contain; border-radius:8px; border:1px solid #e2e8f0; }
+          .badge { display:inline-block; background:#0f304b; color:#fff; padding:10px 18px; border-radius:999px; font-weight:700; letter-spacing:0.04em; margin-top:8px; }
+          .qr-box { display:inline-block; padding:16px; border:3px solid #0f304b; border-radius:18px; margin:18px 0; }
+          .card { background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px 16px; text-align:left; display:inline-block; margin-top:8px; }
+          ul { margin:8px 0 0 14px; text-align:left; }
+          .footer { margin-top:28px; font-size:12px; color:#475569; text-align:center; }
+        </style></head>
+        <body>
+          <div class="wrap">
+            <div class="header">
+              <div style="flex:1;">
+                <div style="font-size:18px; font-weight:800;">${client}</div>
+                <div style="font-size:12px; color:#475569;">${site}</div>
+              </div>
+            </div>
+            <h2 style="margin:24px 0 8px; font-size:28px; font-weight:800;">SCANNEZ-MOI</h2>
+            <div class="badge">${title}</div>
+            <div class="qr-box">
+              <img src="https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(url)}" alt="QR">
+            </div>
+            <p style="max-width:620px; margin:0 auto; color:#1e293b;">${usage}</p>
+            <div class="card">
+              <div style="font-weight:700; margin-bottom:6px;">Comment utiliser ?</div>
+              <ul>
+                ${steps.map(s => `<li>${s}</li>`).join('')}
+              </ul>
+            </div>
+            <div class="footer">
+              <div>${address}</div>
+              <div>Powered by Nessaly</div>
+            </div>
+          </div>
+          <script>window.print();</script>
+        </body></html>
+      `);
+      win.document.close();
+    }
+
     function attachAddressAutocomplete(input, results) {
       let t;
       input.addEventListener('input', () => {
@@ -982,16 +1039,19 @@
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-center">
-            <div class="bg-slate-50 border border-slate-200 rounded-lg p-4">
-              <p class="font-semibold mb-2">QR Pointage agent</p>
+            <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-3">
+              <div class="flex items-center justify-between">
+                <p class="font-semibold">QR Pointage agent</p>
+                <button class="text-xs font-semibold text-sky-700 hover:text-sky-900 underline" onclick="openQrPrintable('pointage', '${pointageUrl}', ${JSON.stringify(data)})">Télécharger PDF A4</button>
+              </div>
               <img src="${qrApi}${encodeURIComponent(pointageUrl)}" alt="QR Pointage" class="mx-auto rounded-md">
-              <p class="text-xs text-slate-500 mt-2 break-all">${pointageUrl}</p>
-              ${agentLabel ? `<p class="text-xs text-slate-500 mt-1">Agent autorise: ${agentLabel}</p>` : `<p class="text-xs text-amber-600 mt-1">Aucun agent assigne (QR non restreint)</p>`}
             </div>
-            <div class="bg-slate-50 border border-slate-200 rounded-lg p-4">
-              <p class="font-semibold mb-2">QR Signalement</p>
+            <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-3">
+              <div class="flex items-center justify-between">
+                <p class="font-semibold">QR Signalement</p>
+                <button class="text-xs font-semibold text-sky-700 hover:text-sky-900 underline" onclick="openQrPrintable('signalement', '${signalementUrl}', ${JSON.stringify(data)})">Télécharger PDF A4</button>
+              </div>
               <img src="${qrApi}${encodeURIComponent(signalementUrl)}" alt="QR Signalement" class="mx-auto rounded-md">
-              <p class="text-xs text-slate-500 mt-2 break-all">${signalementUrl}</p>
             </div>
           </div>
         </div>
