@@ -154,7 +154,7 @@
       if (!email) return null;
       const { data: salarie } = await supabaseClient
         .from('salaries')
-        .select('id, ref, prenom, nom, email, poste, site, contrat_id, contrats:contrat_id(ref, residence, address)')
+        .select('id, ref, prenom, nom, email, poste, site, contrat_id, contrats:contrat_id!salaries_contrat_fk(ref, residence, address)')
         .eq('email', email)
         .maybeSingle();
       currentProfil = salarie || null;

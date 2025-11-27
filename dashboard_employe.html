@@ -241,14 +241,14 @@
       if (!email) { alert('Email manquant sur le compte.'); return; }
       const { data: salarie, error } = await supabaseClient
         .from('salaries')
-        .select('id, ref, prenom, nom, email, telephone, poste, site, contrat_id, contrats:contrat_id(ref, residence, address)')
+        .select('id, ref, prenom, nom, email, telephone, poste, site, contrat_id, contrats:contrat_id!salaries_contrat_fk(ref, residence, address)')
         .eq('email', email)
         .maybeSingle();
       let profil = salarie;
       if ((!profil || error) && email) {
         const { data: salarieIlike } = await supabaseClient
           .from('salaries')
-          .select('id, ref, prenom, nom, email, telephone, poste, site, contrat_id, contrats:contrat_id(ref, residence, address)')
+          .select('id, ref, prenom, nom, email, telephone, poste, site, contrat_id, contrats:contrat_id!salaries_contrat_fk(ref, residence, address)')
           .ilike('email', email)
           .maybeSingle();
         profil = salarieIlike;
