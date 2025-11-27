@@ -1042,14 +1042,14 @@
             <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-3">
               <div class="flex items-center justify-between">
                 <p class="font-semibold">QR Pointage agent</p>
-                <button class="text-xs font-semibold text-sky-700 hover:text-sky-900 underline" onclick="openQrPrintable('pointage', '${pointageUrl}', ${JSON.stringify(data)})">Télécharger PDF A4</button>
+                <button id="btn-print-pointage" type="button" class="text-xs font-semibold text-sky-700 hover:text-sky-900 underline">Télécharger PDF A4</button>
               </div>
               <img src="${qrApi}${encodeURIComponent(pointageUrl)}" alt="QR Pointage" class="mx-auto rounded-md">
             </div>
             <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-3">
               <div class="flex items-center justify-between">
                 <p class="font-semibold">QR Signalement</p>
-                <button class="text-xs font-semibold text-sky-700 hover:text-sky-900 underline" onclick="openQrPrintable('signalement', '${signalementUrl}', ${JSON.stringify(data)})">Télécharger PDF A4</button>
+                <button id="btn-print-signalement" type="button" class="text-xs font-semibold text-sky-700 hover:text-sky-900 underline">Télécharger PDF A4</button>
               </div>
               <img src="${qrApi}${encodeURIComponent(signalementUrl)}" alt="QR Signalement" class="mx-auto rounded-md">
             </div>
@@ -1059,6 +1059,13 @@
       openDetailsPanel(html, data.residence || 'Contrat');
       renderStaffForContract(data.id);
       setupDocumentHandlers(data.id);
+      const printData = {
+        residence: data.residence || data.address || '',
+        address: data.address || '',
+        client_name: data.client_name || data.societe_nom || ''
+      };
+      document.getElementById('btn-print-pointage')?.addEventListener('click', () => openQrPrintable('pointage', pointageUrl, printData));
+      document.getElementById('btn-print-signalement')?.addEventListener('click', () => openQrPrintable('signalement', signalementUrl, printData));
     }
 
     // Events
