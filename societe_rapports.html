@@ -163,33 +163,46 @@
     }
 
     async function loadContracts() {
-      if (!actorType) return;
       const sel = document.getElementById('rapport-contrat');
-      sel.innerHTML = '<option value="">Chargement...</option>';
       const statusEl = document.getElementById('contracts-status');
-      statusEl.textContent = 'Chargement...';
+      sel.innerHTML = '<option value="">Chargement...</option>';
+      statusEl.textContent = actorType ? 'Chargement...' : 'Non authentifie : connecte-toi pour voir les contrats.';
+      if (!actorType) return;
+
       let data = null;
       let error = null;
-      // tentative avec colonnes employe/responsable
+
+      // 1) tentative avec colonnes employe/responsable
       let query = supabaseClient.from('contrats').select('id, ref, site_nom, adresse_site, societe_id, salarie_id, responsable_id');
       if (actorType === 'societe') query = query.eq('societe_id', actor.id);
       if (actorType === 'employe') query = query.or(`salarie_id.eq.${actor.id},responsable_id.eq.${actor.id},societe_id.eq.${actor.societe_id || 0}`);
       ({ data, error } = await query);
-      // si erreur (ex: colonne manquante), on retente avec un select minimal et filtre societe uniquement
-      if (error) {
+
+      // 2) fallback sans colonnes optionnelles
+      if (error || !data?.length) {
         query = supabaseClient.from('contrats').select('id, ref, site_nom, adresse_site, societe_id');
         if (actorType === 'societe') query = query.eq('societe_id', actor.id);
         if (actorType === 'employe') query = query.eq('societe_id', actor.societe_id || -1);
         ({ data, error } = await query);
       }
+
+      // 3) ultime fallback : on tente tous les contrats (debug visibilité)
+      if ((error || !data?.length) && actorType === 'societe') {
+        ({ data, error } = await supabaseClient.from('contrats').select('id, ref, site_nom, adresse_site, societe_id').limit(50));
+      }
+      if ((error || !data?.length) && actorType === 'employe') {
+        ({ data, error } = await supabaseClient.from('contrats').select('id, ref, site_nom, adresse_site, societe_id').eq('societe_id', actor.societe_id || -1).limit(50));
+      }
+
       if (!error && data) contracts = data;
       if (error || !contracts.length) {
         sel.innerHTML = '<option value="">Aucun contrat disponible</option>';
-        statusEl.textContent = 'Aucun contrat trouve pour ce compte.';
+        statusEl.textContent = error ? `Erreur: ${error.message || error}` : 'Aucun contrat trouve pour ce compte.';
+        console.error('Contrats non charges', error);
         return;
       }
       sel.innerHTML = '<option value="">Selectionner...</option>' + (contracts || []).map(c => `<option value="${c.id}" data-site="${c.site_nom || ''}" data-addr="${c.adresse_site || ''}">${c.ref || 'Contrat'} - ${c.site_nom || ''}</option>`).join('');
-      statusEl.textContent = '';
+      statusEl.textContent = `${contracts.length} contrat(s) disponibles`;
     }
 
     async function loadRapports() {
