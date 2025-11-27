@@ -509,19 +509,19 @@
       }
     }
 
-        function openQrPrintable(type, url, data) {
-      const site = data.residence || data.address || 'Site';
-      const address = data.address || '';
-      const client = data.client_name || data.societe_nom || 'Client';
-      const title = type === 'pointage' ? 'QR CODE EMPLOYES' : 'QR CODE RESIDENTS';
-      const usage = type === 'pointage'
-        ? 'Ce QR code permet aux employes de pointer leur arrivee/depart sur site.'
-        : 'Ce QR code permet aux residents ou clients de signaler un incident ou probleme.';
-      const steps = type === 'pointage'
+            function openQrPrintable(type, url, data) {
+      const site = data.residence || data.address || "Site";
+      const address = data.address || "";
+      const client = data.client_name || data.societe_nom || "Client";
+      const title = type === "pointage" ? "QR CODE EMPLOYES" : "QR CODE RESIDENTS";
+      const usage = type === "pointage"
+        ? "Ce QR code permet aux employes de pointer leur arrivee/depart sur site."
+        : "Ce QR code permet aux residents ou clients de signaler un incident ou probleme.";
+      const steps = type === "pointage"
         ? ["Ouvrez l'appareil photo de votre smartphone", "Visez le QR code", "Validez votre pointage"]
         : ["Ouvrez l'appareil photo de votre smartphone", "Visez le QR code", "Remplissez le formulaire de signalement"];
-      const win = window.open('', '_blank');
-      if (!win) { showToast('Autorisez les popups pour imprimer', 'error'); return; }
+      const win = window.open("", "_blank");
+      if (!win) { showToast("Autorisez les popups pour imprimer", "error"); return; }
       const escapedUrl = encodeURIComponent(url);
       const stepsHtml = steps.map(s => `<li>${s}</li>`).join('');
       win.document.write(`<!DOCTYPE html>
@@ -559,7 +559,7 @@
               <div>Powered by Nessaly</div>
             </div>
           </div>
-          <script>window.print();<\/script>
+          <script>window.print();</script>
         </body></html>`);
       win.document.close();
     }
@@ -1040,14 +1040,14 @@
             <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-3">
               <div class="flex items-center justify-between">
                 <p class="font-semibold">QR Pointage agent</p>
-                <button id="btn-print-pointage" type="button" class="text-xs font-semibold text-sky-700 hover:text-sky-900 underline">Télécharger PDF A4</button>
+                <button id="btn-print-pointage" type="button" class="px-3 py-1 rounded-full text-xs font-semibold text-white" style="background:#0f304b;">Telecharger PDF A4</button>
               </div>
               <img src="${qrApi}${encodeURIComponent(pointageUrl)}" alt="QR Pointage" class="mx-auto rounded-md">
             </div>
             <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-3">
               <div class="flex items-center justify-between">
                 <p class="font-semibold">QR Signalement</p>
-                <button id="btn-print-signalement" type="button" class="text-xs font-semibold text-sky-700 hover:text-sky-900 underline">Télécharger PDF A4</button>
+                <button id="btn-print-signalement" type="button" class="px-3 py-1 rounded-full text-xs font-semibold text-white" style="background:#0f304b;">Telecharger PDF A4</button>
               </div>
               <img src="${qrApi}${encodeURIComponent(signalementUrl)}" alt="QR Signalement" class="mx-auto rounded-md">
             </div>
@@ -1151,6 +1151,8 @@
   </script>
 </body>
 </html>
+
+
 
 
 
