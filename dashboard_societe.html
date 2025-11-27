@@ -1,8 +1,8 @@
-?<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Espace Société - Nessaly's</title>
+  <title>Espace Societe - Nessaly's</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
   <script src="vendor/phosphor/index.js"></script>
@@ -39,7 +39,7 @@
   <main class="flex-1 p-8 overflow-y-auto max-w-7xl mx-auto w-full">
     <div class="flex items-center justify-between mb-6">
       <div>
-        <span class="pill"><i class="ph-bold ph-buildings"></i> Portail Société</span>
+        <span class="pill"><i class="ph-bold ph-buildings"></i> Portail Societe</span>
         <h1 class="text-3xl font-bold text-slate-900">Vue d'ensemble</h1>
         <p id="societe-label" class="text-sm text-slate-600"></p>
       </div>
@@ -55,12 +55,12 @@
       <div class="card p-5">
         <p class="text-xs font-semibold text-slate-500 uppercase">Contrats qui se terminent</p>
         <p id="contrats-fin" class="text-3xl font-bold text-amber-700">--</p>
-        <p class="text-sm text-slate-500">Échéance &lt;= 30 jours</p>
+        <p class="text-sm text-slate-500">Echeance &lt;= 30 jours</p>
       </div>
       <div class="card p-5">
-        <p class="text-xs font-semibold text-slate-500 uppercase">Salariés</p>
+        <p class="text-xs font-semibold text-slate-500 uppercase">Salaries</p>
         <p id="salaries-count" class="text-3xl font-bold text-slate-900">--</p>
-        <p class="text-sm text-slate-500">Total des salariés associés</p>
+        <p class="text-sm text-slate-500">Total des salaries associes</p>
       </div>
       <div class="card p-5">
         <p class="text-xs font-semibold text-slate-500 uppercase">CA HT Mensuel</p>
@@ -84,22 +84,35 @@
       </div>
       <div class="card p-5 space-y-3">
         <p class="text-xs font-semibold text-slate-500 uppercase">Actions rapides</p>
-        <a href="societe_clients.html" class="w-full inline-flex items-center justify-between px-4 py-3 border border-slate-200 rounded-lg hover:bg-slate-50 text-sm">Créer un client <i class="ph-bold ph-arrow-up-right"></i></a>
-        <a href="societe_contrats.html" class="w-full inline-flex items-center justify-between px-4 py-3 border border-slate-200 rounded-lg hover:bg-slate-50 text-sm">Créer un contrat <i class="ph-bold ph-arrow-up-right"></i></a>
-        <a href="societe_salaries.html" class="w-full inline-flex items-center justify-between px-4 py-3 border border-slate-200 rounded-lg hover:bg-slate-50 text-sm">Créer un salarié <i class="ph-bold ph-arrow-up-right"></i></a>
+        <a href="societe_clients.html" class="w-full inline-flex items-center justify-between px-4 py-3 border border-slate-200 rounded-lg hover:bg-slate-50 text-sm">Creer un client <i class="ph-bold ph-arrow-up-right"></i></a>
+        <a href="societe_contrats.html" class="w-full inline-flex items-center justify-between px-4 py-3 border border-slate-200 rounded-lg hover:bg-slate-50 text-sm">Creer un contrat <i class="ph-bold ph-arrow-up-right"></i></a>
+        <a href="societe_salaries.html" class="w-full inline-flex items-center justify-between px-4 py-3 border border-slate-200 rounded-lg hover:bg-slate-50 text-sm">Creer un salarie <i class="ph-bold ph-arrow-up-right"></i></a>
       </div>
     </section>
 
-    <section class="card p-5 mt-4">
-      <div class="flex items-center justify-between mb-3">
-        <div>
-          <p class="text-xs font-semibold text-slate-500 uppercase">Nouveaux signalements</p>
-          <h2 class="text-lg font-semibold text-slate-900">À traiter</h2>
+    <section class="grid grid-cols-1 xl:grid-cols-2 gap-4 mt-6">
+      <div class="card p-5">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <p class="text-xs font-semibold text-slate-500 uppercase">Nouveaux signalements</p>
+            <h2 class="text-lg font-semibold text-slate-900">Derniers incidents par site</h2>
+          </div>
+          <span id="recent-count" class="text-xs px-3 py-1 rounded-full bg-slate-100 text-slate-700">--</span>
         </div>
-        <a href="societe_signalements.html" class="text-xs font-semibold text-sky-700 hover:text-sky-900">Ouvrir le suivi</a>
+        <div id="recent-signalements" class="space-y-3 text-sm">
+          <p class="text-slate-500">Chargement...</p>
+        </div>
       </div>
-      <div id="signalements-recents" class="space-y-3 text-sm">
-        <p class="text-slate-500">Chargement...</p>
+
+      <div class="card p-5">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <p class="text-xs font-semibold text-slate-500 uppercase">Facturation</p>
+            <h2 class="text-lg font-semibold text-slate-900">Derniere facture</h2>
+          </div>
+        </div>
+        <p id="facture-date" class="text-xl font-semibold text-slate-900 mb-1">--</p>
+        <p id="facture-amount" class="text-sm text-slate-500">--</p>
       </div>
     </section>
   </main>
@@ -112,6 +125,7 @@
     let userId = null;
 
     function formatCurrency(n) { return Number(n || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2 }) + ' EUR'; }
+    function formatDate(d) { return d ? new Date(d).toLocaleString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '--'; }
 
     async function ensureSociete() {
       const { data: sessionData } = await supabaseClient.auth.getSession();
@@ -130,10 +144,10 @@
       let mensual = 0;
       contrats.forEach(c => {
         const ht = Number(c.prix_ht || 0);
-        const period = (c.periodicite || c.periodicite || '').toLowerCase();
+        const period = (c.periodicite || '').toLowerCase();
         if (period === 'trimestriel') mensual += ht / 3;
         else if (period === 'annuel') mensual += ht / 12;
-        else mensual += ht; // mensuel par défaut
+        else mensual += ht; // mensuel par defaut
       });
       return { mensual, annuel: mensual * 12 };
     }
@@ -146,15 +160,16 @@
         <div class="py-2 flex items-center justify-between">
           <div>
             <p class="text-sm font-semibold text-slate-800">${c.client_name || 'Contrat'}</p>
-            <p class="text-xs text-slate-500">Fin le ${c.date_fin || 'N/A'} · Ref ${c.ref || ''}</p>
+            <p class="text-xs text-slate-500">Fin le ${c.date_fin || 'N/A'} - Ref ${c.ref || ''}</p>
           </div>
           <span class="text-[11px] px-2 py-1 rounded-full bg-amber-100 text-amber-700">Fin proche</span>
         </div>
       `).join('');
     }
+
     async function loadStats() {
       if (!societeId) {
-        [''contrats-actifs'',''contrats-fin'',''salaries-count'',''ca-mensuel'',''ca-annuel'',''facture-date'',''facture-amount''].forEach(id => {
+        ['contrats-actifs','contrats-fin','salaries-count','ca-mensuel','ca-annuel','facture-date','facture-amount'].forEach(id => {
           const el = document.getElementById(id);
           if (el) el.textContent = '--';
         });
@@ -196,51 +211,47 @@
         const f = factures[0];
         const fd = document.getElementById('facture-date');
         const fa = document.getElementById('facture-amount');
-        if (fd) fd.textContent = f.periode || 'Période non renseignée';
+        if (fd) fd.textContent = f.periode || 'Periode non renseignee';
         if (fa) fa.textContent = f.montant ? formatCurrency(f.montant) : '';
       }
     }
 
-    let contratsCache = [];
     async function loadSignalementsRecents() {
-      const container = document.getElementById('signalements-recents');
-      if (!societeId || !container) return;
-      if (!contratsCache.length) {
-        const { data } = await supabaseClient.from('contrats').select('id, ref, residence').eq('societe_id', societeId);
-        contratsCache = data || [];
-      }
-      const refs = contratsCache.map(c => c.ref).filter(Boolean);
-      const sites = contratsCache.map(c => c.residence).filter(Boolean);
-      if (!refs.length && !sites.length) {
-        container.innerHTML = '<p class="text-slate-500">Aucun site/contrat pour filtrer.</p>';
-        return;
-      }
-      const filters = [];
-      if (refs.length) filters.push(`contrat_ref.in.(${refs.join(',')})`);
-      sites.forEach(site => filters.push(`site.ilike.%${encodeURIComponent(site)}%`));
-      let query = supabaseClient
+      const container = document.getElementById('recent-signalements');
+      const badge = document.getElementById('recent-count');
+      if (!societeId) { container.innerHTML = '<p class="text-slate-500">Connectez-vous.</p>'; badge.textContent = '--'; return; }
+
+      const { data: contrats, error: contratsError } = await supabaseClient.from('contrats').select('id, ref, site_nom').eq('societe_id', societeId);
+      if (contratsError || !contrats?.length) { container.innerHTML = '<p class="text-slate-500">Aucun contrat associe.</p>'; badge.textContent = '0'; return; }
+
+      const ids = contrats.map(c => c.id);
+      const { data, error } = await supabaseClient
         .from('signalements')
-        .select('id, titre, type, site, status, created_at')
-        .order('created_at', { ascending:false })
-        .limit(5);
-      if (filters.length) query = query.or(filters.join(','));
-      const { data, error } = await query;
-      if (error) { console.error(error); container.innerHTML = '<p class="text-red-500 text-sm">Impossible de charger les signalements.</p>'; return; }
-      const list = (data || []).filter(s => {
-        const st = (s.status || 'nouveau').toLowerCase();
-        return st.includes('nouveau') || st === 'nouveau';
-      });
-      if (!list.length) { container.innerHTML = '<p class="text-slate-500 text-sm">Aucun nouveau signalement.</p>'; return; }
-      container.innerHTML = list.map(s => {
-        const date = s.created_at ? new Date(s.created_at).toLocaleString() : '';
-        return `<div class="rounded-lg border border-slate-200 px-3 py-2 bg-white shadow-sm flex items-start justify-between gap-2">
-          <div>
-            <p class="font-semibold text-slate-900 text-sm">${s.titre || 'Signalement'}</p>
-            <p class="text-xs text-slate-500">${s.type || ''} • ${s.site || ''}</p>
-            <p class="text-[11px] text-slate-400">${date}</p>
+        .select('id, contrat_id, contrat_ref, site, adresse, statut, created_at, titre, type, priorite')
+        .in('contrat_id', ids)
+        .order('created_at', { ascending: false })
+        .limit(6);
+
+      if (error) { container.innerHTML = '<p class="text-red-600 text-sm">Erreur de chargement.</p>'; badge.textContent = '--'; return; }
+      if (!data?.length) { container.innerHTML = '<p class="text-slate-500">Aucun signalement recent.</p>'; badge.textContent = '0'; return; }
+
+      badge.textContent = `${data.length} recents`;
+      container.innerHTML = data.map(s => {
+        const stat = (s.statut || '').toLowerCase();
+        const colors = stat === 'cloture' ? 'bg-emerald-100 text-emerald-700' : stat === 'en_cours' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-700';
+        return `
+          <div class="p-3 rounded-lg border border-slate-100 bg-slate-50/60">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <p class="font-semibold text-slate-900">${s.titre || 'Signalement'}</p>
+                <p class="text-xs text-slate-500">${s.site || ''} ${s.adresse ? ' Â· ' + s.adresse : ''}</p>
+                <p class="text-[11px] text-slate-500">Contrat ${s.contrat_ref || ''}</p>
+              </div>
+              <span class="px-2 py-1 rounded-full text-[11px] font-semibold ${colors}">${stat || 'nouveau'}</span>
+            </div>
+            <p class="text-xs text-slate-500 mt-1">Cree le ${formatDate(s.created_at)}</p>
           </div>
-          <span class="px-2 py-1 rounded-full bg-amber-50 text-amber-700 text-[11px] font-semibold">Nouveau</span>
-        </div>`;
+        `;
       }).join('');
     }
 
@@ -252,8 +263,3 @@
   </script>
 </body>
 </html>
-
-
-
-
-
