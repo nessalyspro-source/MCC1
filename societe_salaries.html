@@ -429,7 +429,7 @@
       cards.innerHTML = '<div class="col-span-full text-center text-slate-500 py-12">Chargement...</div>';
       const { data, error } = await supabaseClient
         .from('salaries')
-        .select('*, contrats!inner(id, societe_id)')
+        .select('*, contrats:contrat_id!salaries_contrat_fk(id, societe_id)')
         .eq('contrats.societe_id', societeId)
         .order('created_at', { ascending: false });
       if (error) { console.error(error); cards.innerHTML = '<div class="col-span-full text-center text-red-500">Erreur de chargement.</div>'; return; }
