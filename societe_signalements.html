@@ -2,21 +2,20 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Suivi des signalements</title>
+  <title>Suivi des signalements - Nessaly's</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
   <script src="vendor/phosphor/index.js"></script>
   <script src="vendor/supabase/supabase.js"></script>
   <style>
-    :root { --ink:#0c2f35; --navy:#0f304b; --bg:#f3f8ff; }
-    body { font-family:'Outfit',sans-serif; background: radial-gradient(140% 120% at 20% 0%, #f3f8ff 0%, var(--bg) 50%, #f9fbff 100%); color:#0c2f35; }
-    .sidebar { background: linear-gradient(180deg, #0f304b, #0c2f35); border-right:1px solid rgba(255,255,255,0.05); color:#e8eef2; }
-    .sidebar a { color:#cfd8dc; }
-    .sidebar a:hover { background:rgba(255,255,255,0.06); color:#fff; }
-    .nav-item.active { background:rgba(255,255,255,0.12); color:#fff; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); }
-    .stat-card { background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:18px; box-shadow:0 14px 40px rgba(15,48,75,0.08); }
-    .report-card { background:#fff; border:1px solid #e2e8f0; border-radius:18px; padding:20px; box-shadow:0 18px 50px rgba(15,48,75,0.1); }
-    .badge-soft { display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:999px; font-weight:700; font-size:12px; border:1px solid transparent; }
+    :root { --ink:#0c2f35; --navy:#0f304b; --red:#ce3c35; --sand:#b58a64; --bg:#f3f8ff; }
+    body { font-family:'Outfit',sans-serif; background: radial-gradient(140% 120% at 20% 0%, #f6fbff 0%, var(--bg) 55%, #fdfdfb 100%); color:#0c2f35; }
+    .sidebar { background: linear-gradient(180deg, #0f304b, #0c2f35); border-right: 1px solid rgba(255,255,255,0.05); color: #e8eef2; }
+    .sidebar a { color: #cfd8dc; }
+    .sidebar a:hover { background: rgba(255,255,255,0.06); color: #ffffff; }
+    .nav-item.active { background: rgba(255,255,255,0.12); color: #ffffff; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); }
+    .card { background: rgba(255,255,255,0.96); border:1px solid #e2e8f0; border-radius:18px; box-shadow:0 16px 50px rgba(12,47,53,0.08); }
+    .pill { display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:999px; background: rgba(12,47,53,0.08); color: #0f304b; font-weight:600; font-size:12px; letter-spacing:0.04em; }
   </style>
 </head>
 <body class="flex h-screen">
@@ -31,209 +30,277 @@
       <a href="societe_cahier_des_charges.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition"><i class="ph ph-notebook text-lg"></i><span>Cahier des charges</span></a>
       <a href="societe_salaries.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition"><i class="ph ph-currency-eur text-lg"></i><span>Suivi des salaries</span></a>
       <a href="societe_pointages.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition"><i class="ph ph-timer text-lg"></i><span>Suivi des pointages</span></a>
-      <a href="societe_conges.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition"><i class="ph ph-calendar-blank text-lg"></i><span>Suivi des demandes de congés</span></a>
+      <a href="societe_conges.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition"><i class="ph ph-calendar-blank text-lg"></i><span>Suivi des demandes de conges</span></a>
     </nav>
-    <a href="index.html" class="flex items-center gap-2 text-slate-200 hover:text-white transition mt-auto"><i class="ph ph-sign-out"></i> Déconnexion</a>
+    <a href="index.html" class="flex items-center gap-2 text-slate-200 hover:text-white transition mt-auto"><i class="ph ph-sign-out"></i> Deconnexion</a>
   </aside>
 
-  <main class="flex-1 p-8 md:p-10 overflow-y-auto">
-    <div id="content" class="max-w-6xl mx-auto space-y-8"></div>
+  <main class="flex-1 p-6 md:p-10 overflow-y-auto">
+    <div class="max-w-6xl mx-auto space-y-8">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <p class="text-xs uppercase text-slate-500 font-semibold tracking-wide">Signalements</p>
+          <h1 class="text-4xl font-bold text-slate-900">Suivi en temps reel</h1>
+          <p class="text-sm text-slate-600 mt-1">Validez, commentez, archivez ou supprimez les signalements des sites clients.</p>
+        </div>
+        <span id="refresh-label" class="px-3 py-2 rounded-full bg-white/70 border border-white/60 text-xs font-semibold text-slate-600 shadow-sm backdrop-blur">--</span>
+      </div>
+
+      <section class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="card p-4">
+          <p class="text-xs font-semibold text-slate-500 uppercase">Nouveaux</p>
+          <p id="count-nouveau" class="text-3xl font-bold text-slate-900">--</p>
+          <p class="text-sm text-slate-500">En attente de prise en charge</p>
+        </div>
+        <div class="card p-4">
+          <p class="text-xs font-semibold text-slate-500 uppercase">En cours</p>
+          <p id="count-en_cours" class="text-3xl font-bold text-amber-700">--</p>
+          <p class="text-sm text-slate-500">Suivi en cours</p>
+        </div>
+        <div class="card p-4">
+          <p class="text-xs font-semibold text-slate-500 uppercase">Resolus</p>
+          <p id="count-cloture" class="text-3xl font-bold text-emerald-700">--</p>
+          <p class="text-sm text-slate-500">Clos et transmis</p>
+        </div>
+        <div class="card p-4">
+          <p class="text-xs font-semibold text-slate-500 uppercase">Archives</p>
+          <p id="count-archive" class="text-3xl font-bold text-slate-800">--</p>
+          <p class="text-sm text-slate-500">Mis en archive</p>
+        </div>
+      </section>
+
+      <section class="card p-5 space-y-4">
+        <div class="flex items-center justify-between gap-3 flex-wrap">
+          <div class="flex items-center gap-2">
+            <h2 class="text-xl font-bold text-slate-900">Signalements</h2>
+            <span id="total-badge" class="px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-sm font-semibold">--</span>
+          </div>
+          <div class="flex items-center gap-2 text-sm">
+            <select id="filter-status" class="border border-slate-200 rounded-lg px-3 py-2 bg-white text-slate-700">
+              <option value="">Tous les statuts</option>
+              <option value="nouveau">Nouveau</option>
+              <option value="en_cours">En cours</option>
+              <option value="cloture">Cloture</option>
+              <option value="archive">Archive</option>
+            </select>
+            <button id="refresh-btn" class="px-3 py-2 rounded-lg bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800">Rafraichir</button>
+          </div>
+        </div>
+        <div id="signals-list" class="space-y-4"></div>
+      </section>
+    </div>
   </main>
 
   <script>
     const supabaseUrl = 'https://fmfylsykljkvyurcprij.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZtZnlsc3lrbGprdnl1cmNwcmlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1ODQ3OTgsImV4cCI6MjA3OTE2MDc5OH0.hfgBflnh-nr1Ljfl5Chkp0y1EbZbm5XiyyDhsQcdSqE';
-    const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey, { auth: { persistSession:true, autoRefreshToken:true, storage: localStorage } });
-    let currentSocieteId = null;
-    let contrats = [];
+    const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+    let societe = null;
+    let contracts = [];
+    let contractMap = {};
+    let signalements = [];
+    let messages = [];
+    let userEmail = '';
 
-    const root = document.getElementById('content');
+    function fmtDate(d) { return d ? new Date(d).toLocaleString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '--'; }
 
-    function renderLayout() {
-      root.innerHTML = `
-        <div class="flex items-start justify-between gap-4">
-          <div>
-            <p class="text-xs uppercase text-slate-500 font-semibold tracking-wide">Signalements</p>
-            <h1 class="text-4xl font-bold text-slate-900">Suivi des signalements</h1>
-            <p class="text-sm text-slate-600 mt-1">Filtrés automatiquement selon vos sites et contrats.</p>
-          </div>
-          <span id="last-refresh" class="px-3 py-2 rounded-full bg-white/70 border border-white/60 text-xs font-semibold text-slate-600 shadow-sm backdrop-blur">--</span>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="stats-cards"></div>
-        <section class="space-y-4">
-          <div class="flex items-center justify-between flex-wrap gap-3">
-            <div class="flex items-center gap-2">
-              <h2 class="text-xl font-bold text-slate-900">Signalements</h2>
-              <span id="badge-total" class="px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-sm font-semibold border border-slate-200">0</span>
-            </div>
-          </div>
-          <div id="reports" class="space-y-4"></div>
-        </section>
-      `;
+    function statusChip(stat) {
+      const s = (stat || 'nouveau').toLowerCase();
+      if (s === 'cloture') return 'bg-emerald-100 text-emerald-700';
+      if (s === 'en_cours') return 'bg-amber-100 text-amber-700';
+      if (s === 'archive') return 'bg-slate-100 text-slate-700';
+      return 'bg-sky-100 text-sky-700';
     }
 
-    function counters(list) {
-      const res = { nouveau:0, en_cours:0, cloture:0, total:list.length };
-      list.forEach(s => {
-        const st = (s.status || 'nouveau').toLowerCase();
-        if (st.includes('clot')) res.cloture++; else if (st.includes('cours')) res.en_cours++; else res.nouveau++;
-      });
-      return res;
-    }
-
-    function renderStats(stats) {
-      const el = document.getElementById('stats-cards');
-      if (!el) return;
-      el.innerHTML = `
-        <div class="stat-card">
-          <div class="flex items-center justify-between">
-            <p class="text-sm font-semibold text-slate-600">Nouveaux</p>
-            <span class="h-10 w-10 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center text-lg"><i class="ph ph-warning"></i></span>
-          </div>
-          <p class="text-3xl font-bold text-slate-900 mt-2">${stats.nouveau}</p>
-          <p class="text-xs text-slate-500">A traiter</p>
-        </div>
-        <div class="stat-card">
-          <div class="flex items-center justify-between">
-            <p class="text-sm font-semibold text-slate-600">En cours</p>
-            <span class="h-10 w-10 rounded-full bg-sky-50 text-sky-500 flex items-center justify-center text-lg"><i class="ph ph-clock"></i></span>
-          </div>
-          <p class="text-3xl font-bold text-slate-900 mt-2">${stats.en_cours}</p>
-          <p class="text-xs text-slate-500">Interventions</p>
-        </div>
-        <div class="stat-card">
-          <div class="flex items-center justify-between">
-            <p class="text-sm font-semibold text-slate-600">Clôturés</p>
-            <span class="h-10 w-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg"><i class="ph ph-check-circle"></i></span>
-          </div>
-          <p class="text-3xl font-bold text-slate-900 mt-2">${stats.cloture}</p>
-          <p class="text-xs text-slate-500">Résolus</p>
-        </div>
-      `;
-      const badge = document.getElementById('badge-total');
-      if (badge) badge.textContent = `${stats.total} signalement${stats.total>1?'s':''}`;
-      const lr = document.getElementById('last-refresh');
-      if (lr) lr.textContent = `Mis à jour ${new Date().toLocaleTimeString()}`;
-    }
-
-    async function updateStatus(id, status) {
-      try {
-        await supabaseClient.from('signalements').update({ status }).eq('id', id);
-        const msg = status === 'en_cours' ? 'Prise en charge' : (status === 'cloture' ? 'Signalement resolu' : `Statut: ${status}`);
-        await postMessage(id, `${msg} • ${new Date().toLocaleString()}`);
-      } catch(e) {
-        console.error(e);
-        showToast('Mise à jour impossible', 'error');
+    async function resolveSociete() {
+      const { data: sessionData } = await supabaseClient.auth.getSession();
+      const userId = sessionData?.session?.user?.id || null;
+      userEmail = sessionData?.session?.user?.email || '';
+      if (!userId && !userEmail) return;
+      const { data, error } = await supabaseClient
+        .from('societes')
+        .select('id, nom, email_contact, auth_id')
+        .or(`auth_id.eq.${userId},email_contact.eq.${userEmail}`)
+        .limit(1)
+        .single();
+      if (!error && data) {
+        societe = data;
       }
-      await hydrate();
     }
 
-    function renderReports(list) {
-      const container = document.getElementById('reports');
-      if (!container) return;
-      if (!list.length) { container.innerHTML = '<div class="report-card text-sm text-amber-700">Aucun signalement trouvé pour vos sites.</div>'; return; }
-      container.innerHTML = list.map(s => {
-        const st = (s.status || 'nouveau').toLowerCase();
-        const badge = st.includes('clot') ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : st.includes('cours') ? 'bg-sky-50 text-sky-700 border-sky-100' : 'bg-amber-50 text-amber-700 border-amber-100';
-        const titre = s.titre || 'Signalement';
-        const date = s.created_at ? new Date(s.created_at).toLocaleString() : '';
+    async function loadContracts() {
+      if (!societe?.id) return;
+      const { data, error } = await supabaseClient
+        .from('contrats')
+        .select('id, ref, site_nom, adresse_site, contact_email, contact_nom')
+        .eq('societe_id', societe.id);
+      if (error) return;
+      contracts = data || [];
+      contractMap = {};
+      contracts.forEach(c => { contractMap[c.id] = c; });
+    }
+
+    async function loadSignalements() {
+      const listEl = document.getElementById('signals-list');
+      listEl.innerHTML = '<p class="text-slate-500 text-sm">Chargement...</p>';
+      if (!contracts.length) { listEl.innerHTML = '<p class="text-slate-500 text-sm">Aucun contrat associe.</p>'; return; }
+
+      const ids = contracts.map(c => c.id);
+      const { data, error } = await supabaseClient
+        .from('signalements')
+        .select('id, titre, description, site, adresse, statut, priorite, created_at, contrat_ref, contrat_id, updated_at, contact, phone')
+        .in('contrat_id', ids)
+        .order('created_at', { ascending: false });
+      if (error) { listEl.innerHTML = '<p class="text-red-600 text-sm">Erreur de chargement.</p>'; return; }
+      signalements = data || [];
+
+      const idsSign = signalements.map(s => s.id);
+      if (idsSign.length) {
+        const { data: msgs } = await supabaseClient
+          .from('signalement_messages')
+          .select('id, signalement_id, message, created_at, author_type')
+          .in('signalement_id', idsSign)
+          .order('created_at', { ascending: true });
+        messages = msgs || [];
+      } else {
+        messages = [];
+      }
+
+      renderSignalements();
+    }
+
+    function renderSignalements() {
+      const filter = document.getElementById('filter-status').value || '';
+      const listEl = document.getElementById('signals-list');
+      const counts = { nouveau:0, en_cours:0, cloture:0, archive:0 };
+      const filtered = signalements.filter(s => {
+        const st = (s.statut || 'nouveau').toLowerCase();
+        if (counts[st] !== undefined) counts[st] += 1;
+        return !filter || st === filter;
+      });
+      document.getElementById('count-nouveau').textContent = counts.nouveau;
+      document.getElementById('count-en_cours').textContent = counts.en_cours;
+      document.getElementById('count-cloture').textContent = counts.cloture;
+      document.getElementById('count-archive').textContent = counts.archive;
+      document.getElementById('total-badge').textContent = `${filtered.length} affiches`;
+      document.getElementById('refresh-label').textContent = `Mis a jour ${new Date().toLocaleTimeString('fr-FR')}`;
+
+      if (!filtered.length) { listEl.innerHTML = '<p class="text-slate-500 text-sm">Aucun signalement pour ce filtre.</p>'; return; }
+
+      listEl.innerHTML = filtered.map(s => {
+        const st = (s.statut || 'nouveau').toLowerCase();
+        const contract = contractMap[s.contrat_id] || {};
+        const msgs = messages.filter(m => m.signalement_id === s.id);
+        const contactEmail = contract.contact_email || '';
+        const mailDisabled = contactEmail ? '' : 'opacity-60 cursor-not-allowed';
         return `
-          <article class="report-card space-y-3">
-            <div class="flex items-center gap-2 flex-wrap">
-              <span class="badge-soft ${badge}"><i class="ph-bold ph-warning-circle"></i> ${s.status || 'N/A'}</span>
-              ${s.type ? `<span class="badge-soft bg-slate-100 text-slate-700 border-slate-200"><i class="ph-bold ph-tag"></i> ${s.type}</span>` : ''}
-              ${s.site ? `<span class="badge-soft bg-white text-slate-700 border-slate-200"><i class="ph-bold ph-map-pin"></i> ${s.site}</span>` : ''}
-            </div>
-            <div class="grid md:grid-cols-[1.5fr,1fr] gap-3">
-              <div class="space-y-1">
-                <h3 class="text-lg font-semibold text-slate-900">${titre}</h3>
-                <p class="text-sm text-slate-600">${s.description || ''}</p>
+          <article class="border border-slate-200 rounded-2xl p-4 bg-white shadow-sm">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p class="text-xs text-slate-500 uppercase">Contrat ${s.contrat_ref || ''}</p>
+                <h3 class="text-xl font-semibold text-slate-900">${s.titre || 'Signalement'}</h3>
+                <p class="text-sm text-slate-600">${s.site || contract.site_nom || ''}${s.adresse || contract.adresse_site ? ' · ' + (s.adresse || contract.adresse_site) : ''}</p>
               </div>
-              <div class="text-sm text-slate-600 space-y-1">
-                ${date ? `<div class="flex items-center gap-2"><i class="ph-bold ph-calendar-blank"></i> ${date}</div>` : ''}
-                ${s.contact_email ? `<div class="flex items-center gap-2"><i class="ph-bold ph-envelope"></i> ${s.contact_email}</div>` : ''}
-                ${s.contact_tel ? `<div class="flex items-center gap-2"><i class="ph-bold ph-phone-call"></i> ${s.contact_tel}</div>` : ''}
-              </div>
+              <span class="px-3 py-1 rounded-full text-xs font-semibold ${statusChip(st)}">${st}</span>
             </div>
-            <div class="flex flex-wrap gap-2 pt-1">
-              <button class="px-3 py-2 rounded bg-blue-50 text-blue-700 border border-blue-100 hover:bg-blue-100 text-xs font-semibold" data-action="take" data-id="${s.id}">Prendre en charge</button>
-              <button class="px-3 py-2 rounded bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100 text-xs font-semibold" data-action="done" data-id="${s.id}">Marquer résolu</button>
-              <button class="px-3 py-2 rounded bg-white border border-slate-200 text-xs font-semibold text-slate-700 hover:border-slate-300" data-action="detail" data-id="${s.id}">Détails & commentaires</button>
+            <p class="text-sm text-slate-700 mt-2">${s.description || ''}</p>
+            <div class="text-xs text-slate-500 mt-1">Cree le ${fmtDate(s.created_at)}</div>
+
+            <div class="flex flex-wrap gap-2 mt-3">
+              <button data-action="take" data-id="${s.id}" class="px-3 py-2 rounded-lg text-sm font-semibold bg-sky-100 text-sky-800 hover:bg-sky-200">Prendre en charge</button>
+              <button data-action="resolve" data-id="${s.id}" class="px-3 py-2 rounded-lg text-sm font-semibold bg-emerald-100 text-emerald-800 hover:bg-emerald-200">Marquer resolu</button>
+              <button data-action="archive" data-id="${s.id}" class="px-3 py-2 rounded-lg text-sm font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200">Archiver</button>
+              <button data-action="delete" data-id="${s.id}" class="px-3 py-2 rounded-lg text-sm font-semibold bg-red-100 text-red-700 hover:bg-red-200">Supprimer</button>
+              <button data-action="mailto" data-id="${s.id}" class="px-3 py-2 rounded-lg text-sm font-semibold bg-indigo-100 text-indigo-800 hover:bg-indigo-200 ${mailDisabled}">Courriel client</button>
+            </div>
+
+            <div class="mt-4 border-t border-slate-200 pt-3 space-y-2">
+              <p class="text-sm font-semibold text-slate-800 flex items-center gap-2"><i class="ph-bold ph-chats"></i> Historique</p>
+              <div class="space-y-2 max-h-44 overflow-y-auto pr-1" id="history-${s.id}">
+                ${msgs.length ? msgs.map(m => `
+                  <div class="text-sm text-slate-700 bg-slate-50 border border-slate-100 rounded-lg px-3 py-2">
+                    <span class="font-semibold">${(m.author_type || 'societe').toUpperCase()}</span>
+                    <span class="text-xs text-slate-500"> · ${fmtDate(m.created_at)}</span>
+                    <div>${m.message || ''}</div>
+                  </div>
+                `).join('') : '<p class="text-sm text-slate-500">Aucun commentaire.</p>'}
+              </div>
+              <div class="flex flex-col md:flex-row gap-2">
+                <input data-comment="${s.id}" type="text" placeholder="Ajouter un commentaire..." class="flex-1 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-300">
+                <button data-action="comment" data-id="${s.id}" class="px-3 py-2 rounded-lg bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800">Publier</button>
+              </div>
             </div>
           </article>
         `;
       }).join('');
 
-      container.querySelectorAll('button[data-action]').forEach(btn => {
-        btn.onclick = (e) => {
-          const id = parseInt(btn.dataset.id, 10);
+      bindActions();
+    }
+
+    function bindActions() {
+      document.querySelectorAll('[data-action]').forEach(btn => {
+        btn.onclick = async () => {
+          const id = btn.dataset.id;
           const action = btn.dataset.action;
-          const sig = list.find(x => x.id === id);
-          if (!id || !action || !sig) return;
-          if (action === 'take') updateStatus(id, 'en_cours');
-          else if (action === 'done') updateStatus(id, 'cloture');
-          else if (action === 'detail') openDetail(sig);
+          if (action === 'take') return updateStatut(id, 'en_cours', 'Pris en charge par la societe');
+          if (action === 'resolve') return updateStatut(id, 'cloture', 'Marque resolu par la societe');
+          if (action === 'archive') return updateStatut(id, 'archive', 'Archive par la societe');
+          if (action === 'delete') {
+            if (!confirm('Supprimer ce signalement ?')) return;
+            await supabaseClient.from('signalements').delete().eq('id', id);
+            await loadSignalements();
+            return;
+          }
+          if (action === 'mailto') return openMail(id);
+          if (action === 'comment') {
+            const input = document.querySelector(`[data-comment="${id}"]`);
+            const txt = (input?.value || '').trim();
+            if (!txt) return;
+            await supabaseClient.from('signalement_messages').insert({ signalement_id: id, message: txt, author_type: 'societe' });
+            if (input) input.value = '';
+            await loadSignalements();
+          }
         };
       });
     }
 
-    async function requireSession() {
-      const { data } = await supabaseClient.auth.getSession();
-      return data?.session || null;
+    async function updateStatut(id, newStatut, note) {
+      await supabaseClient.from('signalements').update({ statut: newStatut }).eq('id', id);
+      if (note) await supabaseClient.from('signalement_messages').insert({ signalement_id: id, message: note, author_type: 'societe' });
+      await loadSignalements();
     }
 
-    async function ensureSocieteContext() {
-      const session = await requireSession();
-      const userId = session?.user?.id || '';
-      const userEmail = session?.user?.email || '';
-      if (!userId && !userEmail) return null;
-      const { data: byAuth } = await supabaseClient.from('societes').select('id, nom, email_contact').eq('auth_id', userId).maybeSingle();
-      if (byAuth?.id) { currentSocieteId = byAuth.id; return currentSocieteId; }
-      if (userEmail) {
-        const { data: byEmail } = await supabaseClient.from('societes').select('id, nom, email_contact').ilike('email_contact', userEmail).maybeSingle();
-        if (byEmail?.id) { currentSocieteId = byEmail.id; return currentSocieteId; }
-      }
-      return null;
+    function openMail(id) {
+      const sig = signalements.find(s => s.id === id);
+      if (!sig) return;
+      const contract = contractMap[sig.contrat_id] || {};
+      const to = contract.contact_email || userEmail || '';
+      if (!to) return alert('Pas d email client defini');
+      const subject = encodeURIComponent(`Signalement ${sig.titre || ''} - ${sig.site || contract.site_nom || ''}`);
+      const bodyLines = [
+        'Bonjour,',
+        '',
+        'Un signalement vous est transmis :',
+        `- Site : ${sig.site || contract.site_nom || ''}`,
+        `- Adresse : ${sig.adresse || contract.adresse_site || ''}`,
+        `- Contrat : ${sig.contrat_ref || ''}`,
+        `- Statut : ${(sig.statut || 'nouveau')}`,
+        `- Detail : ${sig.description || ''}`,
+        '',
+        'Merci de votre retour.'
+      ];
+      const body = encodeURIComponent(bodyLines.join('\\n'));
+      window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
     }
 
-    async function loadContrats() {
-      if (!currentSocieteId) return [];
-      const { data, error } = await supabaseClient.from('contrats').select('id, ref, residence, address').eq('societe_id', currentSocieteId);
-      if (error) { console.error(error); return []; }
-      contrats = data || [];
-      return contrats;
-    }
+    document.getElementById('filter-status').addEventListener('change', renderSignalements);
+    document.getElementById('refresh-btn').addEventListener('click', loadSignalements);
 
-    async function loadSignalements() {
-      const refs = contrats.map(c => c.ref).filter(Boolean);
-      const sites = contrats.map(c => c.residence).filter(Boolean);
-      if (!refs.length && !sites.length) return [];
-      const filters = [];
-      if (refs.length) filters.push(`contrat_ref.in.(${refs.join(',')})`);
-      sites.forEach(site => filters.push(`site.ilike.%${encodeURIComponent(site)}%`));
-      const query = supabaseClient.from('signalements').select('id, titre, type, description, status, site, created_at, contrat_ref, contact_email, contact_tel').order('created_at', { ascending:false }).limit(100);
-      if (filters.length) query.or(filters.join(','));
-      const { data, error } = await query;
-      if (error) { console.error(error); return []; }
-      return data || [];
-    }
-
-    document.addEventListener('DOMContentLoaded', async () => {
-      renderLayout();
-      const ctxOk = await ensureSocieteContext();
-      if (!ctxOk) {
-        root.innerHTML = '<div class="report-card text-sm text-amber-700">Session société introuvable. Merci de vous reconnecter.</div>';
-        return;
-      }
-      await hydrate();
-    });
-
-    async function hydrate() {
-      await loadContrats();
-      const sigs = await loadSignalements();
-      renderStats(counters(sigs));
-      renderReports(sigs);
-    }
+    (async () => {
+      await resolveSociete();
+      await loadContracts();
+      await loadSignalements();
+    })();
   </script>
 </body>
 </html>
