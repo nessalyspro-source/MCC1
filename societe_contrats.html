@@ -1,4 +1,4 @@
-ï»¿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
@@ -65,9 +65,9 @@
       <a href="societe_cahier_des_charges.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition"><i class="ph ph-notebook text-lg"></i><span>Cahier des charges</span></a>
       <a href="societe_salaries.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition"><i class="ph ph-currency-eur text-lg"></i><span>Suivi des salaries</span></a>
       <a href="societe_pointages.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition"><i class="ph ph-timer text-lg"></i><span>Suivi des pointages</span></a>
-      <a href="societe_conges.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition"><i class="ph ph-calendar-blank text-lg"></i><span>Suivi des demandes de congÃ©s</span></a>
+      <a href="societe_conges.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition"><i class="ph ph-calendar-blank text-lg"></i><span>Suivi des demandes de congés</span></a>
     </nav>
-    <a href="index.html" class="flex items-center gap-2 text-slate-400 hover:text-slate-600 transition mt-auto"><i class="ph ph-sign-out"></i> DÃ©connexion</a>
+    <a href="index.html" class="flex items-center gap-2 text-slate-400 hover:text-slate-600 transition mt-auto"><i class="ph ph-sign-out"></i> Déconnexion</a>
   </aside>
 
   <main class="flex-1 px-6 py-8 max-w-7xl mx-auto w-full overflow-y-auto">
@@ -104,24 +104,24 @@
     <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
       <div>
         <p class="text-xs uppercase tracking-wide text-slate-400">Nouveau contrat</p>
-        <h2 class="text-lg font-semibold text-slate-900" id="panel-title">CrÃ©er un contrat</h2>
+        <h2 class="text-lg font-semibold text-slate-900" id="panel-title">Créer un contrat</h2>
       </div>
       <button id="close-panel-button" class="p-2 rounded-full hover:bg-slate-100 focus:outline-none"><i class="ph-bold ph-x"></i></button>
     </div>
     <div class="px-6 py-4 space-y-4 overflow-y-auto">
       <div class="bg-slate-50 rounded-xl p-4 border border-slate-100">
         <p class="text-xs font-semibold uppercase text-slate-500 mb-2">Client</p>
-        <label class="text-sm text-slate-700 mb-1 block">SÃ©lectionnez un client</label>
+        <label class="text-sm text-slate-700 mb-1 block">Sélectionnez un client</label>
         <select id="client-select" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
           <option value="">Choisir un client...</option>
         </select>
-        <p id="client-type-hint" class="text-xs text-slate-500 mt-2">Le type sera dÃ©tectÃ© automatiquement.</p>
+        <p id="client-type-hint" class="text-xs text-slate-500 mt-2">Le type sera détecté automatiquement.</p>
       </div>
 
       <div id="site-block" class="bg-slate-50 rounded-xl p-4 border border-slate-100 hidden">
         <p class="text-xs font-semibold uppercase text-slate-500 mb-2">Site</p>
         <label class="text-sm text-slate-700 mb-1 block">Nom du site</label>
-        <input id="site-name" type="text" placeholder="Ex: RÃ©sidence Les Jardins" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 mb-3">
+        <input id="site-name" type="text" placeholder="Ex: Résidence Les Jardins" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 mb-3">
         <label class="text-sm text-slate-700 mb-1 block">Adresse du site</label>
         <div class="relative">
           <input id="site-address" type="text" placeholder="Adresse..." class="address-input w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
@@ -130,10 +130,10 @@
       </div>
 
       <div class="bg-slate-50 rounded-xl p-4 border border-slate-100 space-y-3">
-        <p class="text-xs font-semibold uppercase text-slate-500">PÃ©riode & Statut</p>
+        <p class="text-xs font-semibold uppercase text-slate-500">Période & Statut</p>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label class="text-sm text-slate-700 mb-1 block">Date de dÃ©but</label>
+            <label class="text-sm text-slate-700 mb-1 block">Date de début</label>
             <input id="start-date" type="date" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
           </div>
           <div>
@@ -146,7 +146,7 @@
           <select id="status-select" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
             <option value="en_attente">En attente de validation</option>
             <option value="actif">Actif</option>
-            <option value="resilie">RÃ©siliÃ©</option>
+            <option value="resilie">Résilié</option>
           </select>
         </div>
       </div>
@@ -164,7 +164,7 @@
           </div>
         </div>
         <div>
-          <label class="text-sm text-slate-700 mb-1 block">PÃ©riodicitÃ©</label>
+          <label class="text-sm text-slate-700 mb-1 block">Périodicité</label>
           <select id="periodicity" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
             <option value="mensuel">Mensuel</option>
             <option value="trimestriel">Trimestriel</option>
@@ -174,16 +174,16 @@
         <div class="bg-white rounded-lg p-3 border border-slate-200">
                     <p class="text-sm text-slate-500">Calcul TTC</p>
           <div class="flex items-baseline gap-2">
-            <span class="text-xl font-semibold text-slate-900" id="ttc-display">0,00 â‚¬</span>
-            <span class="text-xs text-slate-500" id="projection-display">Projection annuelle: 0,00 â‚¬</span>
+            <span class="text-xl font-semibold text-slate-900" id="ttc-display">0,00 €</span>
+            <span class="text-xs text-slate-500" id="projection-display">Projection annuelle: 0,00 €</span>
           </div>
         </div>
       </div>
 
       <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-        <p class="text-xs font-semibold uppercase text-slate-500 mb-2">RÃ©capitulatif</p>
+        <p class="text-xs font-semibold uppercase text-slate-500 mb-2">Récapitulatif</p>
         <div id="recap" class="text-sm text-slate-700 space-y-1">
-          <p>SÃ©lectionnez un client pour voir le rÃ©capitulatif.</p>
+          <p>Sélectionnez un client pour voir le récapitulatif.</p>
         </div>
       </div>
     </div>
@@ -198,7 +198,7 @@
   <aside id="details-panel" class="fixed inset-y-0 right-0 w-full sm:w-[520px] bg-white shadow-2xl transform translate-x-full opacity-0 flex flex-col">
     <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
       <div>
-        <p class="text-xs uppercase tracking-wide text-slate-400">DÃ©tails du contrat</p>
+        <p class="text-xs uppercase tracking-wide text-slate-400">Détails du contrat</p>
         <h2 class="text-lg font-semibold text-slate-900" id="details-title">Contrat</h2>
       </div>
       <button id="details-close-btn" class="p-2 rounded-full hover:bg-slate-100 focus:outline-none"><i class="ph-bold ph-x"></i></button>
@@ -208,7 +208,7 @@
 
   <!-- Toast -->
   <div id="toast" class="fixed top-4 right-4 bg-slate-900 text-white px-4 py-3 rounded-lg shadow-lg opacity-0 pointer-events-none flex items-center gap-2">
-    <span id="toast-icon">âœ“</span>
+    <span id="toast-icon">?</span>
     <span id="toast-message" class="text-sm">Message</span>
   </div>
 
@@ -294,7 +294,7 @@
     };
     function showToast(msg, type='info') {
       toastMessage.textContent = msg;
-      toastIcon.textContent = type === 'error' ? 'Ã¢s ' : 'Ã¢"?o';
+      toastIcon.textContent = type === 'error' ? 'âs ' : 'â"?o';
       toastEl.classList.remove('opacity-0','pointer-events-none');
       toastEl.style.transform = 'translateY(0)';
       setTimeout(() => {
@@ -509,26 +509,27 @@
       }
     }
 
-    function openQrPrintable(type, url, data) {
+        function openQrPrintable(type, url, data) {
       const site = data.residence || data.address || 'Site';
       const address = data.address || '';
       const client = data.client_name || data.societe_nom || 'Client';
-      const title = type === 'pointage' ? 'QR CODE EMPLOYÃ‰S' : 'QR CODE RÃ‰SIDENTS';
+      const title = type === 'pointage' ? 'QR CODE EMPLOYES' : 'QR CODE RESIDENTS';
       const usage = type === 'pointage'
-        ? 'Ce QR code permet aux employÃ©s de pointer leur arrivÃ©e/dÃ©part sur site.'
-        : 'Ce QR code permet aux rÃ©sidents ou clients de signaler un incident ou problÃ¨me.';
+        ? 'Ce QR code permet aux employes de pointer leur arrivee/depart sur site.'
+        : 'Ce QR code permet aux residents ou clients de signaler un incident ou probleme.';
       const steps = type === 'pointage'
-        ? ['Ouvrez lâ€™appareil photo de votre smartphone', 'Visez le QR code', 'Validez votre pointage']
-        : ['Ouvrez lâ€™appareil photo de votre smartphone', 'Visez le QR code', 'Remplissez le formulaire de signalement'];
+        ? ["Ouvrez l'appareil photo de votre smartphone", "Visez le QR code", "Validez votre pointage"]
+        : ["Ouvrez l'appareil photo de votre smartphone", "Visez le QR code", "Remplissez le formulaire de signalement"];
       const win = window.open('', '_blank');
       if (!win) { showToast('Autorisez les popups pour imprimer', 'error'); return; }
-      win.document.write(`
+      const escapedUrl = encodeURIComponent(url);
+      const stepsHtml = steps.map(s => `<li>${s}</li>`).join('');
+      win.document.write(`<!DOCTYPE html>
         <html><head><title>${client} - ${title}</title>
         <style>
           body { font-family: 'Outfit', Arial, sans-serif; color:#0f304b; padding:30px; }
           .wrap { max-width:800px; margin:0 auto; text-align:center; }
           .header { display:flex; align-items:center; gap:16px; border-bottom:2px solid #0f304b; padding-bottom:12px; }
-          .logo { width:72px; height:72px; object-fit:contain; border-radius:8px; border:1px solid #e2e8f0; }
           .badge { display:inline-block; background:#0f304b; color:#fff; padding:10px 18px; border-radius:999px; font-weight:700; letter-spacing:0.04em; margin-top:8px; }
           .qr-box { display:inline-block; padding:16px; border:3px solid #0f304b; border-radius:18px; margin:18px 0; }
           .card { background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px 16px; text-align:left; display:inline-block; margin-top:8px; }
@@ -546,14 +547,12 @@
             <h2 style="margin:24px 0 8px; font-size:28px; font-weight:800;">SCANNEZ-MOI</h2>
             <div class="badge">${title}</div>
             <div class="qr-box">
-              <img src="https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(url)}" alt="QR">
+              <img src="https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${escapedUrl}" alt="QR">
             </div>
             <p style="max-width:620px; margin:0 auto; color:#1e293b;">${usage}</p>
             <div class="card">
               <div style="font-weight:700; margin-bottom:6px;">Comment utiliser ?</div>
-              <ul>
-                ${steps.map(s => `<li>${s}</li>`).join('')}
-              </ul>
+              <ul>${stepsHtml}</ul>
             </div>
             <div class="footer">
               <div>${address}</div>
@@ -561,8 +560,7 @@
             </div>
           </div>
           <script>window.print();</script>
-        </body></html>
-      `);
+        </body></html>`);
       win.document.close();
     }
 
@@ -694,7 +692,7 @@
     async function loadContracts() {
       if (!currentSocieteId) await ensureSocieteContext();
       if (!currentSocieteId) {
-        container.innerHTML = '<div class="col-span-full text-center text-slate-500">Aucune sociÃ©t associe  ce compte.</div>';
+        container.innerHTML = '<div class="col-span-full text-center text-slate-500">Aucune sociét associe  ce compte.</div>';
         return;
       }
       container.innerHTML = '<div class="col-span-full text-center text-slate-500">Chargement...</div>';
@@ -773,8 +771,8 @@
       const ttc = ht * (1 + tva / 100);
       let factor = 12; if (periodicity === 'trimestriel') factor = 4; if (periodicity === 'annuel') factor = 1;
       const projection = ttc * factor;
-      document.getElementById('ttc-display').textContent = `${ttc.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} â‚¬`;
-      document.getElementById('projection-display').textContent = `Projection annuelle: ${projection.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} â‚¬`;
+      document.getElementById('ttc-display').textContent = `${ttc.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €`;
+      document.getElementById('projection-display').textContent = `Projection annuelle: ${projection.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €`;
       return { ttc, projection };
     }
 
@@ -800,12 +798,12 @@
         document.getElementById('site-block').classList.remove('hidden');
         document.getElementById('site-name').value = c.residence || '';
         document.getElementById('site-address').value = c.address || '';
-        document.getElementById('client-type-hint').textContent = 'Mandataire dÃ©tectÃ©';
+        document.getElementById('client-type-hint').textContent = 'Mandataire détecté';
       } else {
         document.getElementById('site-block').classList.add('hidden');
         document.getElementById('site-name').value = '';
         document.getElementById('site-address').value = '';
-        document.getElementById('client-type-hint').textContent = 'Client direct dÃ©tectÃ©';
+        document.getElementById('client-type-hint').textContent = 'Client direct détecté';
       }
       document.getElementById('start-date').value = c.date_debut || '';
       document.getElementById('end-date').value = c.date_fin || '';
@@ -828,17 +826,17 @@
       const periodicity = document.getElementById('periodicity').value;
       calcPrices();
       const opt = sel.options[sel.selectedIndex];
-      if (!opt || !opt.value) { recap.innerHTML = '<p>SÃ©lectionnez un client pour voir le rÃ©capitulatif.</p>'; return; }
+      if (!opt || !opt.value) { recap.innerHTML = '<p>Sélectionnez un client pour voir le récapitulatif.</p>'; return; }
       const type = opt.dataset.type;
       const addr = opt.dataset.address || '';
       recap.innerHTML = `
         <p><strong>Client:</strong> ${opt.dataset.display}</p>
         <p><strong>Type:</strong> ${type === 'mandataire' ? 'Mandataire' : 'Direct'}</p>
-        <p><strong>Site:</strong> ${type === 'mandataire' ? (siteName || 'Non renseignÃ©') : 'Adresse client'}</p>
-        <p><strong>Adresse:</strong> ${type === 'mandataire' ? (siteAddr || 'Non renseignÃ©e') : (addr || 'Non renseignÃ©e')}</p>
-        <p><strong>PÃ©riode:</strong> ${start || 'N/A'} Ã¢??T ${end || 'N/A'}</p>
+        <p><strong>Site:</strong> ${type === 'mandataire' ? (siteName || 'Non renseigné') : 'Adresse client'}</p>
+        <p><strong>Adresse:</strong> ${type === 'mandataire' ? (siteAddr || 'Non renseignée') : (addr || 'Non renseignée')}</p>
+        <p><strong>Période:</strong> ${start || 'N/A'} â??T ${end || 'N/A'}</p>
         <p><strong>Statut:</strong> ${status}</p>
-        <p><strong>PÃ©riodicitÃ©:</strong> ${periodicity}</p>
+        <p><strong>Périodicité:</strong> ${periodicity}</p>
       `;
     }
 
@@ -898,7 +896,7 @@
         error = errInsert;
       }
       if (error) { console.error(error); showToast("Erreur lors de l'enregistrement", 'error'); return; }
-      showToast(isEdit ? 'Contrat mis   jour' : 'Contrat crÃ©Ã©');
+      showToast(isEdit ? 'Contrat mis   jour' : 'Contrat créé');
       closePanel();
       resetForm();
       loadContracts();
@@ -906,7 +904,7 @@
 
     function resetForm() {
       editModeId = null; editRef = null;
-      panelTitle.textContent = 'CrÃ©er un contrat';
+      panelTitle.textContent = 'Créer un contrat';
       document.getElementById('client-select').value = '';
       document.getElementById('site-name').value = '';
       document.getElementById('site-address').value = '';
@@ -917,7 +915,7 @@
       document.getElementById('tva').value = '20';
       document.getElementById('periodicity').value = 'mensuel';
       document.getElementById('site-block').classList.add('hidden');
-      document.getElementById('client-type-hint').textContent = 'Le type sera dÃ©tectÃ© automatiquement.';
+      document.getElementById('client-type-hint').textContent = 'Le type sera détecté automatiquement.';
       saveBtn.textContent = 'Enregistrer';
       updateRecap();
     }
@@ -1042,14 +1040,14 @@
             <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-3">
               <div class="flex items-center justify-between">
                 <p class="font-semibold">QR Pointage agent</p>
-                <button id="btn-print-pointage" type="button" class="text-xs font-semibold text-sky-700 hover:text-sky-900 underline">TÃ©lÃ©charger PDF A4</button>
+                <button id="btn-print-pointage" type="button" class="text-xs font-semibold text-sky-700 hover:text-sky-900 underline">Télécharger PDF A4</button>
               </div>
               <img src="${qrApi}${encodeURIComponent(pointageUrl)}" alt="QR Pointage" class="mx-auto rounded-md">
             </div>
             <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-3">
               <div class="flex items-center justify-between">
                 <p class="font-semibold">QR Signalement</p>
-                <button id="btn-print-signalement" type="button" class="text-xs font-semibold text-sky-700 hover:text-sky-900 underline">TÃ©lÃ©charger PDF A4</button>
+                <button id="btn-print-signalement" type="button" class="text-xs font-semibold text-sky-700 hover:text-sky-900 underline">Télécharger PDF A4</button>
               </div>
               <img src="${qrApi}${encodeURIComponent(signalementUrl)}" alt="QR Signalement" class="mx-auto rounded-md">
             </div>
@@ -1086,7 +1084,7 @@
           if (confirm('Supprimer ce contrat ?')) {
             const { error } = await supabaseClient.from('contrats').delete().eq('id', id);
             if (error) showToast('Suppression impossible', 'error');
-            else { showToast('Contrat supprimÃ©'); loadContracts(); }
+            else { showToast('Contrat supprimé'); loadContracts(); }
           }
         } else if (btn.classList.contains('edit-btn')) {
           const { data, error } = await supabaseClient.from('contrats').select('*').eq('id', id).single();
@@ -1112,10 +1110,10 @@
       const opt = e.target.options[e.target.selectedIndex];
       if (opt && opt.dataset.type === 'mandataire') {
         document.getElementById('site-block').classList.remove('hidden');
-        document.getElementById('client-type-hint').textContent = 'Mandataire dÃ©tectÃ©';
+        document.getElementById('client-type-hint').textContent = 'Mandataire détecté';
       } else {
         document.getElementById('site-block').classList.add('hidden');
-        document.getElementById('client-type-hint').textContent = 'Client direct dÃ©tectÃ©';
+        document.getElementById('client-type-hint').textContent = 'Client direct détecté';
       }
       updateRecap();
     });
@@ -1153,6 +1151,7 @@
   </script>
 </body>
 </html>
+
 
 
 
