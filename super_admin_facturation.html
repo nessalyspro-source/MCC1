@@ -1,0 +1,196 @@
+﻿﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Super Admin - Facturation</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <script src="vendor/phosphor/index.js"></script>
+  <script src="vendor/supabase/supabase.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <style>
+    :root { --ink:#0c2f35; --navy:#0f304b; --red:#ce3c35; --sand:#b58a64; --bg:#f7f5f2; }
+    body { font-family:'Outfit',sans-serif; background: radial-gradient(120% 100% at 10% 0%, #eef4f6 0%, #f8f5f0 55%, #fdfdfb 100%); color: var(--ink); }
+    .sidebar { background: linear-gradient(180deg, #0f304b, #0c2f35); color:#e8eef2; }
+    .nav-item { display:flex; align-items:center; gap:12px; padding:10px 14px; border-radius:12px; color:#cfd8dc; transition:all .15s ease; }
+    .nav-item.active, .nav-item:hover { background: rgba(255,255,255,0.1); color:#fff; }
+    .card { background:#fff; border:1px solid #e6e2dc; border-radius:18px; box-shadow:0 12px 40px rgba(12,47,53,0.08); }
+    .pill { background: rgba(12,47,53,0.08); color: var(--navy); padding:8px 12px; border-radius:999px; font-weight:600; font-size:12px; letter-spacing:0.04em; display:inline-flex; align-items:center; gap:8px; }
+    .btn-main { background: linear-gradient(120deg, var(--navy), var(--ink)); color:#fff; }
+    .field { border:1px solid #d9e0e7; }
+    .field:focus { outline:none; border-color: var(--navy); box-shadow:0 0 0 3px rgba(15,48,75,0.18); }
+  </style>
+</head>
+<body class="flex min-h-screen">
+  <aside class="w-64 sidebar flex flex-col p-6 gap-4">
+    <div class="text-2xl font-bold tracking-wide mb-6 text-center">SUPER <span class="text-sand-200">ADMIN</span></div>
+    <nav class="flex-1 space-y-2">
+      <a href="dashboard_admin.html" class="nav-item"><i class="ph-fill ph-squares-four text-lg"></i><span>Tableau de bord</span></a>
+      <a href="super_admin_societes.html" class="nav-item"><i class="ph ph-buildings text-lg"></i><span>Societes</span></a>
+      <a href="super_admin_facturation.html" class="nav-item active"><i class="ph ph-receipt text-lg"></i><span>Facturation</span></a>
+    </nav>
+    <a href="super_admin_login.html" class="flex items-center gap-2 text-slate-300 hover:text-white transition mt-auto"><i class="ph ph-sign-out"></i> Deconnexion</a>
+  </aside>
+
+  <main class="flex-1 px-8 py-10 max-w-7xl mx-auto w-full">
+    <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+      <div class="space-y-2">
+        <span class="pill"><i class="ph-bold ph-receipt"></i> Facturation</span>
+        <h1 class="text-3xl font-bold text-slate-900">Creer et suivre les factures</h1>
+        <p class="text-sm text-slate-600">Associez une facture a une societe existante (portail) et telechargez le PDF.</p>
+      </div>
+    </header>
+
+    <section class="grid lg:grid-cols-3 gap-4 mb-6">
+      <div class="card p-5 lg:col-span-1">
+        <h2 class="text-lg font-semibold text-slate-900 mb-3">Nouvelle facture</h2>
+        <form id="invoice-form" class="space-y-3">
+          <div>
+            <label class="text-sm font-semibold text-slate-700">Societe</label>
+            <select id="societe-select" required class="field w-full rounded-lg px-3 py-2 text-sm mt-1"></select>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-sm font-semibold text-slate-700">Periode</label>
+              <input id="periode" type="month" required class="field w-full rounded-lg px-3 py-2 text-sm mt-1">
+            </div>
+            <div>
+              <label class="text-sm font-semibold text-slate-700">Montant (EUR)</label>
+              <input id="montant" type="number" step="0.01" required class="field w-full rounded-lg px-3 py-2 text-sm mt-1" value="29">
+            </div>
+          </div>
+          <div>
+            <label class="text-sm font-semibold text-slate-700">Statut</label>
+            <select id="statut" class="field w-full rounded-lg px-3 py-2 text-sm mt-1">
+              <option value="brouillon">Brouillon</option>
+              <option value="emise">Emise</option>
+              <option value="payee">Payee</option>
+            </select>
+          </div>
+          <button type="submit" class="btn-main w-full rounded-xl py-3 font-semibold">Enregistrer</button>
+          <p id="form-msg" class="text-sm"></p>
+        </form>
+      </div>
+
+      <div class="card p-5 lg:col-span-2">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-lg font-semibold text-slate-900">Factures</h2>
+          <span id="invoice-count" class="text-sm text-slate-500"></span>
+        </div>
+        <div id="invoice-list" class="divide-y divide-slate-200 text-sm">
+          <p class="text-slate-500 py-3">Chargement...</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const supabaseUrl = 'https://fmfylsykljkvyurcprij.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZtZnlsc3lrbGprdnl1cmNwcmlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1ODQ3OTgsImV4cCI6MjA3OTE2MDc5OH0.hfgBflnh-nr1Ljfl5Chkp0y1EbZbm5XiyyDhsQcdSqE';
+    const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+    let societes = [];
+    let invoices = [];
+
+    function formatCurrency(n) {
+      return Number(n || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2 }) + ' EUR';
+    }
+
+    async function loadSocietes() {
+      const { data, error } = await supabaseClient.from('societes').select('id, nom');
+      if (error) { document.getElementById('societe-select').innerHTML = '<option value="">Table "societes" manquante</option>'; return; }
+      societes = data || [];
+      const select = document.getElementById('societe-select');
+      select.innerHTML = societes.length ? '' : '<option value="">Aucune societe</option>';
+      societes.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.id;
+        opt.textContent = s.nom || 'Societe';
+        select.appendChild(opt);
+      });
+    }
+
+    async function loadInvoices() {
+      const { data, error } = await supabaseClient.from('factures').select('*').order('created_at', { ascending:false });
+      const list = document.getElementById('invoice-list');
+      if (error) { list.innerHTML = '<p class="text-red-600 py-3">Table "factures" manquante ou erreur.</p>'; return; }
+      invoices = data || [];
+      if (!invoices.length) { list.innerHTML = '<p class="text-slate-500 py-3">Aucune facture.</p>'; document.getElementById('invoice-count').textContent = '0'; return; }
+      document.getElementById('invoice-count').textContent = `${invoices.length} facture${invoices.length>1?'s':''}`;
+      list.innerHTML = invoices.map(f => {
+        const badge = f.statut === 'payee' ? 'bg-emerald-100 text-emerald-700' : f.statut === 'emise' ? 'bg-sky-100 text-sky-700' : 'bg-amber-100 text-amber-700';
+        const ref = f.id ? `FACT-${f.id}` : 'FACT-TEMP';
+        return `
+          <div class="py-3 flex items-center justify-between gap-3">
+            <div>
+              <p class="font-semibold text-slate-800">${f.societe_nom || 'Societe'}</p>
+              <p class="text-xs text-slate-500">${ref} · ${f.periode || ''} · ${f.montant ? formatCurrency(f.montant) : '0,00 EUR'}</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] px-2 py-1 rounded-full ${badge}">${f.statut || ''}</span>
+              <button class="text-slate-400 hover:text-slate-700 pdf-btn" data-id="${f.id}" title="Telecharger PDF"><i class="ph-bold ph-file-pdf"></i></button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function generateInvoicePdf(inv) {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const ref = inv.id ? `FACT-${inv.id}` : 'FACT-TEMP';
+      const montant = formatCurrency(inv.montant);
+      const created = inv.created_at ? new Date(inv.created_at).toLocaleDateString('fr-FR') : new Date().toLocaleDateString('fr-FR');
+      doc.setFontSize(16);
+      doc.text('Facture', 15, 20);
+      doc.setFontSize(11);
+      doc.text(`Reference : ${ref}`, 15, 30);
+      doc.text(`Societe : ${inv.societe_nom || 'N/A'}`, 15, 38);
+      doc.text(`Periode : ${inv.periode || 'N/A'}`, 15, 46);
+      doc.text(`Statut : ${inv.statut || 'brouillon'}`, 15, 54);
+      doc.text(`Date : ${created}`, 15, 62);
+      doc.setFontSize(13);
+      doc.text(`Montant : ${montant}`, 15, 74);
+      doc.setFontSize(10);
+      doc.text('Emis par : Super Admin', 15, 90);
+      doc.save(`${ref}.pdf`);
+    }
+
+    async function saveInvoice(e) {
+      e.preventDefault();
+      const msg = document.getElementById('form-msg');
+      msg.textContent = '';
+      const societeId = document.getElementById('societe-select').value;
+      if (!societeId) { msg.textContent = 'Choisissez une societe'; msg.className = 'text-sm text-red-600'; return; }
+      const societe = societes.find(s => String(s.id) === String(societeId));
+      const payload = {
+        societe_id: parseInt(societeId, 10),
+        societe_nom: societe?.nom || null,
+        periode: document.getElementById('periode').value || null,
+        montant: parseFloat(document.getElementById('montant').value) || 0,
+        statut: document.getElementById('statut').value || 'brouillon'
+      };
+      const { error } = await supabaseClient.from('factures').insert([payload]);
+      if (error) { msg.textContent = 'Erreur: ' + error.message; msg.className = 'text-sm text-red-600'; return; }
+      msg.textContent = 'Facture enregistree';
+      msg.className = 'text-sm text-emerald-600';
+      loadInvoices();
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await loadSocietes();
+      await loadInvoices();
+      document.getElementById('invoice-form').addEventListener('submit', saveInvoice);
+      document.getElementById('invoice-list').addEventListener('click', (e) => {
+        const btn = e.target.closest('.pdf-btn');
+        if (!btn) return;
+        const id = parseInt(btn.dataset.id, 10);
+        const inv = invoices.find(i => i.id === id);
+        if (inv) generateInvoicePdf(inv);
+      });
+    });
+  </script>
+</body>
+</html>
+
+
+

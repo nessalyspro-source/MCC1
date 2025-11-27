@@ -1,0 +1,246 @@
+﻿﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Super Admin - Societes</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <script src="vendor/phosphor/index.js"></script>
+  <script src="vendor/supabase/supabase.js"></script>
+  <style>
+    :root { --ink:#0c2f35; --navy:#0f304b; --red:#ce3c35; --sand:#b58a64; --bg:#f7f5f2; }
+    body { font-family:'Outfit',sans-serif; background: radial-gradient(120% 100% at 10% 0%, #eef4f6 0%, #f8f5f0 55%, #fdfdfb 100%); color: var(--ink); }
+    .sidebar { background: linear-gradient(180deg, #0f304b, #0c2f35); color:#e8eef2; }
+    .nav-item { display:flex; align-items:center; gap:12px; padding:10px 14px; border-radius:12px; color:#cfd8dc; transition:all .15s ease; }
+    .nav-item.active, .nav-item:hover { background: rgba(255,255,255,0.1); color:#fff; }
+    .card { background:#fff; border:1px solid #e6e2dc; border-radius:18px; box-shadow:0 12px 40px rgba(12,47,53,0.08); }
+    .pill { background: rgba(12,47,53,0.08); color: var(--navy); padding:8px 12px; border-radius:999px; font-weight:600; font-size:12px; letter-spacing:0.04em; display:inline-flex; align-items:center; gap:8px; }
+    .btn-main { background: linear-gradient(120deg, var(--navy), var(--ink)); color:#fff; }
+    .field { border:1px solid #d9e0e7; }
+    .field:focus { outline:none; border-color: var(--navy); box-shadow:0 0 0 3px rgba(15,48,75,0.18); }
+  </style>
+</head>
+<body class="flex min-h-screen">
+  <aside class="w-64 sidebar flex flex-col p-6 gap-4">
+    <div class="text-2xl font-bold tracking-wide mb-6 text-center">SUPER <span class="text-sand-200">ADMIN</span></div>
+    <nav class="flex-1 space-y-2">
+      <a href="dashboard_admin.html" class="nav-item"><i class="ph-fill ph-squares-four text-lg"></i><span>Tableau de bord</span></a>
+      <a href="super_admin_societes.html" class="nav-item active"><i class="ph ph-buildings text-lg"></i><span>Societes</span></a>
+      <a href="super_admin_facturation.html" class="nav-item"><i class="ph ph-receipt text-lg"></i><span>Facturation</span></a>
+    </nav>
+    <a href="super_admin_login.html" class="flex items-center gap-2 text-slate-300 hover:text-white transition mt-auto"><i class="ph ph-sign-out"></i> Deconnexion</a>
+  </aside>
+
+  <main class="flex-1 px-8 py-10 max-w-7xl mx-auto w-full">
+    <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+      <div class="space-y-2">
+        <span class="pill"><i class="ph-bold ph-buildings"></i> Societes</span>
+        <h1 class="text-3xl font-bold text-slate-900">Creation et suivi des portails</h1>
+        <p class="text-sm text-slate-600">Le super admin cree la societe (portail). La societe gere ensuite ses clients, salaries et contrats.</p>
+      </div>
+      <div class="flex gap-2">
+        <button id="open-create" class="btn-main rounded-xl px-4 py-3 text-sm font-semibold flex items-center gap-2 shadow"><i class="ph-bold ph-plus"></i> Nouvelle societe</button>
+      </div>
+    </header>
+
+    <section class="card p-4 mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div class="flex items-center gap-2 text-sm text-slate-600">
+        <i class="ph ph-magnifying-glass"></i>
+        <input id="search" type="text" placeholder="Rechercher une societe..." class="field rounded-lg px-3 py-2 w-64 text-sm">
+      </div>
+      <div class="text-sm text-slate-500" id="count"></div>
+    </section>
+
+    <section class="card p-4" id="list"></section>
+  </main>
+
+  <div id="drawer" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="card w-full max-w-xl p-6 relative">
+      <button id="close-drawer" class="absolute top-3 right-3 text-slate-500 hover:text-slate-700"><i class="ph-bold ph-x"></i></button>
+      <h2 class="text-xl font-bold text-slate-900 mb-4" id="drawer-title">Nouvelle societe</h2>
+      <form id="form" class="space-y-3">
+        <div>
+          <label class="text-sm font-semibold text-slate-700">Nom de la societe</label>
+          <input name="nom" class="field w-full rounded-lg px-3 py-2 text-sm" required>
+        </div>
+        <div>
+          <label class="text-sm font-semibold text-slate-700">Representant (nom complet)</label>
+          <input name="representant" class="field w-full rounded-lg px-3 py-2 text-sm" required>
+        </div>
+        <div>
+          <label class="text-sm font-semibold text-slate-700">Email contact</label>
+          <input name="email_contact" type="email" class="field w-full rounded-lg px-3 py-2 text-sm">
+        </div>
+        <div>
+          <label class="text-sm font-semibold text-slate-700">Telephone</label>
+          <input name="telephone" class="field w-full rounded-lg px-3 py-2 text-sm">
+        </div>
+        <div>
+          <label class="text-sm font-semibold text-slate-700">Adresse</label>
+          <input name="adresse" class="field w-full rounded-lg px-3 py-2 text-sm">
+        </div>
+        <div>
+          <label class="text-sm font-semibold text-slate-700">Numero SIRET</label>
+          <input name="siret" class="field w-full rounded-lg px-3 py-2 text-sm" placeholder="14 chiffres">
+        </div>
+        <div>
+          <label class="text-sm font-semibold text-slate-700">Code d'acces (premiere connexion)</label>
+          <div class="flex gap-2">
+            <input name="code_acces" id="code_acces" class="field w-full rounded-lg px-3 py-2 text-sm" readonly>
+            <button type="button" id="regen-code" class="px-3 py-2 rounded-lg border border-slate-200 text-slate-700 text-sm">Regenerer</button>
+          </div>
+          <p class="text-xs text-slate-500 mt-1">Format: SCT-<lettre><4 chiffres> (ex. SCT-A1234)</p>
+        </div>
+        <div>
+          <label class="text-sm font-semibold text-slate-700">Statut</label>
+          <select name="statut" class="field w-full rounded-lg px-3 py-2 text-sm">
+            <option value="actif">Actif</option>
+            <option value="inactif">Inactif</option>
+          </select>
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" id="cancel" class="px-4 py-2 rounded-lg border border-slate-200 text-slate-600">Annuler</button>
+          <button type="submit" id="form-submit" class="btn-main px-4 py-2 rounded-lg font-semibold">Enregistrer</button>
+        </div>
+        <p id="form-msg" class="text-sm"></p>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const supabaseUrl = 'https://fmfylsykljkvyurcprij.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZtZnlsc3lrbGprdnl1cmNwcmlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1ODQ3OTgsImV4cCI6MjA3OTE2MDc5OH0.hfgBflnh-nr1Ljfl5Chkp0y1EbZbm5XiyyDhsQcdSqE';
+    const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+    let societes = [];
+    let editId = null;
+
+    function generateAccessCode() {
+      const letter = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+      const digits = Math.floor(1000 + Math.random() * 9000);
+      return `SCT-${letter}${digits}`;
+    }
+
+    async function loadSocietes() {
+      const { data, error } = await supabaseClient.from('societes').select('*').order('created_at', { ascending:false });
+      if (error) { document.getElementById('list').innerHTML = '<p class="text-sm text-red-600">Table "societes" manquante ou erreur.</p>'; return; }
+      societes = data || [];
+      renderList();
+    }
+
+    function renderList() {
+      const q = document.getElementById('search').value.trim().toLowerCase();
+      const filtered = q ? societes.filter(s => (s.nom||'').toLowerCase().includes(q) || (s.email_contact||'').toLowerCase().includes(q)) : societes;
+      document.getElementById('count').textContent = `${filtered.length} societe${filtered.length>1?'s':''}`;
+      const container = document.getElementById('list');
+      if (!filtered.length) { container.innerHTML = '<p class="text-sm text-slate-500">Aucune societe.</p>'; return; }
+      container.innerHTML = filtered.map(s => `
+        <div class="flex items-center justify-between py-3 border-b border-slate-200 last:border-0">
+          <div>
+            <p class="text-sm font-semibold text-slate-800">${s.nom || 'Societe'}</p>
+            <p class="text-xs text-slate-500">${s.email_contact || ''}</p>
+            <p class="text-xs text-slate-500">Repr.: ${s.representant || 'N/A'} · SIRET: ${s.siret || 'N/A'}</p>
+            <p class="text-xs text-slate-500">Code: ${s.code_acces || '-'}</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-[11px] px-2 py-1 rounded-full ${(s.statut||'').toLowerCase()==='actif' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-700'}">${s.statut || 'actif'}</span>
+            <button class="text-slate-400 hover:text-sky-600 edit-btn" data-id="${s.id}" title="Modifier"><i class="ph-bold ph-pencil-simple"></i></button>
+            <button class="text-slate-400 hover:text-red-600 delete-btn" data-id="${s.id}" title="Supprimer"><i class="ph-bold ph-trash"></i></button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function saveSociete(e) {
+      e.preventDefault();
+      const form = e.target;
+      const msg = document.getElementById('form-msg');
+      msg.textContent = '';
+      const payload = {
+        nom: form.nom.value || null,
+        representant: form.representant.value || null,
+        email_contact: form.email_contact.value || null,
+        telephone: form.telephone.value || null,
+        adresse: form.adresse.value || null,
+        siret: form.siret.value || null,
+        code_acces: form.code_acces.value || generateAccessCode(),
+        statut: form.statut.value || 'actif'
+      };
+      let error;
+      if (editId) {
+        ({ error } = await supabaseClient.from('societes').update(payload).eq('id', editId));
+      } else {
+        ({ error } = await supabaseClient.from('societes').insert([payload]));
+      }
+      if (error) { msg.textContent = 'Erreur: ' + error.message; msg.className = 'text-sm text-red-600'; return; }
+      msg.textContent = editId ? 'Societe mise a jour' : 'Societe enregistree';
+      msg.className = 'text-sm text-emerald-600';
+      form.reset();
+      editId = null;
+      await loadSocietes();
+      setTimeout(() => { document.getElementById('drawer').classList.add('hidden'); msg.textContent=''; document.getElementById('form-submit').textContent='Enregistrer'; document.getElementById('drawer-title').textContent='Nouvelle societe'; }, 800);
+    }
+
+    function resetForm() {
+      const form = document.getElementById('form');
+      form.reset();
+      document.getElementById('code_acces').value = generateAccessCode();
+      document.getElementById('drawer-title').textContent = 'Nouvelle societe';
+      document.getElementById('form-submit').textContent = 'Enregistrer';
+      editId = null;
+    }
+
+    function fillForm(s) {
+      const form = document.getElementById('form');
+      form.nom.value = s.nom || '';
+      form.representant.value = s.representant || '';
+      form.email_contact.value = s.email_contact || '';
+      form.telephone.value = s.telephone || '';
+      form.adresse.value = s.adresse || '';
+      form.siret.value = s.siret || '';
+      form.code_acces.value = s.code_acces || generateAccessCode();
+      form.statut.value = s.statut || 'actif';
+      document.getElementById('drawer-title').textContent = 'Modifier la societe';
+      document.getElementById('form-submit').textContent = 'Mettre a jour';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadSocietes();
+      document.getElementById('search').addEventListener('input', renderList);
+      document.getElementById('open-create').addEventListener('click', () => {
+        resetForm();
+        document.getElementById('drawer').classList.remove('hidden');
+      });
+      document.getElementById('regen-code').addEventListener('click', () => {
+        document.getElementById('code_acces').value = generateAccessCode();
+      });
+      document.getElementById('close-drawer').addEventListener('click', () => document.getElementById('drawer').classList.add('hidden'));
+      document.getElementById('cancel').addEventListener('click', () => document.getElementById('drawer').classList.add('hidden'));
+      document.getElementById('form').addEventListener('submit', saveSociete);
+
+      document.getElementById('list').addEventListener('click', async (e) => {
+        const editBtn = e.target.closest('.edit-btn');
+        const delBtn = e.target.closest('.delete-btn');
+        if (editBtn) {
+          const id = parseInt(editBtn.dataset.id, 10);
+          const s = societes.find(x => x.id === id);
+          if (!s) return;
+          editId = id;
+          fillForm(s);
+          document.getElementById('drawer').classList.remove('hidden');
+        } else if (delBtn) {
+          const id = parseInt(delBtn.dataset.id, 10);
+          if (confirm('Supprimer cette societe ?')) {
+            const { error } = await supabaseClient.from('societes').delete().eq('id', id);
+            if (error) { alert('Suppression impossible: ' + error.message); return; }
+            await loadSocietes();
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>
+
+
+

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Planning - Espace Employé</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <script src="vendor/phosphor/index.js"></script>
+  <style>
+    body { font-family: 'Outfit', sans-serif; background: radial-gradient(140% 120% at 20% 0%, #f0f7f8 0%, #f7f5f2 45%, #fdfdfb 100%); color: #0c2f35; }
+    .sidebar { background: linear-gradient(180deg, #0f304b, #0c2f35); color: #e8eef2; }
+    .sidebar a { color: #cfd8dc; }
+    .sidebar a:hover { background: rgba(255,255,255,0.06); color: #ffffff; }
+    .nav-item.active { background: rgba(255,255,255,0.12); color: #ffffff; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); }
+  </style>
+</head>
+<body class="flex h-screen">
+  <aside class="w-64 sidebar flex flex-col p-6">
+    <div class="text-xl font-bold tracking-wide mb-10 text-center text-white">ESPACE <span class="text-green-300">RH</span></div>
+    <nav class="flex-1 space-y-2">
+      <a href="dashboard_employe.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-slate-200 transition"><i class="ph-fill ph-house"></i> Accueil</a>
+      <a href="planning_employe.html" class="flex items-center gap-3 p-3 rounded-xl nav-item active font-medium"><i class="ph ph-calendar"></i> Planning</a>
+      <a href="bulletins_employe.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-slate-200 transition"><i class="ph ph-files"></i> Bulletins</a>
+    </nav>
+    <a href="index.html" class="flex items-center gap-2 text-slate-200 hover:text-white transition mt-auto"><i class="ph ph-sign-out"></i> Déconnexion</a>
+  </aside>
+  <main class="flex-1 p-8 overflow-y-auto">
+    <div class="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm">
+      <h1 class="text-2xl font-bold text-slate-900 mb-3">Planning</h1>
+      <p class="text-sm text-slate-600 mb-4">Vos missions et actions prévues.</p>
+      <div id="planning-list" class="space-y-3 text-sm text-slate-700">
+        <p class="text-slate-500">Chargement...</p>
+      </div>
+    </div>
+  </main>
+  <script src="vendor/supabase/supabase.js"></script>
+  <script>
+    const supabaseUrl = 'https://fmfylsykljkvyurcprij.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZtZnlsc3lrbGprdnl1cmNwcmlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1ODQ3OTgsImV4cCI6MjA3OTE2MDc5OH0.hfgBflnh-nr1Ljfl5Chkp0y1EbZbm5XiyyDhsQcdSqE';
+    const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey, { auth: { persistSession:true, autoRefreshToken:true, storage:localStorage } });
+
+    async function requireSession() {
+      const { data } = await supabaseClient.auth.getSession();
+      if (data?.session) return data.session;
+      const stored = localStorage.getItem('supabaseSession');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          const { data: setData } = await supabaseClient.auth.setSession({ access_token: parsed?.access_token, refresh_token: parsed?.refresh_token });
+          return setData?.session || null;
+        } catch(e) { console.warn(e); }
+      }
+      return null;
+    }
+
+    function render(plans) {
+      const list = document.getElementById('planning-list');
+      if (!plans.length) { list.innerHTML = '<p class="text-slate-500">Aucun élément de planning.</p>'; return; }
+      list.innerHTML = plans.map(p => {
+        const d = p.date ? new Date(p.date) : null;
+        const dateLabel = d ? d.toLocaleDateString() : 'Date N/A';
+        const badge = p.status === 'valide' ? 'bg-emerald-100 text-emerald-700' : (p.status === 'fait' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700');
+        return `<div class="rounded-xl border border-slate-200 p-3">
+          <div class="flex items-center justify-between gap-2">
+            <div class="font-semibold text-slate-900">${p.title || 'Sans titre'}</div>
+            <span class="px-2 py-1 rounded-full text-xs font-semibold ${badge}">${p.status || 'prévu'}</span>
+          </div>
+          <p class="text-xs text-slate-500">${dateLabel}</p>
+          <p class="text-sm text-slate-700 mt-1">${p.description || ''}</p>
+        </div>`;
+      }).join('');
+    }
+
+    async function loadPlanning() {
+      const session = await requireSession();
+      if (!session) { window.location.href = 'employes_login.html'; return; }
+      const email = session.user?.email || '';
+      const { data: salarie } = await supabaseClient.from('salaries').select('id').ilike('email', email).maybeSingle();
+      if (!salarie?.id) { document.getElementById('planning-list').innerHTML = '<p class="text-red-500">Profil salarié introuvable.</p>'; return; }
+      const { data, error } = await supabaseClient
+        .from('planning_items')
+        .select('id, date, title, description, status')
+        .eq('salarie_id', salarie.id)
+        .order('date', { ascending: true });
+      if (error) { console.error(error); document.getElementById('planning-list').innerHTML = '<p class="text-red-500">Erreur de chargement.</p>'; return; }
+      render(data || []);
+    }
+
+    document.addEventListener('DOMContentLoaded', loadPlanning);
+  </script>
+</body>
+</html>

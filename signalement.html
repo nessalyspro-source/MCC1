@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Signalement</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <script src="vendor/phosphor/index.js"></script>
+  <script src="vendor/supabase/supabase.js"></script>
+  <style>
+    body { font-family:'Outfit',sans-serif; background: radial-gradient(140% 120% at 20% 0%, #f0f7f8 0%, #f7f5f2 45%, #fdfdfb 100%); color:#0c2f35; }
+    .card { background:#fff; border:1px solid #e7e5e0; border-radius:18px; box-shadow:0 10px 30px rgba(12,47,53,0.08); }
+    .step { display:none; }
+    .step.active { display:block; }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+  <div class="w-full max-w-3xl card p-6 space-y-4">
+    <div class="flex items-center gap-3">
+      <div class="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center">
+        <i class="ph ph-warning-circle text-2xl text-emerald-600"></i>
+      </div>
+      <div>
+        <p class="text-xs uppercase text-slate-500">Signalement</p>
+        <h1 class="text-2xl font-bold text-slate-900">Déclarer un problème</h1>
+        <p class="text-sm text-slate-500">Suivez les étapes, ajoutez des photos et vos coordonnées.</p>
+      </div>
+    </div>
+
+    <div id="header-info" class="bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm text-slate-700 space-y-1">
+      <p><strong>Société:</strong> <span id="societe-nom">-</span> · <strong>Contrat:</strong> <span id="contrat-ref">-</span></p>
+      <p><strong>Site:</strong> <span id="contrat-site">-</span> · <strong>Adresse:</strong> <span id="contrat-address">-</span></p>
+      <p><strong>Contact:</strong> <span id="societe-contact">-</span></p>
+    </div>
+
+    <div class="flex items-center gap-2 text-xs">
+      <div id="step-1-pill" class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700">1. Pourquoi</div>
+      <div id="step-2-pill" class="px-3 py-1 rounded-full bg-slate-100 text-slate-600">2. Type</div>
+      <div id="step-3-pill" class="px-3 py-1 rounded-full bg-slate-100 text-slate-600">3. Détails</div>
+      <div id="step-4-pill" class="px-3 py-1 rounded-full bg-slate-100 text-slate-600">4. Contact</div>
+    </div>
+
+    <div class="step active" data-step="1">
+      <h3 class="text-lg font-semibold text-slate-900 mb-2">Pourquoi signaler ?</h3>
+      <p class="text-sm text-slate-600 mb-3">Décrivez brièvement l'objectif de votre signalement.</p>
+      <textarea id="raison" rows="4" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Ex: Problème de propreté dans le hall..."></textarea>
+    </div>
+
+    <div class="step" data-step="2">
+      <h3 class="text-lg font-semibold text-slate-900 mb-2">Choisissez le type</h3>
+      <div id="type-list" class="grid grid-cols-2 gap-2 text-sm">
+        <!-- buttons injected -->
+      </div>
+    </div>
+
+    <div class="step" data-step="3">
+      <h3 class="text-lg font-semibold text-slate-900 mb-2">Détails</h3>
+      <div class="space-y-3 text-sm">
+        <label class="block">Titre<input id="titre" type="text" class="w-full mt-1 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Ex: Fuite dans la cage d'escalier"></label>
+        <label class="block">Description<textarea id="description" rows="4" class="w-full mt-1 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Expliquez le problème..."></textarea></label>
+        <label class="block">Photos (max 5)
+          <input id="photos" type="file" accept="image/*" multiple class="mt-1 block w-full text-sm">
+        </label>
+      </div>
+    </div>
+
+    <div class="step" data-step="4">
+      <h3 class="text-lg font-semibold text-slate-900 mb-2">Vos coordonnées</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+        <label class="block">Nom<input id="contact-nom" type="text" class="w-full mt-1 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"></label>
+        <label class="block">Email<input id="contact-email" type="email" class="w-full mt-1 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"></label>
+        <label class="block md:col-span-2">Téléphone<input id="contact-tel" type="tel" class="w-full mt-1 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"></label>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-between">
+      <button id="prev-btn" class="px-4 py-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50">Précédent</button>
+      <button id="next-btn" class="px-4 py-2 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700">Suivant</button>
+    </div>
+  </div>
+
+  <div id="toast" class="fixed bottom-4 right-4 bg-slate-900 text-white px-4 py-3 rounded-lg shadow-lg opacity-0 pointer-events-none text-sm transition-all duration-300">Message</div>
+
+  <script>
+    const supabaseUrl = 'https://fmfylsykljkvyurcprij.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZtZnlsc3lrbGprdnl1cmNwcmlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1ODQ3OTgsImV4cCI6MjA3OTE2MDc5OH0.hfgBflnh-nr1Ljfl5Chkp0y1EbZbm5XiyyDhsQcdSqE';
+    const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey, { auth: { persistSession:true, autoRefreshToken:true, storage: localStorage } });
+    const bucket = 'signalements-documents';
+    const steps = Array.from(document.querySelectorAll('.step'));
+    const pillMap = {
+      1: document.getElementById('step-1-pill'),
+      2: document.getElementById('step-2-pill'),
+      3: document.getElementById('step-3-pill'),
+      4: document.getElementById('step-4-pill'),
+    };
+    let currentStep = 1;
+    let selectedType = '';
+    let context = { societe_nom:'', contrat_ref:'', site:'', address:'', contact:'' };
+
+    function showToast(msg, type='info') {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.classList.remove('opacity-0','pointer-events-none');
+      el.style.backgroundColor = type === 'error' ? '#b91c1c' : '#0f172a';
+      setTimeout(() => el.classList.add('opacity-0','pointer-events-none'), 2200);
+    }
+
+    function setHeader() {
+      document.getElementById('societe-nom').textContent = context.societe_nom || '-';
+      document.getElementById('contrat-ref').textContent = context.contrat_ref || '-';
+      document.getElementById('contrat-site').textContent = context.site || '-';
+      document.getElementById('contrat-address').textContent = context.address || '-';
+      document.getElementById('societe-contact').textContent = context.contact || '-';
+    }
+
+    function parseUrlContext() {
+      const params = new URLSearchParams(window.location.search);
+      context.societe_nom = params.get('societe') || '';
+      context.contrat_ref = params.get('contrat') || '';
+      context.site = params.get('site') || '';
+      context.address = params.get('address') || '';
+      context.contact = params.get('contact') || '';
+      setHeader();
+    }
+
+    function renderTypes() {
+      const list = document.getElementById('type-list');
+      const types = ['Menage','Dératisation','Désinsectisation','Fuite','Dégradation/Vandalisme','Incivilité','Sécurité','Autre'];
+      list.innerHTML = types.map(t => `<button data-type="${t}" class="rounded-lg border border-slate-200 px-3 py-2 text-left hover:border-emerald-300">${t}</button>`).join('');
+      list.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-type]');
+        if (!btn) return;
+        selectedType = btn.dataset.type;
+        Array.from(list.querySelectorAll('button')).forEach(b => b.classList.remove('border-emerald-400','bg-emerald-50'));
+        btn.classList.add('border-emerald-400','bg-emerald-50');
+      }, { once: true });
+    }
+
+    function goStep(step) {
+      steps.forEach(s => s.classList.remove('active'));
+      const target = steps.find(s => parseInt(s.dataset.step,10) === step);
+      if (target) target.classList.add('active');
+      Object.keys(pillMap).forEach(k => {
+        const pill = pillMap[k];
+        pill.classList.remove('bg-emerald-100','text-emerald-700');
+        pill.classList.remove('bg-slate-100','text-slate-600');
+        if (parseInt(k,10) === step) pill.classList.add('bg-emerald-100','text-emerald-700');
+        else pill.classList.add('bg-slate-100','text-slate-600');
+      });
+      currentStep = step;
+      document.getElementById('prev-btn').style.visibility = step === 1 ? 'hidden' : 'visible';
+      document.getElementById('next-btn').textContent = step === 4 ? 'Envoyer' : 'Suivant';
+    }
+
+    function validateStep(step) {
+      const raisonVal = document.getElementById('raison').value.trim();
+      const titreVal = document.getElementById('titre').value.trim();
+      const emailVal = document.getElementById('contact-email').value.trim();
+      if (step === 1) return raisonVal.length >= 1; // plus permissif
+      if (step === 2) return !!selectedType;
+      if (step === 3) return titreVal.length >= 2;
+      if (step === 4) return emailVal.length >= 3;
+      return true;
+    }
+
+    async function uploadPhotos(signalementId, files) {
+      const uploads = [];
+      for (const file of files.slice(0,5)) {
+        const path = `signalements/${signalementId}/${Date.now()}-${file.name}`;
+        uploads.push(supabaseClient.storage.from(bucket).upload(path, file, { upsert:false, contentType:file.type }));
+      }
+      await Promise.all(uploads);
+    }
+
+    async function submitForm() {
+      const raison = document.getElementById('raison').value.trim();
+      const titre = document.getElementById('titre').value.trim();
+      const desc = document.getElementById('description').value.trim();
+      const photos = Array.from(document.getElementById('photos').files || []);
+      const contactNom = document.getElementById('contact-nom').value.trim();
+      const contactEmail = document.getElementById('contact-email').value.trim();
+      const contactTel = document.getElementById('contact-tel').value.trim();
+      const payload = {
+        raison, type: selectedType, titre, description: desc,
+        contact_nom: contactNom, contact_email: contactEmail, contact_tel: contactTel,
+        societe_nom: context.societe_nom, contrat_ref: context.contrat_ref, site: context.site, address: context.address,
+        status: 'nouveau'
+      };
+      const { data, error } = await supabaseClient.from('signalements').insert([payload]).select().single();
+      if (error) { console.error(error); showToast('Envoi impossible', 'error'); return; }
+      if (photos.length) await uploadPhotos(data.id, photos);
+      showToast('Signalement envoyé');
+      window.location.href = 'dashboard_employe.html';
+    }
+
+    document.getElementById('next-btn').addEventListener('click', () => {
+      if (!validateStep(currentStep)) { showToast('Complétez les champs requis', 'error'); return; }
+      if (currentStep === 4) { submitForm(); return; }
+      goStep(currentStep + 1);
+    });
+    document.getElementById('prev-btn').addEventListener('click', () => goStep(Math.max(1, currentStep - 1)));
+
+    document.addEventListener('DOMContentLoaded', () => {
+      parseUrlContext();
+      renderTypes();
+      goStep(1);
+    });
+  </script>
+</body>
+</html>

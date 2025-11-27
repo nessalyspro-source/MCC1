@@ -1,0 +1,233 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nessaly's Group - Portail d'Accès</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Polices -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Montserrat:wght@300;400;600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <!-- Phosphor Icons -->
+    <script src="vendor/phosphor/index.js"></script>
+
+    <style>
+        :root {
+            --color-primary: #2C3E50;    /* Bleu nuit */
+            --color-secondary: #E74C3C;  /* Rouge */
+            --color-bg: #F8FAFC;         /* Fond très clair */
+            --color-white: #FFFFFF;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--color-bg);
+            color: var(--color-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            background-image: radial-gradient(#E2E8F0 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+
+        /* En-tête */
+        .site-title { font-size: 3.5rem; line-height: 1; margin-bottom: 0.5rem; letter-spacing: -0.02em; }
+        .subtitle { font-family: 'Montserrat', sans-serif; letter-spacing: 0.1em; text-transform: uppercase; font-size: 0.875rem; color: #64748B; margin-top: 1rem;}
+
+        /* Cartes Modernes */
+        .card-container {
+            perspective: 1000px;
+        }
+
+        .modern-card {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            border-radius: 24px;
+            padding: 3.5rem 2rem;
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 
+                0 4px 6px -1px rgba(0, 0, 0, 0.05), 
+                0 10px 15px -3px rgba(0, 0, 0, 0.03);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100%;
+        }
+
+        /* Effet de brillance */
+        .modern-card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 60%);
+            opacity: 0;
+            transform: scale(0.5);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            pointer-events: none;
+        }
+
+        .modern-card:hover {
+            transform: translateY(-15px);
+            box-shadow: 
+                0 25px 50px -12px rgba(0, 0, 0, 0.15), 
+                0 0 0 1px rgba(231, 76, 60, 0.1);
+        }
+        
+        .modern-card:hover::after {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* Icônes */
+        .card-icon {
+            font-size: 4.5rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            color: #94A3B8;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+        }
+
+        /* Couleurs au survol */
+        .modern-card:hover .icon-admin { color: #475569; transform: scale(1.1) rotate(15deg); }
+        .modern-card:hover .icon-company { color: var(--color-secondary); transform: scale(1.1) translateY(-5px); }
+        .modern-card:hover .icon-employee { color: #3B82F6; transform: scale(1.1) translateY(-5px); }
+
+        .card-title {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--color-primary);
+            transition: color 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .modern-card:hover .card-title { color: var(--color-secondary); }
+
+        .card-desc {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #64748B;
+            font-weight: 300;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Animations d'entrée */
+        .fade-in-up { animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; transform: translateY(30px); }
+        @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
+        
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+
+        /* Séparateur */
+        .separator {
+            width: 40px;
+            height: 3px;
+            background-color: #E2E8F0;
+            margin: 1.5rem auto;
+            border-radius: 2px;
+            transition: width 0.3s ease, background-color 0.3s ease;
+        }
+
+        .modern-card:hover .separator {
+            width: 60px;
+            background-color: var(--color-secondary);
+        }
+        :root {
+      --ink: #0c2f35;
+      --navy: #0f304b;
+      --red: #ce3c35;
+      --sand: #b58a64;
+      --bg: #f7f5f2;
+    }
+    body { background: radial-gradient(140% 120% at 20% 0%, #f0f7f8 0%, var(--bg) 45%, #fdfdfb 100%); color: #0c2f35; }
+    .sidebar { background: linear-gradient(180deg, #0f304b, #0c2f35); border-right: 1px solid rgba(255,255,255,0.05); color: #e8eef2; }
+    .sidebar a { color: #cfd8dc; }
+    .sidebar a:hover { background: rgba(255,255,255,0.06); color: #ffffff; }
+    .nav-item.active { background: rgba(255,255,255,0.12); color: #ffffff; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); }
+    .pill { background: rgba(12,47,53,0.08); color: #0f304b; }
+    .gradient-chip { background: linear-gradient(120deg, var(--red), var(--navy)); box-shadow: 0 10px 30px rgba(12,47,53,0.22); }
+    .card-surface { border: 1px solid #e7e5e0; box-shadow: 0 12px 40px rgba(12,47,53,0.08); }
+</style>
+</head>
+<body>
+
+    <div class="w-full max-w-6xl mx-auto">
+        <!-- En-tête -->
+        <header class="text-center mb-20 fade-in-up">
+            <div class="site-title font-bold font-[Cinzel]">
+                <span style="color: var(--color-primary);">NESSALY'S</span>
+                <span style="color: var(--color-secondary);" class="ml-2">GROUP</span>
+            </div>
+            <div class="flex justify-center items-center space-x-2 mb-8">
+                <div class="h-1.5 w-16 rounded-full opacity-80" style="background-color: var(--color-primary);"></div>
+                <div class="h-1.5 w-16 rounded-full opacity-80" style="background-color: var(--color-secondary);"></div>
+            </div>
+            <h1 class="subtitle tracking-[0.2em]">Portail d'Accès Sécurisé</h1>
+        </header>
+
+        <!-- Grille de Cartes -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 px-4">
+            
+            <!-- 1. Carte Super Admin (Lien corrigé) -->
+            <div class="card-container fade-in-up delay-1">
+                <div class="modern-card group" onclick="window.location.href='super_admin_login.html'">
+                    <i class="ph-fill ph-gear card-icon icon-admin"></i>
+                    <h2 class="card-title">Super Admin</h2>
+                    <div class="separator"></div>
+                    <p class="card-desc">
+                        Configuration globale, gestion des utilisateurs et supervision technique de la plateforme.
+                    </p>
+                </div>
+            </div>
+
+            <!-- 2. Carte Sociétés (Lien corrigé) -->
+            <div class="card-container fade-in-up delay-2">
+                <div class="modern-card group" onclick="window.location.href='societes_login.html'">
+                    <i class="ph-fill ph-buildings card-icon icon-company"></i>
+                    <h2 class="card-title">Espace Sociétés</h2>
+                    <div class="separator"></div>
+                    <p class="card-desc">
+                        Gestion des contrats, suivi des prestations et tableau de bord pour les entreprises partenaires.
+                    </p>
+                </div>
+            </div>
+
+            <!-- 3. Carte Employés (Lien corrigé) -->
+            <div class="card-container fade-in-up delay-3">
+                <div class="modern-card group" onclick="window.location.href='employes_login.html'">
+                    <i class="ph-fill ph-users-three card-icon icon-employee"></i>
+                    <h2 class="card-title">Espace Employés</h2>
+                    <div class="separator"></div>
+                    <p class="card-desc">
+                        Accès personnel pour la consultation des plannings, fiches de paie et demandes de congés.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <footer class="mt-24 text-center text-xs text-gray-400 font-light fade-in-up delay-3 tracking-wide">
+            <p>© 2025 Nessaly's Group. Tous droits réservés. Sécurisé par SSL.</p>
+        </footer>
+    </div>
+
+</body>
+</html>
+
+
+

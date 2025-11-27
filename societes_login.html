@@ -1,0 +1,162 @@
+﻿﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connexion Société</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <script src="vendor/phosphor/index.js"></script>
+  <script src="vendor/supabase/supabase.js"></script>
+  <style>
+    :root { --ink: #0c2f35; --navy: #0f304b; --red: #ce3c35; --sand: #b58a64; --bg: #f7f5f2; }
+    body { font-family:'Outfit',sans-serif; background: radial-gradient(140% 120% at 20% 0%, #f0f7f8 0%, var(--bg) 45%, #fdfdfb 100%); color: var(--ink); }
+    .card { background: #ffffffdd; backdrop-filter: blur(16px); border: 1px solid rgba(12,47,53,0.08); box-shadow: 0 20px 60px rgba(12,47,53,0.12); }
+    .tab { cursor:pointer; }
+    .tab.active { color: #0f304b; border-bottom: 2px solid #0f304b; font-weight: 700; }
+    .field { border:1px solid #d9e0e7; }
+    .field:focus { outline:none; border-color:#0f304b; box-shadow:0 0 0 3px rgba(15,48,75,0.15); }
+    .btn-main { background: linear-gradient(120deg, var(--navy), var(--ink)); color:white; }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+  <div class="card w-full max-w-lg rounded-2xl p-8 space-y-6">
+    <div class="text-center space-y-1">
+      <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-slate-900 text-white"><i class="ph-bold ph-buildings text-2xl"></i></div>
+      <h1 class="text-2xl font-bold text-slate-900">Espace Société</h1>
+      <p class="text-sm text-slate-600">Connectez-vous ou activez votre portail avec le code fourni par le Super Admin.</p>
+    </div>
+
+    <div class="flex border-b border-slate-200 text-sm">
+      <div id="tab-login" class="tab flex-1 text-center py-2 active">Connexion</div>
+      <div id="tab-activate" class="tab flex-1 text-center py-2">Activation</div>
+    </div>
+
+    <form id="login-form" class="space-y-4">
+      <div>
+        <label class="text-sm font-semibold text-slate-700">Email</label>
+        <input id="login-email" type="email" required class="field w-full rounded-lg px-3 py-2 mt-1 text-sm">
+      </div>
+      <div>
+        <label class="text-sm font-semibold text-slate-700">Mot de passe</label>
+        <input id="login-password" type="password" required class="field w-full rounded-lg px-3 py-2 mt-1 text-sm">
+      </div>
+      <button type="submit" class="btn-main w-full rounded-xl py-3 font-semibold">Se connecter</button>
+    </form>
+
+    <form id="activate-form" class="space-y-4 hidden">
+      <div>
+        <label class="text-sm font-semibold text-slate-700">Code d'accès (SCT-...)</label>
+        <input id="code-acces" type="text" required class="field w-full rounded-lg px-3 py-2 mt-1 text-sm" placeholder="SCT-A1234">
+      </div>
+      <div>
+        <label class="text-sm font-semibold text-slate-700">Email</label>
+        <input id="activate-email" type="email" required class="field w-full rounded-lg px-3 py-2 mt-1 text-sm">
+      </div>
+      <div>
+        <label class="text-sm font-semibold text-slate-700">Mot de passe</label>
+        <input id="activate-password" type="password" required class="field w-full rounded-lg px-3 py-2 mt-1 text-sm">
+      </div>
+      <button type="submit" class="btn-main w-full rounded-xl py-3 font-semibold">Activer le compte</button>
+    </form>
+
+    <p id="message" class="text-sm text-center"></p>
+  </div>
+
+  <script>
+    const supabaseUrl = 'https://fmfylsykljkvyurcprij.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZtZnlsc3lrbGprdnl1cmNwcmlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1ODQ3OTgsImV4cCI6MjA3OTE2MDc5OH0.hfgBflnh-nr1Ljfl5Chkp0y1EbZbm5XiyyDhsQcdSqE';
+    const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+    const tabLogin = document.getElementById('tab-login');
+    const tabActivate = document.getElementById('tab-activate');
+    const loginForm = document.getElementById('login-form');
+    const activateForm = document.getElementById('activate-form');
+    const msg = document.getElementById('message');
+
+    function setMessage(text, type='info') {
+      msg.textContent = text;
+      msg.className = 'text-sm text-center ' + (type === 'error' ? 'text-red-600' : 'text-emerald-600');
+    }
+
+    function showLogin() {
+      loginForm.classList.remove('hidden');
+      activateForm.classList.add('hidden');
+      tabLogin.classList.add('active');
+      tabActivate.classList.remove('active');
+      setMessage('');
+    }
+    function showActivate() {
+      loginForm.classList.add('hidden');
+      activateForm.classList.remove('hidden');
+      tabActivate.classList.add('active');
+      tabLogin.classList.remove('active');
+      setMessage('');
+    }
+    tabLogin.addEventListener('click', showLogin);
+    tabActivate.addEventListener('click', showActivate);
+
+    async function doLogin(email, password) {
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      if (error) throw new Error(error.message);
+      if (data?.session) localStorage.setItem('supabaseSession', JSON.stringify(data.session));
+    }
+
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      setMessage('Connexion en cours...');
+      try {
+        await doLogin(document.getElementById('login-email').value.trim(), document.getElementById('login-password').value);
+        setMessage('Connecté, redirection...');
+        window.location.href = 'dashboard_societe.html';
+      } catch(err) {
+        setMessage(err.message || 'Connexion impossible', 'error');
+      }
+    });
+
+    activateForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      setMessage('Vérification du code...');
+      const code = document.getElementById('code-acces').value.trim();
+      const email = document.getElementById('activate-email').value.trim();
+      const password = document.getElementById('activate-password').value;
+      try {
+        const { data: rows, error: errCode } = await supabaseClient.from('societes').select('*').eq('code_acces', code).single();
+        if (errCode || !rows) throw new Error('Code invalide ou société non trouvée');
+
+        // Création utilisateur auth (ou fallback si déjà créé)
+        let userId = null;
+        const { data: signData, error: signErr } = await supabaseClient.auth.signUp({ email, password });
+        if (signErr) {
+          if (/already|registered/i.test(signErr.message || '')) {
+            const { data: loginData, error: loginErr } = await supabaseClient.auth.signInWithPassword({ email, password });
+            if (loginErr) throw new Error(loginErr.message);
+            userId = loginData?.user?.id || null;
+          } else {
+            throw new Error(signErr.message);
+          }
+        } else {
+          userId = signData?.user?.id || null;
+        }
+
+        // Met à jour la société avec l'auth_id et l'email
+        const updatePayload = { email_contact: email, statut: 'actif' };
+        if (userId) updatePayload.auth_id = userId;
+        const { error: updErr } = await supabaseClient.from('societes').update(updatePayload).eq('id', rows.id);
+        if (updErr) throw new Error(updErr.message);
+
+        // Connexion immédiate
+        await doLogin(email, password);
+        setMessage('Compte activé, redirection...');
+        window.location.href = 'dashboard_societe.html';
+      } catch(err) {
+        console.error(err);
+        setMessage(err.message || 'Activation impossible', 'error');
+      }
+    });
+  </script>
+</body>
+</html>
+
+
+

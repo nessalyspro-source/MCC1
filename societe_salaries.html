@@ -1,0 +1,666 @@
+﻿﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Suivi des salaries</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <script src="vendor/phosphor/index.js"></script>
+  <script src="vendor/supabase/supabase.js"></script>
+  <style>
+    :root { --ink:#0c2f35; --navy:#0f304b; --red:#ce3c35; --sand:#b58a64; --bg:#f7f5f2; }
+    body { font-family: 'Outfit', sans-serif; background: radial-gradient(140% 120% at 20% 0%, #f0f7f8 0%, var(--bg) 45%, #fdfdfb 100%); color: #0c2f35; }
+    .sidebar { background: linear-gradient(180deg, #0f304b, #0c2f35); border-right: 1px solid rgba(255,255,255,0.05); color: #e8eef2; }
+    .sidebar a { color: #cfd8dc; }
+    .sidebar a:hover { background: rgba(255,255,255,0.06); color: #ffffff; }
+    .nav-item.active { background: rgba(255,255,255,0.12); color: #ffffff; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); }
+    .pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: rgba(12,47,53,0.08); color: #0f304b; font-weight: 600; font-size: 12px; }
+    .gradient-chip { background: linear-gradient(120deg, var(--red), var(--navy)); box-shadow: 0 10px 30px rgba(12,47,53,0.22); }
+    .card-surface { background: #fff; border: 1px solid #e7e5e0; border-radius: 18px; box-shadow: 0 12px 40px rgba(12,47,53,0.08); }
+    .glass-card { background: linear-gradient(135deg, rgba(255,255,255,0.96), rgba(249,250,251,0.92)); border: 1px solid #e7e5e0; border-radius: 16px; box-shadow: 0 12px 40px rgba(12,47,53,0.08); transition: transform .2s ease, box-shadow .2s ease; }
+    .glass-card:hover { transform: translateY(-4px); box-shadow: 0 18px 50px rgba(12,47,53,0.12); }
+    .doc-tile { border: 1px dashed #cbd5e1; }
+    #panel-backdrop, #details-backdrop { transition: opacity .3s ease; }
+    #panel, #details-panel { transition: transform .3s ease, opacity .3s ease; }
+    #toast { transition: transform .3s ease, opacity .3s ease; }
+  </style>
+</head>
+<body class="flex h-screen text-slate-800">
+  <aside class="w-64 sidebar flex flex-col p-6">
+    <div class="text-xl font-bold tracking-wide mb-10 text-center text-white">ESPACE <span class="text-sand-200">CLIENT</span></div>
+    <nav class="flex-1 space-y-2">
+      <a href="dashboard_societe.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50/5 text-slate-200 transition"><i class="ph-fill ph-squares-four text-lg"></i><span>Vue d'ensemble</span></a>
+      <a href="societe_signalements.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50/5 text-slate-200 transition"><i class="ph ph-warning-circle text-lg"></i><span>Suivi des signalements</span></a>
+      <a href="societe_clients.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50/5 text-slate-200 transition"><i class="ph ph-users text-lg"></i><span>Suivi des clients</span></a>
+      <a href="societe_contrats.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50/5 text-slate-200 transition"><i class="ph ph-file-text text-lg"></i><span>Suivi des contrats</span></a>
+      <a href="societe_rapports.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50/5 text-slate-200 transition"><i class="ph ph-chart-bar text-lg"></i><span>Rapports</span></a>
+      <a href="societe_cahier_des_charges.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50/5 text-slate-200 transition"><i class="ph ph-notebook text-lg"></i><span>Cahier des charges</span></a>
+      <a href="societe_salaries.html" class="flex items-center gap-3 p-3 rounded-xl nav-item active font-medium"><i class="ph ph-id-badge text-lg"></i><span>Suivi des salaries</span></a>
+      <a href="societe_pointages.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50/5 text-slate-200 transition"><i class="ph ph-timer text-lg"></i><span>Suivi des pointages</span></a>
+      <a href="societe_conges.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50/5 text-slate-200 transition"><i class="ph ph-calendar-blank text-lg"></i><span>Suivi des demandes de conges</span></a>
+    </nav>
+    <a href="index.html" class="flex items-center gap-2 text-slate-200 hover:text-white transition mt-auto"><i class="ph ph-sign-out"></i> Deconnexion</a>
+  </aside>
+
+  <main class="flex-1 px-6 py-8 max-w-7xl mx-auto w-full overflow-y-auto">
+    <header class="card-surface subtle-grid p-5 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border border-slate-100">
+      <div class="space-y-1">
+        <span class="pill"><i class="ph-bold ph-butterfly"></i> Portefeuille salaries</span>
+        <h1 class="text-2xl font-bold text-slate-900">Salaries</h1>
+        <p class="text-sm text-slate-500">Creez, assignez un site, suivez pointages/conges et centralisez les documents.</p>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center w-full sm:w-auto">
+        <div class="relative flex-1 sm:w-72">
+          <input id="search-input" type="text" placeholder="Rechercher un salarie..." class="w-full rounded-full border border-slate-200 px-4 py-2 pl-10 text-sm focus:outline-none focus:ring-2 focus:ring-sand-500 focus:border-transparent bg-white shadow-sm">
+          <i class="ph-bold ph-magnifying-glass text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+        </div>
+        <button id="open-create" class="inline-flex items-center justify-center gap-2 rounded-full gradient-chip text-white px-4 py-2 text-sm font-semibold hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sand-400">
+          <i class="ph-bold ph-plus"></i> Creer un salarie
+        </button>
+      </div>
+    </header>
+
+    <section class="mb-5 card-surface p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border border-slate-100">
+      <div class="flex items-center gap-3">
+        <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-sm font-semibold" id="count-chip">0 salarie</span>
+        <span class="text-sm text-slate-500" id="last-refresh"></span>
+      </div>
+          <p class="text-sm text-slate-500">Un nouvel employe recoit une reference <strong>EMP-xxxx</strong> comme premier code d'acces.</p>
+    </section>
+
+    <section id="cards" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"></section>
+  </main>
+
+  <div id="panel-backdrop" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm opacity-0 pointer-events-none"></div>
+  <aside id="panel" class="fixed inset-y-0 right-0 w-full sm:w-[500px] bg-white shadow-2xl transform translate-x-full opacity-0 flex flex-col">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+      <div>
+        <p class="text-xs uppercase tracking-wide text-slate-400">Nouveau salarie</p>
+        <h2 class="text-lg font-semibold text-slate-900" id="panel-title">Creer un salarie</h2>
+      </div>
+      <button id="close-panel" class="p-2 rounded-full hover:bg-slate-100 focus:outline-none"><i class="ph-bold ph-x"></i></button>
+    </div>
+    <div class="px-6 py-4 space-y-4 overflow-y-auto">
+      <div class="card-surface p-4 space-y-3 border border-slate-100">
+        <p class="text-xs font-semibold uppercase text-slate-500">Identite</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <input id="last-name" type="text" placeholder="Nom" class="rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sand-500">
+          <input id="first-name" type="text" placeholder="Prenom" class="rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sand-500">
+        </div>
+        <input id="email" type="email" placeholder="Email" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sand-500">
+        <input id="phone" type="tel" placeholder="Telephone" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sand-500">
+        <input id="address" type="text" placeholder="Adresse" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sand-500">
+      </div>
+      <div class="card-surface p-4 space-y-3 border border-slate-100">
+        <p class="text-xs font-semibold uppercase text-slate-500">Contrat & Affectation</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <input id="position" type="text" placeholder="Poste / Fonction" class="rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sand-500">
+          <div class="space-y-2">
+            <input id="site-filter" type="text" placeholder="Rechercher un site/contrat" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sand-500" autocomplete="off">
+            <select id="site-select" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sand-500">
+              <option value="">Choisir un site (contrat)</option>
+            </select>
+          </div>
+        </div>
+        <input id="site" type="text" placeholder="Site affecte (auto ou libre)" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sand-500">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <label class="text-sm text-slate-600 space-y-1">
+            <span>Date d'embauche</span>
+            <input id="hire-date" type="date" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sand-500">
+          </label>
+          <label class="text-sm text-slate-600 space-y-1">
+            <span>Statut</span>
+            <select id="status" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sand-500">
+              <option value="actif">Actif</option>
+              <option value="suspendu">Suspendu</option>
+              <option value="archive">Archive</option>
+            </select>
+          </label>
+        </div>
+      </div>
+      <div class="card-surface p-4 space-y-3 border border-slate-100">
+        <p class="text-xs font-semibold uppercase text-slate-500">Documents</p>
+        <div class="space-y-2">
+          <p class="text-sm text-slate-600">Contrat de travail</p>
+          <label class="inline-flex items-center gap-2 px-3 py-2 bg-slate-900 text-white rounded-lg text-sm font-semibold cursor-pointer hover:bg-slate-800">
+            <i class="ph-bold ph-upload-simple"></i><span>Ajouter</span>
+            <input type="file" id="doc-contrat" class="hidden doc-input" data-type="contrat" accept=".pdf,.doc,.docx,image/*">
+          </label>
+        </div>
+        <div class="space-y-2">
+          <div class="flex items-center gap-2">
+            <p class="text-sm text-slate-600 flex-1">Avenant</p>
+            <input id="avenant-label" type="text" placeholder="Libelle" class="rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sand-500 flex-1">
+          </div>
+          <label class="inline-flex items-center gap-2 px-3 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-semibold cursor-pointer hover:bg-slate-50">
+            <i class="ph-bold ph-paperclip"></i><span>Ajouter</span>
+            <input type="file" id="doc-avenant" class="hidden doc-input" data-type="avenant" accept=".pdf,.doc,.docx,image/*">
+          </label>
+        </div>
+        <div class="space-y-2">
+          <p class="text-sm text-slate-600">Autres (attestations, badges...)</p>
+          <label class="inline-flex items-center gap-2 px-3 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-semibold cursor-pointer hover:bg-slate-50">
+            <i class="ph-bold ph-upload-simple"></i><span>Ajouter</span>
+            <input type="file" id="doc-autre" class="hidden doc-input" data-type="autre" accept=".pdf,.doc,.docx,image/*">
+          </label>
+        </div>
+      </div>
+      <div class="card-surface p-4 space-y-2 border border-slate-100">
+        <p class="text-xs font-semibold uppercase text-slate-500">Acces initial</p>
+        <p class="text-sm text-slate-600">Un code <strong>EMP-xxxx</strong> sera genere et servira de premier identifiant de connexion.</p>
+      </div>
+    </div>
+    <div class="p-4 border-t border-slate-100 flex items-center justify-between">
+      <button id="cancel" class="px-4 py-2 rounded-lg text-slate-600 hover:bg-slate-100 text-sm font-semibold">Annuler</button>
+      <button id="save" class="px-4 py-2 rounded-lg gradient-chip text-white text-sm font-semibold shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sand-400">Enregistrer</button>
+    </div>
+  </aside>
+  <div id="details-backdrop" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm opacity-0 pointer-events-none"></div>
+  <aside id="details-panel" class="fixed inset-y-0 right-0 w-full sm:w-[520px] bg-white shadow-2xl transform translate-x-full opacity-0 flex flex-col">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+      <div>
+        <p class="text-xs uppercase tracking-wide text-slate-400">Details salarie</p>
+        <h2 class="text-lg font-semibold text-slate-900" id="details-title">Salarie</h2>
+      </div>
+      <button id="details-close-btn" class="p-2 rounded-full hover:bg-slate-100 focus:outline-none"><i class="ph-bold ph-x"></i></button>
+    </div>
+    <div class="px-6 py-4 space-y-4 overflow-y-auto" id="details-content"></div>
+  </aside>
+
+  <div id="toast" class="fixed top-4 right-4 bg-slate-900 text-white px-4 py-3 rounded-lg shadow-lg opacity-0 pointer-events-none flex items-center gap-2">
+    <span id="toast-icon">✅</span>
+    <span id="toast-message" class="text-sm">Message</span>
+  </div>
+  <script>
+  const supabaseUrl = 'https://fmfylsykljkvyurcprij.supabase.co';
+  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZtZnlsc3lrbGprdnl1cmNwcmlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1ODQ3OTgsImV4cCI6MjA3OTE2MDc5OH0.hfgBflnh-nr1Ljfl5Chkp0y1EbZbm5XiyyDhsQcdSqE';
+  const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey, {
+    auth: { persistSession: true, autoRefreshToken: true, storage: localStorage }
+  });
+    const documentsBucket = 'salarie-documents';
+
+    const cards = document.getElementById('cards');
+    const searchInput = document.getElementById('search-input');
+    const countChip = document.getElementById('count-chip');
+    const lastRefresh = document.getElementById('last-refresh');
+    const openCreate = document.getElementById('open-create');
+    const panel = document.getElementById('panel');
+    const panelBackdrop = document.getElementById('panel-backdrop');
+    const closePanelBtn = document.getElementById('close-panel');
+    const cancelBtn = document.getElementById('cancel');
+    const saveBtn = document.getElementById('save');
+    const detailsPanel = document.getElementById('details-panel');
+    const detailsBackdrop = document.getElementById('details-backdrop');
+    const detailsContent = document.getElementById('details-content');
+    const detailsCloseBtn = document.getElementById('details-close-btn');
+    const panelTitle = document.getElementById('panel-title');
+    const toastEl = document.getElementById('toast');
+    const toastMessage = document.getElementById('toast-message');
+    const toastIcon = document.getElementById('toast-icon');
+
+    let editId = null;
+    let societeId = null;
+    let userId = null;
+    let cached = [];
+    let contractsCache = [];
+    let selectedContractId = null;
+
+    function showToast(msg, type='info') {
+      toastMessage.textContent = msg;
+      toastIcon.textContent = type === 'error' ? '⚠️' : '✅';
+      toastEl.classList.remove('opacity-0','pointer-events-none');
+      toastEl.style.transform = 'translateY(0)';
+      setTimeout(() => {
+        toastEl.classList.add('opacity-0','pointer-events-none');
+        toastEl.style.transform = 'translateY(-10px)';
+      }, 2600);
+    }
+
+    const openPanel = () => { panel.classList.remove('translate-x-full','opacity-0'); panelBackdrop.classList.remove('opacity-0','pointer-events-none'); document.body.style.overflow = 'hidden'; };
+    const closePanel = () => { panel.classList.add('translate-x-full','opacity-0'); panelBackdrop.classList.add('opacity-0','pointer-events-none'); document.body.style.overflow = ''; };
+    const openDetailsPanel = (html, title='Salarie') => { detailsContent.innerHTML = html; document.getElementById('details-title').textContent = title; detailsPanel.classList.remove('translate-x-full','opacity-0'); detailsBackdrop.classList.remove('opacity-0','pointer-events-none'); document.body.style.overflow = 'hidden'; };
+    const closeDetailsPanel = () => { detailsPanel.classList.add('translate-x-full','opacity-0'); detailsBackdrop.classList.add('opacity-0','pointer-events-none'); document.body.style.overflow = ''; };
+    function copyRefToClipboard(ref) {
+      if (!ref) return;
+      try {
+        if (navigator.clipboard?.writeText) {
+          navigator.clipboard.writeText(ref).then(() => showToast('Matricule copié')).catch(() => showToast('Impossible de copier', 'error'));
+          return;
+        }
+        const ta = document.createElement('textarea');
+        ta.value = ref;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast('Matricule copié');
+      } catch (err) {
+        console.error('Copy failed', err);
+        showToast('Impossible de copier', 'error');
+      }
+    }
+
+    const slugifyLabel = (label='') => label.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,60) || 'document';
+    const sanitizeFileName = (name='document') => name.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9.\-]+/g,'-').replace(/-+/g,'-').toLowerCase();
+    const prettyLabelFromName = (name='document') => name.replace(/\.[^.]+$/, '').replace(/^[0-9]+-/, '').replace(/-/g,' ');
+
+    async function requireSession() {
+      const { data } = await supabaseClient.auth.getSession();
+      if (data?.session) {
+        localStorage.setItem('supabaseSession', JSON.stringify(data.session));
+        return data.session;
+      }
+      const stored = localStorage.getItem('supabaseSession');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          const { data: setData, error: setErr } = await supabaseClient.auth.setSession({
+            access_token: parsed?.access_token,
+            refresh_token: parsed?.refresh_token
+          });
+          if (!setErr && setData?.session) return setData.session;
+        } catch (e) {
+          console.warn('Session locale invalide', e);
+        }
+      }
+      return null;
+    }
+
+    async function ensureSociete() {
+      const session = await requireSession();
+      userId = session?.user?.id || null;
+      if (!userId) { showToast('Session requise', 'error'); return null; }
+      const { data, error } = await supabaseClient.from('societes').select('id, nom').eq('auth_id', userId).single();
+      if (error || !data) { console.error(error); showToast('Société introuvable', 'error'); return null; }
+      societeId = data.id;
+      return societeId;
+    }
+
+    async function loadContractsForSites() {
+      if (!societeId) return;
+      const { data, error } = await supabaseClient.from('contrats').select('id, residence, address, ref').eq('societe_id', societeId);
+      if (error) { console.error(error); return; }
+      contractsCache = data || [];
+      renderContractOptions();
+    }
+
+    function renderContractOptions(filter='') {
+      const sel = document.getElementById('site-select');
+      if (!sel) return;
+      const query = (filter || '').toLowerCase();
+      sel.innerHTML = '<option value="">Choisir un site (contrat)</option>';
+      contractsCache
+        .filter(c => !query || (c.residence || '').toLowerCase().includes(query) || (c.address || '').toLowerCase().includes(query) || (c.ref || '').toLowerCase().includes(query))
+        .forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c.id;
+          opt.textContent = `${c.residence || 'Site'} (${c.ref || 'CTR'})`;
+          opt.dataset.address = c.address || '';
+          opt.dataset.ref = c.ref || '';
+          sel.appendChild(opt);
+        });
+    }
+
+    async function listDocs(id, folder) {
+      const path = `salaries/${id}/${folder}`;
+      const { data, error } = await supabaseClient.storage.from(documentsBucket).list(path, { limit: 100, sortBy: { column: 'created_at', order: 'desc' } });
+      if (error) { console.error(error); return []; }
+      const files = await Promise.all((data || []).map(async f => {
+        const fullPath = `${path}/${f.name}`;
+        const { data: signed } = await supabaseClient.storage.from(documentsBucket).createSignedUrl(fullPath, 3600);
+        return { name: f.name, url: signed?.signedUrl || '#', created_at: f.created_at };
+      }));
+      return files;
+    }
+
+    async function handleDocUpload(id, type, file, label='') {
+      if (!file) return;
+      const folderMap = { contrat: 'contrat', avenant: 'avenants', autre: 'autres' };
+      const folder = folderMap[type];
+      if (!folder) return;
+      const safeName = sanitizeFileName(file.name || `${type}.pdf`);
+      const prefix = type === 'avenant' ? `${slugifyLabel(label)}-` : '';
+      const path = `salaries/${id}/${folder}/${Date.now()}-${prefix}${safeName}`;
+      const { error } = await supabaseClient.storage.from(documentsBucket).upload(path, file, { upsert: false, contentType: file.type });
+      if (error) { console.error(error); showToast('Upload impossible', 'error'); return; }
+      showToast('Document ajoute');
+      if (editId === id) loadDocsInDetails(id);
+    }
+
+    function renderDocList(targetId, files, empty) {
+      const t = document.getElementById(targetId);
+      if (!t) return;
+      if (!files.length) { t.innerHTML = `<p class="text-sm text-slate-500">${empty}</p>`; return; }
+      t.innerHTML = files.map(f => {
+        const dateStr = f.created_at ? new Date(f.created_at).toLocaleDateString() : '';
+        return `<div class="flex items-center justify-between doc-tile bg-white/80 rounded-xl px-3 py-2 border border-slate-200 shadow-sm">
+          <div class="flex items-center gap-2 text-sm text-slate-700 overflow-hidden">
+            <i class="ph-bold ph-file-text text-slate-400"></i>
+            <a href="${f.url}" target="_blank" rel="noopener" class="truncate hover:text-sand-700">${prettyLabelFromName(f.name)}</a>
+          </div>
+          <span class="text-xs text-slate-400">${dateStr}</span>
+        </div>`;
+      }).join('');
+    }
+
+    async function loadDocsInDetails(id) {
+      const [contrats, avenants, autres] = await Promise.all([
+        listDocs(id, 'contrat'),
+        listDocs(id, 'avenants'),
+        listDocs(id, 'autres')
+      ]);
+      renderDocList('doc-list-contrat', contrats, 'Aucun contrat depose');
+      renderDocList('doc-list-avenants', avenants, 'Aucun avenant depose');
+      renderDocList('doc-list-autres', autres, 'Aucun document depose');
+    }
+
+    function resetForm() {
+      editId = null;
+      panelTitle.textContent = 'Creer un salarie';
+      ['last-name','first-name','email','phone','address','position','site','hire-date'].forEach(id => { const el=document.getElementById(id); if (el) el.value=''; });
+      document.getElementById('status').value = 'actif';
+      document.getElementById('avenant-label').value = '';
+      ['doc-contrat','doc-avenant','doc-autre'].forEach(id => { const el=document.getElementById(id); if (el) el.value=''; });
+      selectedContractId = null;
+      const sel = document.getElementById('site-select'); if (sel) sel.value='';
+      const sf = document.getElementById('site-filter'); if (sf) sf.value='';
+    }
+
+    function filtered() {
+      const q = searchInput.value.trim().toLowerCase();
+      if (!q) return cached;
+      return cached.filter(s =>
+        (s.ref || '').toLowerCase().includes(q) ||
+        (s.prenom || '').toLowerCase().includes(q) ||
+        (s.nom || '').toLowerCase().includes(q) ||
+        (s.email || '').toLowerCase().includes(q) ||
+        (s.site || '').toLowerCase().includes(q) ||
+        (s.poste || '').toLowerCase().includes(q)
+      );
+    }
+
+    function renderCards() {
+      const list = filtered();
+      countChip.textContent = `${list.length} salarie${list.length>1?'s':''}`;
+      if (!list.length) { cards.innerHTML = '<div class="col-span-full text-center text-slate-500 py-12">Aucun salarie.</div>'; return; }
+      cards.innerHTML = '';
+      list.forEach(s => {
+        const card = document.createElement('div');
+        card.className = 'glass-card p-5 relative cursor-pointer';
+        card.dataset.id = s.id;
+        const statut = s.statut || 'actif';
+        const statutLabel = statut === 'actif' ? 'Actif' : (statut === 'suspendu' ? 'Suspendu' : 'Archive');
+        const statutColor = statut === 'actif' ? 'bg-emerald-100 text-emerald-700' : (statut === 'suspendu' ? 'bg-amber-100 text-amber-700' : 'bg-slate-200 text-slate-700');
+        card.innerHTML = `
+          <div class="flex items-start justify-between gap-3">
+            <div class="space-y-1">
+              <p class="text-xs text-slate-500 flex items-center gap-2">
+                <span>Ref: ${s.ref || 'N/A'}</span>
+                ${s.ref ? `<button class="copy-ref text-slate-400 hover:text-slate-700" data-ref="${s.ref}" title="Copier le matricule"><i class="ph-bold ph-copy"></i></button>` : ''}
+              </p>
+              <h3 class="text-lg font-semibold text-slate-900">${s.prenom || ''} ${s.nom || ''}</h3>
+              <p class="text-sm text-slate-500">${s.poste || 'Poste N/A'} · ${s.site || 'Site N/A'}</p>
+            </div>
+            <span class="px-3 py-1 rounded-full text-xs font-semibold ${statutColor}">${statutLabel}</span>
+          </div>
+          <div class="text-sm text-slate-600 mt-2">
+            <p>${s.email || ''}</p>
+            <p>${s.telephone || ''}</p>
+            <p>Acces initial: ${s.ref || 'EMP-xxxx'}</p>
+          </div>
+          <div class="flex justify-end items-center gap-2 pt-3 border-t border-slate-100 mt-3">
+            <button class="action-btn details-btn text-slate-400 hover:text-blue-600" data-id="${s.id}"><i class="ph-bold ph-eye text-xl"></i></button>
+            <button class="action-btn edit-btn text-slate-400 hover:text-sky-600" data-id="${s.id}"><i class="ph-bold ph-pencil-simple text-xl"></i></button>
+            <button class="action-btn delete-btn text-slate-400 hover:text-red-600" data-id="${s.id}"><i class="ph-bold ph-trash text-xl"></i></button>
+          </div>
+        `;
+        cards.appendChild(card);
+      });
+    }
+
+    async function loadSalaries() {
+      if (!societeId) {
+        cards.innerHTML = '<div class="col-span-full text-center text-red-500 py-12">Session société requise.</div>';
+        return;
+      }
+      cards.innerHTML = '<div class="col-span-full text-center text-slate-500 py-12">Chargement...</div>';
+      const { data, error } = await supabaseClient
+        .from('salaries')
+        .select('*, contrats!inner(id, societe_id)')
+        .eq('contrats.societe_id', societeId)
+        .order('created_at', { ascending: false });
+      if (error) { console.error(error); cards.innerHTML = '<div class="col-span-full text-center text-red-500">Erreur de chargement.</div>'; return; }
+      cached = data || [];
+      renderCards();
+      lastRefresh.textContent = 'Mis a jour a ' + new Date().toLocaleTimeString();
+    }
+
+    async function saveSalarie() {
+      if (!societeId) { showToast('Session société requise', 'error'); return; }
+      const nom = document.getElementById('last-name').value.trim();
+      const prenom = document.getElementById('first-name').value.trim();
+      if (!nom || !prenom) { showToast('Nom et prenom requis', 'error'); return; }
+      const email = document.getElementById('email').value.trim();
+      const telephone = document.getElementById('phone').value.trim();
+      const adresse = document.getElementById('address').value.trim();
+      const poste = document.getElementById('position').value.trim();
+      const site = document.getElementById('site').value.trim();
+      const hireDate = document.getElementById('hire-date').value || null;
+      const statut = document.getElementById('status').value;
+
+      const baseRef = `EMP-${Date.now()}`;
+      if (!selectedContractId) { showToast('Sélectionnez un contrat/site', 'error'); return; }
+      const dataToSave = { nom, prenom, email, telephone, adresse, poste, site, date_embauche: hireDate, statut, contrat_id: selectedContractId };
+      let targetId = editId;
+
+      if (editId) {
+        const { error } = await supabaseClient.from('salaries').update(dataToSave).eq('id', editId);
+        if (error) { console.error(error); showToast("Erreur lors de l'enregistrement", 'error'); return; }
+      } else {
+        dataToSave.ref = baseRef;
+        const { data, error } = await supabaseClient.from('salaries').insert([dataToSave]).select().single();
+        if (error) { console.error(error); showToast("Erreur lors de l'enregistrement", 'error'); return; }
+        targetId = data.id;
+      }
+
+      const docContrat = document.getElementById('doc-contrat').files[0];
+      const docAvenant = document.getElementById('doc-avenant').files[0];
+      const docAutre = document.getElementById('doc-autre').files[0];
+      const avenantLabel = document.getElementById('avenant-label').value.trim();
+      if (docContrat) await handleDocUpload(targetId, 'contrat', docContrat);
+      if (docAvenant) await handleDocUpload(targetId, 'avenant', docAvenant, avenantLabel);
+      if (docAutre) await handleDocUpload(targetId, 'autre', docAutre);
+
+      showToast(editId ? 'Salarie mis a jour' : 'Salarie cree');
+      closePanel();
+      resetForm();
+      loadSalaries();
+    }
+
+    async function deleteSalarie(id) {
+      if (!societeId) { showToast('Session société requise', 'error'); return; }
+      const confirmDelete = confirm('Supprimer ce salarie ?');
+      if (!confirmDelete) return;
+      const { error } = await supabaseClient.from('salaries').delete().eq('id', id);
+      if (error) { showToast('Suppression impossible', 'error'); return; }
+      showToast('Salarie supprime');
+      loadSalaries();
+    }
+
+    async function showDetails(s) {
+      const html = `
+        <div class="space-y-3 text-sm text-slate-700">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-xs text-slate-500">Ref: ${s.ref || 'N/A'}</p>
+              <p class="text-base font-semibold text-slate-900">${s.prenom || ''} ${s.nom || ''}</p>
+              <p class="text-sm text-slate-500">${s.poste || 'Poste N/A'} · ${s.site || 'Site N/A'}</p>
+            </div>
+            <span class="px-3 py-1 rounded-full text-xs font-semibold ${s.statut==='actif'?'bg-emerald-100 text-emerald-700':(s.statut==='suspendu'?'bg-amber-100 text-amber-700':'bg-slate-200 text-slate-700')}">${s.statut || 'N/A'}</span>
+          </div>
+          <p><strong>Email:</strong> ${s.email || 'N/A'}</p>
+          <p><strong>Telephone:</strong> ${s.telephone || 'N/A'}</p>
+          <p><strong>Adresse:</strong> ${s.adresse || 'N/A'}</p>
+          <p><strong>Date d'embauche:</strong> ${s.date_embauche || 'N/A'}</p>
+          <p><strong>Acces initial:</strong> ${s.ref || 'EMP-xxxx'}</p>
+        </div>
+        <div class="mt-4 space-y-3">
+          <p class="text-xs uppercase text-slate-500 font-semibold">Documents</p>
+          <div class="card-surface p-3 space-y-2 border border-slate-100">
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <p class="font-semibold text-slate-800">Contrat</p>
+                <p class="text-xs text-slate-500">PDF, DOC ou image</p>
+              </div>
+              <label class="inline-flex items-center gap-2 px-3 py-2 bg-slate-900 text-white rounded-lg text-sm font-semibold cursor-pointer hover:bg-slate-800">
+                <i class="ph-bold ph-upload-simple"></i><span>Ajouter</span>
+                <input type="file" class="hidden doc-input details-upload" data-type="contrat" data-id="${s.id}" accept=".pdf,.doc,.docx,image/*">
+              </label>
+            </div>
+            <div id="doc-list-contrat" class="text-sm text-slate-600">Chargement...</div>
+          </div>
+          <div class="card-surface p-3 space-y-2 border border-slate-100">
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <p class="font-semibold text-slate-800">Avenants</p>
+                <p class="text-xs text-slate-500">Libelle + fichier</p>
+              </div>
+              <div class="flex gap-2">
+                <input id="details-avenant-label" type="text" placeholder="Libelle" class="rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sand-500">
+                <label class="inline-flex items-center gap-2 px-3 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-semibold cursor-pointer hover:bg-slate-50">
+                  <i class="ph-bold ph-paperclip"></i><span>Ajouter</span>
+                  <input type="file" class="hidden doc-input details-upload" data-type="avenant" data-id="${s.id}" accept=".pdf,.doc,.docx,image/*">
+                </label>
+              </div>
+            </div>
+            <div id="doc-list-avenants" class="text-sm text-slate-600">Chargement...</div>
+          </div>
+          <div class="card-surface p-3 space-y-2 border border-slate-100">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="font-semibold text-slate-800">Autres</p>
+                <p class="text-xs text-slate-500">Attestations, badges...</p>
+              </div>
+              <label class="inline-flex items-center gap-2 px-3 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-semibold cursor-pointer hover:bg-slate-50">
+                <i class="ph-bold ph-upload-simple"></i><span>Ajouter</span>
+                <input type="file" class="hidden doc-input details-upload" data-type="autre" data-id="${s.id}" accept=".pdf,.doc,.docx,image/*">
+              </label>
+            </div>
+            <div id="doc-list-autres" class="text-sm text-slate-600">Chargement...</div>
+          </div>
+        </div>
+      `;
+      openDetailsPanel(html, `${s.prenom || ''} ${s.nom || ''}`);
+      loadDocsInDetails(s.id);
+    }
+
+    function setupDetailUploadListeners() {
+      detailsContent.addEventListener('change', async (e) => {
+        const input = e.target.closest('.details-upload');
+        if (!input || !input.files?.length) return;
+        const type = input.dataset.type;
+        const id = parseInt(input.dataset.id, 10);
+        const label = type === 'avenant' ? (document.getElementById('details-avenant-label')?.value.trim() || '') : '';
+        await handleDocUpload(id, type, input.files[0], label);
+        input.value = '';
+        loadDocsInDetails(id);
+      });
+    }
+
+    function fillForm(s) {
+      editId = s.id;
+      panelTitle.textContent = 'Modifier un salarie';
+      document.getElementById('last-name').value = s.nom || '';
+      document.getElementById('first-name').value = s.prenom || '';
+      document.getElementById('email').value = s.email || '';
+      document.getElementById('phone').value = s.telephone || '';
+      document.getElementById('address').value = s.adresse || '';
+      document.getElementById('position').value = s.poste || '';
+      document.getElementById('site').value = s.site || '';
+      const selSite = document.getElementById('site-select');
+      if (selSite && s.contrat_id) { selSite.value = s.contrat_id; selectedContractId = s.contrat_id; }
+      document.getElementById('hire-date').value = s.date_embauche || '';
+      document.getElementById('status').value = s.statut || 'actif';
+    }
+
+    openCreate.addEventListener('click', () => { resetForm(); openPanel(); });
+    closePanelBtn.addEventListener('click', closePanel);
+    cancelBtn.addEventListener('click', closePanel);
+    panelBackdrop.addEventListener('click', closePanel);
+    saveBtn.addEventListener('click', saveSalarie);
+    searchInput.addEventListener('input', renderCards);
+    detailsBackdrop.addEventListener('click', closeDetailsPanel);
+    detailsCloseBtn.addEventListener('click', closeDetailsPanel);
+    setupDetailUploadListeners();
+    document.getElementById('site-filter')?.addEventListener('input', (e) => {
+      renderContractOptions(e.target.value);
+    });
+    document.getElementById('site-select')?.addEventListener('change', (e) => {
+      const val = e.target.value;
+      const opt = e.target.selectedOptions[0];
+      selectedContractId = val ? parseInt(val,10) : null;
+      const siteInput = document.getElementById('site');
+      if (siteInput && opt) siteInput.value = opt.textContent || '';
+    });
+
+    cards.addEventListener('click', async (e) => {
+      const copyBtn = e.target.closest('.copy-ref');
+      if (copyBtn && copyBtn.dataset.ref) { e.stopPropagation(); copyRefToClipboard(copyBtn.dataset.ref); return; }
+      const btn = e.target.closest('.action-btn');
+      const card = e.target.closest('.glass-card');
+      if (btn) {
+        e.stopPropagation();
+        const id = parseInt(btn.dataset.id, 10);
+        if (btn.classList.contains('delete-btn')) {
+          deleteSalarie(id);
+        } else if (btn.classList.contains('edit-btn')) {
+          const { data, error } = await supabaseClient
+            .from('salaries')
+            .select('*, contrats!inner(id, societe_id)')
+            .eq('id', id)
+            .eq('contrats.societe_id', societeId)
+            .single();
+          if (error || !data) { showToast('Chargement impossible', 'error'); return; }
+          fillForm(data);
+          openPanel();
+        } else if (btn.classList.contains('details-btn')) {
+          const { data, error } = await supabaseClient
+            .from('salaries')
+            .select('*, contrats!inner(id, societe_id)')
+            .eq('id', id)
+            .eq('contrats.societe_id', societeId)
+            .single();
+          if (error || !data) { showToast('Chargement impossible', 'error'); return; }
+          showDetails(data);
+        }
+        return;
+      }
+      if (card) {
+        const id = parseInt(card.dataset.id, 10);
+        const { data, error } = await supabaseClient
+          .from('salaries')
+          .select('*, contrats!inner(id, societe_id)')
+          .eq('id', id)
+          .eq('contrats.societe_id', societeId)
+          .single();
+        if (error || !data) { showToast('Chargement impossible', 'error'); return; }
+        showDetails(data);
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await ensureSociete();
+      if (societeId) {
+        await loadContractsForSites();
+        await loadSalaries();
+      }
+    });
+  </script>
+</body>
+</html>
+
+
+

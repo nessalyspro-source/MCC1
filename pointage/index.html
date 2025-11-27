@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pointage par QR</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <script src="../vendor/phosphor/index.js"></script>
+  <script src="../vendor/supabase/supabase.js"></script>
+  <style>
+    body { font-family: 'Outfit', sans-serif; background: radial-gradient(140% 120% at 20% 0%, #f0f7f8 0%, #f7f5f2 45%, #fdfdfb 100%); color: #0c2f35; }
+    .card { background: #fff; border: 1px solid #e7e5e0; border-radius: 18px; box-shadow: 0 10px 30px rgba(12,47,53,0.08); }
+    .badge { display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:999px; font-weight:600; font-size:12px; }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+  <div class="w-full max-w-2xl space-y-4">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-xs uppercase text-slate-500">QR Pointage</p>
+        <h1 id="heading-site" class="text-2xl font-bold text-slate-900">Site</h1>
+        <p id="heading-contract" class="text-sm text-slate-600">Contrat</p>
+      </div>
+      <span id="type-badge" class="badge bg-emerald-100 text-emerald-700">Arrivee</span>
+    </div>
+
+    <div class="card p-5 space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-slate-700">
+        <div>
+          <p class="text-xs text-slate-500">Site</p>
+          <p id="info-site" class="font-semibold">-</p>
+        </div>
+        <div>
+          <p class="text-xs text-slate-500">Adresse</p>
+          <p id="info-address" class="font-semibold break-words">-</p>
+        </div>
+        <div>
+          <p class="text-xs text-slate-500">Contrat</p>
+          <p id="info-contrat" class="font-semibold">-</p>
+        </div>
+        <div>
+          <p class="text-xs text-slate-500">QR attribue a</p>
+          <p id="info-agent" class="font-semibold">Libre</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 text-sm text-slate-600">
+        <i class="ph ph-map-pin text-lg text-green-600"></i>
+        <span id="geo-status">Geo en attente</span>
+      </div>
+
+      <div class="space-y-2">
+        <label class="block text-sm text-slate-700">Note (optionnelle)
+          <input id="note-input" type="text" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="Ex: badge oublie">
+        </label>
+        <div class="flex flex-col sm:flex-row gap-2">
+          <button id="toggle-type" class="w-full sm:w-auto px-4 py-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+            <i class="ph ph-arrows-left-right"></i>
+            Basculer arrivee/depart
+          </button>
+          <button id="btn-pointage" class="w-full sm:w-auto px-5 py-2 rounded-lg bg-green-600 text-white font-semibold shadow hover:bg-green-700 flex items-center gap-2 justify-center">
+            <i class="ph ph-check-circle"></i>
+            Pointer maintenant
+          </button>
+        </div>
+        <p class="text-xs text-slate-500">Astuce : restez a moins de 50m du site pour que le pointage soit valide.</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="fixed bottom-4 right-4 bg-slate-900 text-white px-4 py-3 rounded-lg shadow-lg opacity-0 pointer-events-none text-sm transition-all duration-300">Message</div>
+
+  <script>
+    const supabaseUrl = 'https://fmfylsykljkvyurcprij.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZtZnlsc3lrbGprdnl1cmNwcmlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1ODQ3OTgsImV4cCI6MjA3OTE2MDc5OH0.hfgBflnh-nr1Ljfl5Chkp0y1EbZbm5XiyyDhsQcdSqE';
+    const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey, {
+      auth: { persistSession: true, autoRefreshToken: true, storage: localStorage }
+    });
+
+    const params = new URLSearchParams(window.location.search);
+    const ctx = {
+      raw: window.location.href,
+      contratRef: params.get('contrat') || '',
+      site: params.get('site') || '',
+      address: params.get('address') || '',
+      agent: params.get('agent') || '',
+      note: params.get('note') || '',
+      directionHint: (params.get('type') || params.get('direction') || '').toLowerCase()
+    };
+    let currentProfil = null;
+    let contractMeta = null;
+    let nextType = 'entree';
+    const geoCache = new Map();
+
+    function showToast(msg, type='info') {
+      const el = document.getElementById('toast');
+      if (!el) return;
+      el.textContent = msg;
+      el.classList.remove('opacity-0','pointer-events-none');
+      el.style.backgroundColor = type === 'error' ? '#b91c1c' : '#0f172a';
+      setTimeout(() => el.classList.add('opacity-0','pointer-events-none'), 2200);
+    }
+
+    function setText(id, value) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value || '-';
+    }
+
+    function renderTypeBadge() {
+      const badge = document.getElementById('type-badge');
+      if (!badge) return;
+      const isSortie = nextType === 'sortie';
+      badge.textContent = isSortie ? 'Depart' : 'Arrivee';
+      badge.classList.toggle('bg-emerald-100', !isSortie);
+      badge.classList.toggle('text-emerald-700', !isSortie);
+      badge.classList.toggle('bg-rose-100', isSortie);
+      badge.classList.toggle('text-rose-700', isSortie);
+    }
+
+    function renderContext() {
+      const siteLabel = ctx.site || contractMeta?.residence || 'Site';
+      const addr = ctx.address || contractMeta?.address || 'Adresse non renseignee';
+      setText('heading-site', siteLabel);
+      setText('heading-contract', ctx.contratRef ? `Contrat ${ctx.contratRef}` : 'Contrat non renseigne');
+      setText('info-site', siteLabel);
+      setText('info-address', addr);
+      setText('info-contrat', ctx.contratRef || contractMeta?.ref || 'Contrat');
+      setText('info-agent', ctx.agent ? `Agent ${ctx.agent}` : (contractMeta?.agent_id ? `Agent ${contractMeta.agent_id}` : 'Libre'));
+      const noteInput = document.getElementById('note-input');
+      if (noteInput && ctx.note) noteInput.value = ctx.note;
+    }
+
+    async function requireSession() {
+      const { data } = await supabaseClient.auth.getSession();
+      if (data?.session) return data.session;
+      const stored = localStorage.getItem('supabaseSession');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          const { data: setData } = await supabaseClient.auth.setSession({
+            access_token: parsed?.access_token,
+            refresh_token: parsed?.refresh_token
+          });
+          return setData?.session || null;
+        } catch (e) { console.warn('Session locale invalide', e); }
+      }
+      return null;
+    }
+
+    async function loadProfile(session) {
+      const email = session?.user?.email || '';
+      if (!email) return null;
+      const { data: salarie } = await supabaseClient
+        .from('salaries')
+        .select('id, ref, prenom, nom, email, poste, site, contrat_id, contrats:contrat_id(ref, residence, address)')
+        .eq('email', email)
+        .maybeSingle();
+      currentProfil = salarie || null;
+      return currentProfil;
+    }
+
+    async function loadContract() {
+      if (!ctx.contratRef) return null;
+      const tryId = parseInt(ctx.contratRef, 10);
+      const { data, error } = await supabaseClient
+        .from('contrats')
+        .select('id, ref, residence, address, agent_id')
+        .or(`ref.eq.${ctx.contratRef},id.eq.${Number.isFinite(tryId) ? tryId : -1}`)
+        .limit(1)
+        .single();
+      if (!error && data) {
+        contractMeta = data;
+        if (!ctx.address && data.address) ctx.address = data.address;
+        if (!ctx.site && data.residence) ctx.site = data.residence;
+        if (!ctx.agent && data.agent_id) ctx.agent = data.agent_id;
+      }
+      return contractMeta;
+    }
+
+    function updateGeoStatus(text, ok=true) {
+      const el = document.getElementById('geo-status');
+      if (!el) return;
+      el.textContent = text;
+      el.classList.toggle('text-emerald-800', ok);
+      el.classList.toggle('text-rose-700', !ok);
+    }
+
+    function haversine(lat1, lon1, lat2, lon2) {
+      const toRad = d => d * Math.PI / 180;
+      const R = 6371000;
+      const dLat = toRad(lat2 - lat1);
+      const dLon = toRad(lon2 - lon1);
+      const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+      return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    async function geocodeAddress(addr) {
+      if (!addr) return null;
+      if (geoCache.has(addr)) return geoCache.get(addr);
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(addr)}`, { headers: { 'Accept-Language': 'fr' } });
+        const json = await res.json();
+        const first = json?.[0];
+        if (first) {
+          const coords = { lat: parseFloat(first.lat), lon: parseFloat(first.lon) };
+          geoCache.set(addr, coords);
+          return coords;
+        }
+      } catch (e) { console.warn('Geocode failed', e); }
+      return null;
+    }
+
+    async function getPositionWithFallback() {
+      if (!navigator.geolocation) throw new Error('Geolocalisation indisponible');
+      const optsHigh = { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 };
+      const optsCoarse = { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 };
+      const request = (opts) => new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, opts);
+      });
+      try { return await request(optsHigh); }
+      catch (e) {
+        try { return await request(optsCoarse); }
+        catch (err) { throw err; }
+      }
+    }
+
+    function geoHelpText() {
+      const ua = navigator.userAgent.toLowerCase();
+      if (/android/.test(ua)) return 'Activez la localisation dans les reglages du telephone et dans le navigateur.';
+      if (/iphone|ipad|ipod/.test(ua)) return 'iOS : Reglages > Confidentialite > Service de localisation > autoriser le navigateur.';
+      return 'Activez la localisation (Wi-Fi/GPS) et autorisez le navigateur a l utiliser.';
+    }
+
+    async function ensureWithinRange(address) {
+      const coords = await geocodeAddress(address);
+      if (!coords) { showToast('Adresse introuvable pour geolocalisation', 'error'); updateGeoStatus('Adresse introuvable', false); return false; }
+      try {
+        const pos = await getPositionWithFallback();
+        const dist = haversine(pos.coords.latitude, pos.coords.longitude, coords.lat, coords.lon);
+        const ok = dist <= 50;
+        if (!ok) {
+          showToast(`Trop loin du site (${Math.round(dist)}m)`, 'error');
+          updateGeoStatus(`Distance ${Math.round(dist)}m`, false);
+        } else {
+          updateGeoStatus(`A ${Math.round(dist)}m du site`, true);
+        }
+        return ok;
+      } catch (err) {
+        const code = err?.code;
+        if (code === 1) {
+          showToast('Autorisez la geolocalisation pour pointer', 'error');
+          updateGeoStatus('Permission refusee', false);
+        } else if (code === 2) {
+          showToast(geoHelpText(), 'error');
+          updateGeoStatus('Position indisponible', false);
+        } else if (code === 3) {
+          showToast('Geolocalisation trop longue, reessayez', 'error');
+          updateGeoStatus('Timeout geoloc', false);
+        } else {
+          showToast('Geolocalisation impossible', 'error');
+          updateGeoStatus('Geo indisponible', false);
+        }
+        return false;
+      }
+    }
+
+    function matchesAgent() {
+      if (!ctx.agent) return true;
+      if (!currentProfil) return false;
+      const agent = String(ctx.agent).toLowerCase();
+      const ref = (currentProfil.ref || '').toLowerCase();
+      const email = (currentProfil.email || '').toLowerCase();
+      return agent === String(currentProfil.id) || agent === ref || agent === email;
+    }
+
+    async function loadLastPointage() {
+      if (!currentProfil?.id) return;
+      const { data } = await supabaseClient
+        .from('pointages')
+        .select('type')
+        .eq('salarie_id', currentProfil.id)
+        .order('created_at', { ascending: false })
+        .limit(1);
+      const lastType = data?.[0]?.type || '';
+      if (ctx.directionHint === 'entree' || ctx.directionHint === 'arrivee') nextType = 'entree';
+      else if (ctx.directionHint === 'sortie' || ctx.directionHint === 'depart') nextType = 'sortie';
+      else nextType = lastType === 'entree' ? 'sortie' : 'entree';
+      renderTypeBadge();
+    }
+
+    async function recordPointage() {
+      if (!currentProfil) {
+        showToast('Session requise', 'error');
+        setTimeout(() => { window.location.href = '../employes_login.html'; }, 800);
+        return;
+      }
+      if (!matchesAgent()) {
+        showToast('QR reserve a un autre agent', 'error');
+        return;
+      }
+      const siteLabel = ctx.site || contractMeta?.residence || currentProfil.site || 'Site';
+      const addr = ctx.address || contractMeta?.address || currentProfil.contrats?.address || '';
+      if (!addr) { showToast('Adresse manquante pour valider le site', 'error'); return; }
+      const withinRange = await ensureWithinRange(addr);
+      if (!withinRange) return;
+      const noteVal = document.getElementById('note-input')?.value.trim() || ctx.note || '';
+      const insertPayload = {
+        salarie_id: currentProfil.id,
+        type: nextType,
+        mode: 'scan',
+        note: noteVal,
+        site: siteLabel,
+        contrat_id: currentProfil.contrat_id || contractMeta?.id || null,
+        raw_payload: ctx.raw
+      };
+      const { error } = await supabaseClient.from('pointages').insert([insertPayload]);
+      if (error) { console.error(error); showToast('Pointage impossible', 'error'); return; }
+      showToast('Pointage enregistre');
+      await loadLastPointage();
+    }
+
+    document.getElementById('toggle-type').addEventListener('click', () => {
+      nextType = nextType === 'entree' ? 'sortie' : 'entree';
+      renderTypeBadge();
+    });
+
+    document.getElementById('btn-pointage').addEventListener('click', recordPointage);
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      renderContext();
+      const session = await requireSession();
+      if (!session) {
+        showToast('Connectez-vous pour pointer', 'error');
+        setTimeout(() => { window.location.href = '../employes_login.html'; }, 900);
+        return;
+      }
+      await loadProfile(session);
+      await loadContract();
+      renderContext();
+      if (!matchesAgent() && ctx.agent) showToast('QR reserve a un autre agent', 'error');
+      await loadLastPointage();
+    });
+  </script>
+</body>
+</html>

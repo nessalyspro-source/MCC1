@@ -1,0 +1,1068 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Suivi des contrats</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <script src="vendor/phosphor/index.js"></script>
+  <script src="vendor/supabase/supabase.js"></script>
+  <style>
+    :root {
+      --ink: #0c2f35;
+      --navy: #0f304b;
+      --red: #ce3c35;
+      --sand: #b58a64;
+      --bg: #f7f5f2;
+    }
+    body { font-family: 'Outfit', sans-serif; background: radial-gradient(140% 120% at 20% 0%, #f0f7f8 0%, var(--bg) 45%, #fdfdfb 100%); }
+    .subtle-grid { background-image: linear-gradient(90deg, rgba(12,47,53,0.03) 1px, transparent 1px), linear-gradient(rgba(12,47,53,0.03) 1px, transparent 1px); background-size: 28px 28px; }
+    .sidebar { background: linear-gradient(180deg, #0f304b, #0c2f35); border-right: 1px solid rgba(255,255,255,0.05); color: #e8eef2; }
+    .sidebar a { color: #cfd8dc; }
+    .sidebar a:hover { background: rgba(255,255,255,0.06); color: #fff; }
+    .nav-item.active { background: rgba(255,255,255,0.12); color: #fff; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); }
+    .glass-card { position: relative; overflow: hidden; background: linear-gradient(135deg, rgba(255,255,255,0.96), rgba(249,250,251,0.92)); backdrop-filter: blur(10px); }
+    .glass-card::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 20% 20%, rgba(12,47,53,0.08), transparent 35%), radial-gradient(circle at 80% 0%, rgba(206,60,53,0.08), transparent 35%), radial-gradient(circle at 50% 100%, rgba(181,138,100,0.08), transparent 35%); pointer-events: none; }
+    .floating { transition: transform .2s ease, box-shadow .2s ease; }
+    .floating:hover { transform: translateY(-4px); box-shadow: 0 16px 50px rgba(15,23,42,0.12); }
+    .glass-card:hover .card-actions { opacity: 1; }
+    #contract-panel, #details-panel { transition: transform .3s ease, opacity .3s ease; }
+    #toast { transition: transform .3s ease, opacity .3s ease; }
+    .gradient-chip { background: linear-gradient(120deg, var(--red), var(--navy)); box-shadow: 0 10px 30px rgba(12,47,53,0.22); }
+    .pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: rgba(12,47,53,0.08); color: var(--navy); font-weight: 600; font-size: 12px; }
+    .card-surface { background: #fff; border: 1px solid #e7e5e0; border-radius: 18px; box-shadow: 0 12px 40px rgba(12,47,53,0.08); }
+    .doc-tile { border: 1px dashed #cbd5e1; }
+    .section-title { letter-spacing: 0.08em; font-size: 11px; color: #64748b; }
+    .ghost-btn { border: 1px solid #e2e8f0; background: white; }
+    .ghost-btn:hover { background: #f8fafc; }
+      :root {
+      --ink: #0c2f35;
+      --navy: #0f304b;
+      --red: #ce3c35;
+      --sand: #b58a64;
+      --bg: #f7f5f2;
+    }
+    body { background: radial-gradient(140% 120% at 20% 0%, #f0f7f8 0%, var(--bg) 45%, #fdfdfb 100%); color: #0c2f35; }
+    .sidebar { background: linear-gradient(180deg, #0f304b, #0c2f35); border-right: 1px solid rgba(255,255,255,0.05); color: #e8eef2; }
+    .sidebar a { color: #cfd8dc; }
+    .sidebar a:hover { background: rgba(255,255,255,0.06); color: #ffffff; }
+    .nav-item.active { background: rgba(255,255,255,0.12); color: #ffffff; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); }
+    .pill { background: rgba(12,47,53,0.08); color: #0f304b; }
+    .gradient-chip { background: linear-gradient(120deg, var(--red), var(--navy)); box-shadow: 0 10px 30px rgba(12,47,53,0.22); }
+    .card-surface { border: 1px solid #e7e5e0; box-shadow: 0 12px 40px rgba(12,47,53,0.08); }
+</style>
+</head>
+<body class="flex h-screen text-slate-800">
+  <aside class="w-64 sidebar flex flex-col p-6">
+    <div class="text-xl font-bold tracking-wide mb-10 text-center text-slate-800">ESPACE <span class="text-sky-500">CLIENT</span></div>
+    <nav class="flex-1 space-y-2">
+      <a href="dashboard_societe.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition"><i class="ph-fill ph-squares-four text-lg"></i><span>Vue d'ensemble</span></a>
+      <a href="societe_signalements.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition"><i class="ph ph-warning-circle text-lg"></i><span>Suivi des signalements</span></a>
+      <a href="societe_clients.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition"><i class="ph ph-users text-lg"></i><span>Suivi des clients</span></a>
+      <a href="societe_contrats.html" class="flex items-center gap-3 p-3 rounded-xl nav-item active font-medium"><i class="ph ph-file-text text-lg"></i><span>Suivi des contrats</span></a>
+      <a href="societe_rapports.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition"><i class="ph ph-chart-bar text-lg"></i><span>Rapports</span></a>
+      <a href="societe_cahier_des_charges.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition"><i class="ph ph-notebook text-lg"></i><span>Cahier des charges</span></a>
+      <a href="societe_salaries.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition"><i class="ph ph-currency-eur text-lg"></i><span>Suivi des salaries</span></a>
+      <a href="societe_pointages.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition"><i class="ph ph-timer text-lg"></i><span>Suivi des pointages</span></a>
+      <a href="societe_conges.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition"><i class="ph ph-calendar-blank text-lg"></i><span>Suivi des demandes de congés</span></a>
+    </nav>
+    <a href="index.html" class="flex items-center gap-2 text-slate-400 hover:text-slate-600 transition mt-auto"><i class="ph ph-sign-out"></i> Déconnexion</a>
+  </aside>
+
+  <main class="flex-1 px-6 py-8 max-w-7xl mx-auto w-full overflow-y-auto">
+    <header class="card-surface subtle-grid p-5 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border border-slate-100">
+      <div class="space-y-1">
+        <span class="pill"><i class="ph-bold ph-sparkle"></i> Portefeuille contrats</span>
+        <h1 class="text-2xl font-bold text-slate-900">Contrats</h1>
+        <p class="text-sm text-slate-500">Creez, mettez a jour et suivez vos documents en un coup d'oeil.</p>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center w-full sm:w-auto">
+        <div class="relative flex-1 sm:w-72">
+          <input id="search-input" type="text" placeholder="Rechercher un contrat..." class="w-full rounded-full border border-slate-200 px-4 py-2 pl-10 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent bg-white shadow-sm">
+          <i class="ph-bold ph-magnifying-glass text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+        </div>
+        <button id="open-create-button" class="inline-flex items-center justify-center gap-2 rounded-full gradient-chip text-white px-4 py-2 text-sm font-semibold hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500">
+          <i class="ph-bold ph-plus"></i> Creer un contrat
+        </button>
+      </div>
+    </header>
+
+    <section class="mb-5 card-surface p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border border-slate-100">
+      <div class="flex items-center gap-3">
+        <span class="px-3 py-1 rounded-full bg-sky-100 text-sky-700 text-sm font-semibold" id="contract-count">0 contrat</span>
+        <span class="text-sm text-slate-500" id="last-refresh"></span>
+      </div>
+      <p class="text-sm text-slate-500">Astuce : ajoutez vos avenants et rapports directement depuis la fiche contrat.</p>
+    </section>
+
+    <section id="contracts-container" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"></section>
+  </main>
+  <!-- Create/Edit slide-over -->
+  <div id="panel-backdrop" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm opacity-0 pointer-events-none transition" aria-hidden="true"></div>
+  <aside id="contract-panel" class="fixed inset-y-0 right-0 w-full sm:w-[480px] bg-white shadow-2xl transform translate-x-full opacity-0 flex flex-col">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+      <div>
+        <p class="text-xs uppercase tracking-wide text-slate-400">Nouveau contrat</p>
+        <h2 class="text-lg font-semibold text-slate-900" id="panel-title">Créer un contrat</h2>
+      </div>
+      <button id="close-panel-button" class="p-2 rounded-full hover:bg-slate-100 focus:outline-none"><i class="ph-bold ph-x"></i></button>
+    </div>
+    <div class="px-6 py-4 space-y-4 overflow-y-auto">
+      <div class="bg-slate-50 rounded-xl p-4 border border-slate-100">
+        <p class="text-xs font-semibold uppercase text-slate-500 mb-2">Client</p>
+        <label class="text-sm text-slate-700 mb-1 block">Sélectionnez un client</label>
+        <select id="client-select" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+          <option value="">Choisir un client...</option>
+        </select>
+        <p id="client-type-hint" class="text-xs text-slate-500 mt-2">Le type sera détecté automatiquement.</p>
+      </div>
+
+      <div id="site-block" class="bg-slate-50 rounded-xl p-4 border border-slate-100 hidden">
+        <p class="text-xs font-semibold uppercase text-slate-500 mb-2">Site</p>
+        <label class="text-sm text-slate-700 mb-1 block">Nom du site</label>
+        <input id="site-name" type="text" placeholder="Ex: Résidence Les Jardins" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 mb-3">
+        <label class="text-sm text-slate-700 mb-1 block">Adresse du site</label>
+        <div class="relative">
+          <input id="site-address" type="text" placeholder="Adresse..." class="address-input w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+          <div class="address-results absolute z-20 bg-white border border-slate-200 rounded-lg mt-1 w-full hidden shadow-lg"></div>
+        </div>
+      </div>
+
+      <div class="bg-slate-50 rounded-xl p-4 border border-slate-100 space-y-3">
+        <p class="text-xs font-semibold uppercase text-slate-500">Période & Statut</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="text-sm text-slate-700 mb-1 block">Date de début</label>
+            <input id="start-date" type="date" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+          </div>
+          <div>
+            <label class="text-sm text-slate-700 mb-1 block">Date de fin</label>
+            <input id="end-date" type="date" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+          </div>
+        </div>
+        <div>
+          <label class="text-sm text-slate-700 mb-1 block">Statut</label>
+          <select id="status-select" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+            <option value="en_attente">En attente de validation</option>
+            <option value="actif">Actif</option>
+            <option value="resilie">Résilié</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="bg-slate-50 rounded-xl p-4 border border-slate-100 space-y-3">
+        <p class="text-xs font-semibold uppercase text-slate-500">Tarification</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="text-sm text-slate-700 mb-1 block">Prix HT</label>
+            <input id="price-ht" type="number" step="0.01" placeholder="0.00" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+          </div>
+          <div>
+            <label class="text-sm text-slate-700 mb-1 block">TVA (%)</label>
+            <input id="tva" type="number" step="0.1" value="20" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+          </div>
+        </div>
+        <div>
+          <label class="text-sm text-slate-700 mb-1 block">Périodicité</label>
+          <select id="periodicity" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+            <option value="mensuel">Mensuel</option>
+            <option value="trimestriel">Trimestriel</option>
+            <option value="annuel">Annuel</option>
+          </select>
+        </div>
+        <div class="bg-white rounded-lg p-3 border border-slate-200">
+                    <p class="text-sm text-slate-500">Calcul TTC</p>
+          <div class="flex items-baseline gap-2">
+            <span class="text-xl font-semibold text-slate-900" id="ttc-display">0,00 €</span>
+            <span class="text-xs text-slate-500" id="projection-display">Projection annuelle: 0,00 €</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+        <p class="text-xs font-semibold uppercase text-slate-500 mb-2">Récapitulatif</p>
+        <div id="recap" class="text-sm text-slate-700 space-y-1">
+          <p>Sélectionnez un client pour voir le récapitulatif.</p>
+        </div>
+      </div>
+    </div>
+    <div class="p-4 border-t border-slate-100 flex items-center justify-between">
+      <button id="cancel-button" class="px-4 py-2 rounded-lg text-slate-600 hover:bg-slate-100 text-sm font-semibold">Annuler</button>
+      <button id="save-button" class="px-4 py-2 rounded-lg bg-sky-600 text-white text-sm font-semibold shadow hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500">Enregistrer</button>
+    </div>
+  </aside>
+
+  <!-- Details drawer -->
+  <div id="details-backdrop" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm opacity-0 pointer-events-none transition" aria-hidden="true"></div>
+  <aside id="details-panel" class="fixed inset-y-0 right-0 w-full sm:w-[520px] bg-white shadow-2xl transform translate-x-full opacity-0 flex flex-col">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+      <div>
+        <p class="text-xs uppercase tracking-wide text-slate-400">Détails du contrat</p>
+        <h2 class="text-lg font-semibold text-slate-900" id="details-title">Contrat</h2>
+      </div>
+      <button id="details-close-btn" class="p-2 rounded-full hover:bg-slate-100 focus:outline-none"><i class="ph-bold ph-x"></i></button>
+    </div>
+    <div class="px-6 py-4 space-y-4 overflow-y-auto" id="details-content"></div>
+  </aside>
+
+  <!-- Toast -->
+  <div id="toast" class="fixed top-4 right-4 bg-slate-900 text-white px-4 py-3 rounded-lg shadow-lg opacity-0 pointer-events-none flex items-center gap-2">
+    <span id="toast-icon">✓</span>
+    <span id="toast-message" class="text-sm">Message</span>
+  </div>
+
+  <script>
+  const supabaseUrl = 'https://fmfylsykljkvyurcprij.supabase.co';
+  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZtZnlsc3lrbGprdnl1cmNwcmlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1ODQ3OTgsImV4cCI6MjA3OTE2MDc5OH0.hfgBflnh-nr1Ljfl5Chkp0y1EbZbm5XiyyDhsQcdSqE';
+  const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey, {
+    auth: { persistSession: true, autoRefreshToken: true, storage: localStorage }
+  });
+    const documentsBucket = 'contrat-documents';
+
+    const panel = document.getElementById('contract-panel');
+    const backdrop = document.getElementById('panel-backdrop');
+    const openBtn = document.getElementById('open-create-button');
+    const closeBtn = document.getElementById('close-panel-button');
+    const cancelBtn = document.getElementById('cancel-button');
+    const saveBtn = document.getElementById('save-button');
+    const panelTitle = document.getElementById('panel-title');
+    const toastEl = document.getElementById('toast');
+    const toastMessage = document.getElementById('toast-message');
+    const toastIcon = document.getElementById('toast-icon');
+    const container = document.getElementById('contracts-container');
+    const searchInput = document.getElementById('search-input');
+    const countChip = document.getElementById('contract-count');
+    const lastRefresh = document.getElementById('last-refresh');
+    const detailsDrawer = document.getElementById('details-panel');
+    const detailsBackdrop = document.getElementById('details-backdrop');
+    const detailsContent = document.getElementById('details-content');
+
+    let cachedContracts = [];
+    let clientsCache = [];
+    let staffByContract = {};
+    let editModeId = null;
+    let editRef = null;
+    let currentSocieteId = null;
+    let currentUserId = null;
+
+    async function requireSession() {
+      const { data } = await supabaseClient.auth.getSession();
+      if (data?.session) {
+        localStorage.setItem('supabaseSession', JSON.stringify(data.session));
+        return data.session;
+      }
+      await restoreSession();
+      const { data: data2 } = await supabaseClient.auth.getSession();
+      if (data2?.session) {
+        localStorage.setItem('supabaseSession', JSON.stringify(data2.session));
+      }
+      return data2?.session || null;
+    }
+
+    async function restoreSession() {
+      try {
+        const stored = localStorage.getItem('supabaseSession');
+        if (!stored) return null;
+        const parsed = JSON.parse(stored);
+        const access_token = parsed?.access_token;
+        const refresh_token = parsed?.refresh_token;
+        if (access_token && refresh_token) {
+          const { data, error } = await supabaseClient.auth.setSession({ access_token, refresh_token });
+          if (error) { console.warn('Session Supabase invalide', error); return null; }
+          return data?.session?.user?.id || null;
+        }
+      } catch (e) {
+        console.warn('Impossible de restaurer la session Supabase', e);
+      }
+      return null;
+    }
+
+    const openPanel = () => { panel.classList.remove('translate-x-full','opacity-0'); backdrop.classList.remove('opacity-0','pointer-events-none'); document.body.style.overflow = 'hidden'; };
+    const closePanel = () => { panel.classList.add('translate-x-full','opacity-0'); backdrop.classList.add('opacity-0','pointer-events-none'); document.body.style.overflow = ''; };
+    const openDetailsPanel = (html, title='Contrat') => {
+      detailsContent.innerHTML = html;
+      document.getElementById('details-title').textContent = title;
+      detailsDrawer.classList.remove('translate-x-full','opacity-0');
+      detailsBackdrop.classList.remove('opacity-0','pointer-events-none');
+      document.body.style.overflow = 'hidden';
+    };
+    const closeDetailsPanel = () => {
+      detailsDrawer.classList.add('translate-x-full','opacity-0');
+      detailsBackdrop.classList.add('opacity-0','pointer-events-none');
+      document.body.style.overflow = '';
+    };
+    function showToast(msg, type='info') {
+      toastMessage.textContent = msg;
+      toastIcon.textContent = type === 'error' ? 'âs ' : 'â"?o';
+      toastEl.classList.remove('opacity-0','pointer-events-none');
+      toastEl.style.transform = 'translateY(0)';
+      setTimeout(() => {
+        toastEl.classList.add('opacity-0','pointer-events-none');
+        toastEl.style.transform = 'translateY(-10px)';
+      }, 2600);
+    }
+
+    function slugifyLabel(label='') {
+      return label
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 60) || 'avenant';
+    }
+
+    function sanitizeFileName(name='document') {
+      return name
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-zA-Z0-9.\-]+/g, '-')
+        .replace(/-+/g, '-')
+        .toLowerCase();
+    }
+
+    function prettyLabelFromName(name='document') {
+      const base = name.replace(/\.[^.]+$/, '').replace(/^[0-9]+-/, '');
+      return base.replace(/-/g, ' ');
+    }
+
+    function renderDocList(target, files, emptyLabel) {
+      if (!target) return;
+      if (!files.length) {
+        target.innerHTML = `<p class="text-sm text-slate-500">${emptyLabel}</p>`;
+        return;
+      }
+      target.innerHTML = files.map(f => {
+        const dateStr = f.created_at ? new Date(f.created_at).toLocaleDateString() : '';
+        return `
+          <div class="flex items-center justify-between doc-tile bg-white/80 rounded-xl px-3 py-2 border border-slate-200 shadow-sm">
+            <div class="flex items-center gap-2 text-sm text-slate-700 overflow-hidden">
+              <i class="ph-bold ph-file-text text-slate-400"></i>
+              <a href="${f.url}" target="_blank" rel="noopener" class="truncate hover:text-sky-600">${prettyLabelFromName(f.name)}</a>
+            </div>
+            <span class="text-xs text-slate-400">${dateStr}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function listDocs(contractId, folder) {
+      const path = `contrats/${contractId}/${folder}`;
+      const { data, error } = await supabaseClient.storage
+        .from(documentsBucket)
+        .list(path, { limit: 100, sortBy: { column: 'created_at', order: 'desc' } });
+      if (error) {
+        console.error('Erreur listage documents', error);
+        return { files: [], error };
+      }
+      const files = await Promise.all((data || []).map(async file => {
+        const fullPath = `${path}/${file.name}`;
+        let url = '#';
+        let signedError = null;
+        const { data: signed, error: errSigned } = await supabaseClient.storage
+          .from(documentsBucket)
+          .createSignedUrl(fullPath, 60 * 60); // 1h
+        if (!errSigned && signed?.signedUrl) {
+          url = signed.signedUrl;
+        } else {
+          signedError = errSigned;
+          const { data: urlData } = supabaseClient.storage.from(documentsBucket).getPublicUrl(fullPath);
+          url = urlData?.publicUrl || '#';
+        }
+        if (signedError) console.warn('Signed URL fallback to public', signedError);
+        return { name: file.name, url, created_at: file.created_at };
+      }));
+      return { files, error: null };
+    }
+
+    async function refreshDocuments(contractId) {
+      const docArea = document.getElementById('documents-area');
+      if (!docArea || parseInt(docArea.dataset.contractId, 10) !== contractId) return;
+      const [contratRes, avenantRes, rapportRes, cdcRes] = await Promise.all([
+        listDocs(contractId, 'contrat'),
+        listDocs(contractId, 'avenants'),
+        listDocs(contractId, 'rapports'),
+        listDocs(contractId, 'cahier-des-charges')
+      ]);
+      renderDocList(document.getElementById('doc-list-contrat'), contratRes.files, 'Aucun contrat depose');
+      renderDocList(document.getElementById('doc-list-avenants'), avenantRes.files, 'Aucun avenant depose');
+      renderDocList(document.getElementById('doc-list-rapports'), rapportRes.files, 'Aucun rapport depose');
+      renderDocList(document.getElementById('doc-list-cdc'), cdcRes.files, 'Aucun cahier des charges depose');
+      if (contratRes.error || avenantRes.error || rapportRes.error || cdcRes.error) {
+        showToast("Impossible de charger certains documents (verifiez le bucket)", 'error');
+      }
+    }
+
+    async function handleDocumentUpload(contractId, type, file, label='') {
+      if (!file) return;
+      const folderMap = { contrat: 'contrat', avenant: 'avenants', rapport: 'rapports', cdc: 'cahier-des-charges' };
+      const folder = folderMap[type];
+      if (!folder) return;
+      const safeName = sanitizeFileName(file.name || `${type}.pdf`);
+      const prefix = type === 'avenant' ? `${slugifyLabel(label)}-` : '';
+      const path = `contrats/${contractId}/${folder}/${Date.now()}-${prefix}${safeName}`;
+      const { error } = await supabaseClient.storage.from(documentsBucket).upload(path, file, {
+        upsert: false,
+        contentType: file.type
+      });
+      if (error) {
+        console.error('Upload doc', error);
+        showToast("Upload impossible (verifiez le bucket contrat-documents)", 'error');
+        return;
+      }
+      showToast('Document ajoute');
+      refreshDocuments(contractId);
+    }
+
+    function setupDocumentHandlers(contractId) {
+      const area = document.getElementById('documents-area');
+      if (!area) return;
+      const labelInput = document.getElementById('avenant-label');
+      area.addEventListener('change', (e) => {
+        const input = e.target.closest('.doc-input');
+        if (!input || !input.files?.length) return;
+        const type = input.dataset.type;
+        const file = input.files[0];
+        const label = type === 'avenant' ? (labelInput?.value.trim() || '') : '';
+        handleDocumentUpload(contractId, type, file, label);
+        input.value = '';
+      });
+      refreshDocuments(contractId);
+    }
+
+    function slugifyString(str='') {
+      return (str || 'site')
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    }
+
+    function resolveBaseUrl() {
+      if (window.location?.origin && window.location.origin !== 'null') return window.location.origin;
+      return 'https://nessaly.app';
+    }
+
+    function buildQrUrl(type, data) {
+      const base = resolveBaseUrl();
+      const siteLabel = data.residence || data.address || 'site';
+      const site = slugifyString(siteLabel);
+      const contractId = data.ref || data.id;
+      const params = new URLSearchParams();
+      if (type === 'pointage') {
+        params.set('contrat', contractId);
+        params.set('site', siteLabel);
+        if (data.address) params.set('address', data.address);
+        const agentId = data.agent_id || data.agent || data.agent_assign_id;
+        if (agentId) params.set('agent', agentId);
+        return `${base}/pointage/?${params.toString()}`;
+      } else {
+        params.set('contrat', contractId);
+        params.set('site', siteLabel);
+        params.set('address', data.address || '');
+        params.set('societe', data.client_name || data.societe_nom || '');
+        params.set('contact', data.contact_societe || '');
+        return `${base}/signalement.html?${params.toString()}`;
+      }
+    }
+
+    function attachAddressAutocomplete(input, results) {
+      let t;
+      input.addEventListener('input', () => {
+        clearTimeout(t);
+        const q = input.value.trim();
+        if (q.length < 3) { results.classList.add('hidden'); return; }
+        t = setTimeout(async () => {
+          try {
+            const res = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(q)}&limit=5`);
+            const data = await res.json();
+            results.innerHTML = '';
+            if (!data.features.length) { results.classList.add('hidden'); return; }
+            data.features.forEach(f => {
+              const div = document.createElement('div');
+              div.className = 'px-3 py-2 hover:bg-slate-100 cursor-pointer text-sm';
+              div.textContent = f.properties.label;
+              div.addEventListener('click', () => { input.value = f.properties.label; results.classList.add('hidden'); updateRecap(); });
+              results.appendChild(div);
+            });
+            results.classList.remove('hidden');
+          } catch(e) { console.error(e); }
+        }, 250);
+      });
+      document.addEventListener('click', e => {
+        if (!results.contains(e.target) && !input.contains(e.target)) results.classList.add('hidden');
+      });
+    }
+
+    async function ensureSocieteContext() {
+      try {
+        const session = await requireSession();
+        const userId = session?.user?.id;
+        const userEmail = session?.user?.email;
+        currentUserId = userId || currentUserId;
+        if (!userId && !userEmail) return null;
+
+        // 1) recherche par auth_id (chemin normal)
+        const { data: byAuth, error: errAuth } = await supabaseClient
+          .from('societes')
+          .select('id, auth_id')
+          .eq('auth_id', userId || '')
+          .maybeSingle();
+        if (byAuth?.id) {
+          currentSocieteId = byAuth.id;
+          return currentSocieteId;
+        }
+
+        // 2) fallback pour les comptes anciens : recherche par email de contact
+        if (userEmail) {
+          const { data: byEmail, error: errEmail } = await supabaseClient
+            .from('societes')
+            .select('id, auth_id')
+            .ilike('email_contact', userEmail)
+            .maybeSingle();
+          if (byEmail?.id) {
+            // Fix legacy records without auth_id to satisfy RLS (societe auth matches current user)
+            if (!byEmail.auth_id && userId) {
+              const { error: updErr } = await supabaseClient
+                .from('societes')
+                .update({ auth_id: userId })
+                .eq('id', byEmail.id);
+              if (updErr) console.warn('Impossible de lier la societe a l utilisateur courant', updErr);
+            }
+            currentSocieteId = byEmail.id;
+            return currentSocieteId;
+          }
+          if (errEmail) console.warn('Fallback email societe', errEmail);
+        }
+        if (errAuth) console.warn('Auth_id societe introuvable', errAuth);
+        return null;
+      } catch (e) {
+        console.warn('Contexte societe introuvable', e);
+        return null;
+      }
+    }
+
+    async function loadClients() {
+      const { data: directs } = await supabaseClient.from('clients_directs').select('id, prenom, nom, adresse');
+      const { data: mandataires } = await supabaseClient.from('mandataires').select('id, nom_entreprise, adresse_entreprise');
+      clientsCache = [];
+      const select = document.getElementById('client-select');
+      select.innerHTML = '<option value=\"\">Choisir un client...</option>';
+      (directs || []).forEach(c => {
+        const label = `${c.prenom} ${c.nom}`;
+        const opt = document.createElement('option');
+        opt.value = `direct:${c.id}`;
+        opt.textContent = label;
+        opt.dataset.type = 'direct';
+        opt.dataset.address = c.adresse || '';
+        opt.dataset.display = label;
+        select.appendChild(opt);
+        clientsCache.push({ type: 'direct', id: c.id, label, address: c.adresse });
+      });
+      (mandataires || []).forEach(m => {
+        const label = m.nom_entreprise;
+        const opt = document.createElement('option');
+        opt.value = `mandataire:${m.id}`;
+        opt.textContent = label;
+        opt.dataset.type = 'mandataire';
+        opt.dataset.address = m.adresse_entreprise || '';
+        opt.dataset.display = label;
+        select.appendChild(opt);
+        clientsCache.push({ type: 'mandataire', id: m.id, label, address: m.adresse_entreprise });
+      });
+    }
+
+    async function loadStaffAssignments() {
+      if (!currentSocieteId) { staffByContract = {}; return; }
+      const { data, error } = await supabaseClient
+        .from('salaries')
+        .select('id, prenom, nom, poste, site, contrat_id, contrats!inner(id, societe_id)')
+        .eq('contrats.societe_id', currentSocieteId);
+      if (error) {
+        console.error('Erreur chargement salaries', error);
+        staffByContract = {};
+        return;
+      }
+      staffByContract = (data || []).reduce((acc, s) => {
+        if (!s.contrat_id) return acc;
+        if (!acc[s.contrat_id]) acc[s.contrat_id] = [];
+        acc[s.contrat_id].push(s);
+        return acc;
+      }, {});
+    }
+
+    async function loadContracts() {
+      if (!currentSocieteId) await ensureSocieteContext();
+      if (!currentSocieteId) {
+        container.innerHTML = '<div class="col-span-full text-center text-slate-500">Aucune sociét associe  ce compte.</div>';
+        return;
+      }
+      container.innerHTML = '<div class="col-span-full text-center text-slate-500">Chargement...</div>';
+      let query = supabaseClient.from('contrats').select('*').order('created_at', { ascending: false });
+      query = query.eq('societe_id', currentSocieteId);
+      const { data, error } = await query;
+      if (error) { console.error(error); container.innerHTML = '<div class="col-span-full text-center text-red-500">Erreur de chargement.</div>'; return; }
+      cachedContracts = data || [];
+      await loadStaffAssignments();
+      renderContracts();
+      lastRefresh.textContent = 'Mis   jour   ' + new Date().toLocaleTimeString();
+    }
+
+    function filteredContracts() {
+      const q = searchInput.value.trim().toLowerCase();
+      if (!q) return cachedContracts;
+      return cachedContracts.filter(c =>
+        (c.ref || '').toLowerCase().includes(q) ||
+        (c.client_name || '').toLowerCase().includes(q) ||
+        (c.residence || '').toLowerCase().includes(q) ||
+        (c.address || '').toLowerCase().includes(q)
+      );
+    }
+
+    function renderContracts() {
+      const list = filteredContracts();
+      countChip.textContent = `${list.length} contrat${list.length > 1 ? 's' : ''}`;
+      if (!list.length) { container.innerHTML = '<div class="col-span-full text-center text-slate-500 py-12">Aucun contrat pour le moment.</div>'; return; }
+      container.innerHTML = '';
+      list.forEach(c => {
+        const card = document.createElement('div');
+        card.className = 'glass-card floating rounded-2xl p-5 border border-slate-100 shadow-md relative cursor-pointer flex flex-col gap-4';
+        card.dataset.id = c.id;
+        const statut = c.statut || 'en_attente';
+        const statutLabel = statut === 'actif' ? 'Actif' : statut === 'resilie' ? 'Resilie' : 'En attente';
+        const statutColor = statut === 'actif' ? 'bg-emerald-100 text-emerald-700' : (statut === 'resilie' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700');
+        const price = c.prix_ttc || c.prix_ht ? `${(c.prix_ttc || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} EUR TTC` : '-';
+        const staffList = staffByContract[c.id] || [];
+        const staffLabel = staffList.length ? `${staffList.length} salarie${staffList.length > 1 ? 's' : ''}` : 'Aucun salarie';
+        card.innerHTML = `
+          <div class="flex items-start justify-between gap-3">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2 text-xs text-slate-500">
+                <span class="px-2 py-1 rounded-full bg-white/70 border border-slate-200">Ref ${c.ref || 'N/A'}</span>
+                <span class="flex items-center gap-1"><i class="ph-bold ph-map-pin text-slate-400"></i>${c.residence || 'Site N/A'}</span>
+              </div>
+              <h3 class="text-lg font-semibold text-slate-900">${c.client_name || 'Client'}</h3>
+              <p class="text-sm text-slate-500 overflow-hidden text-ellipsis">${c.address || ''}</p>
+            </div>
+            <span class="px-3 py-1 rounded-full text-xs font-semibold ${statutColor}">${statutLabel}</span>
+          </div>
+          <div class="flex items-center justify-between text-sm text-slate-700">
+            <div class="flex items-center gap-2 text-slate-600">
+              <i class="ph-bold ph-calendar-blank"></i>
+              <span>${c.date_debut || 'N/A'} - ${c.date_fin || 'N/A'}</span>
+            </div>
+            <span class="text-base font-semibold text-slate-900">${price}</span>
+          </div>
+          <div class="flex items-center gap-2 text-xs text-slate-600">
+            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-white/80 border border-slate-200"><i class="ph-bold ph-users"></i>${staffLabel}</span>
+          </div>
+          <div class="card-actions flex justify-end items-center gap-2 pt-3 border-t border-slate-100 mt-2 opacity-0 transition-opacity duration-200">
+            <button class="action-btn details-btn text-slate-400 hover:text-blue-600" data-id="${c.id}"><i class="ph-bold ph-eye text-xl"></i></button>
+            <button class="action-btn edit-btn text-slate-400 hover:text-sky-600" data-id="${c.id}"><i class="ph-bold ph-pencil-simple text-xl"></i></button>
+            <button class="action-btn delete-btn text-slate-400 hover:text-red-600" data-id="${c.id}"><i class="ph-bold ph-trash text-xl"></i></button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function calcPrices() {
+      const ht = parseFloat(document.getElementById('price-ht').value) || 0;
+      const tva = parseFloat(document.getElementById('tva').value) || 0;
+      const periodicity = document.getElementById('periodicity').value;
+      const ttc = ht * (1 + tva / 100);
+      let factor = 12; if (periodicity === 'trimestriel') factor = 4; if (periodicity === 'annuel') factor = 1;
+      const projection = ttc * factor;
+      document.getElementById('ttc-display').textContent = `${ttc.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €`;
+      document.getElementById('projection-display').textContent = `Projection annuelle: ${projection.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €`;
+      return { ttc, projection };
+    }
+
+    function guessClientValue(clientId) {
+      const d = clientsCache.find(c => c.type === 'direct' && c.id === clientId);
+      if (d) return `direct:${clientId}`;
+      const m = clientsCache.find(c => c.type === 'mandataire' && c.id === clientId);
+      if (m) return `mandataire:${clientId}`;
+      return '';
+    }
+
+    function setFormFromContract(c) {
+      editModeId = c.id;
+      editRef = c.ref || null;
+      saveBtn.textContent = 'Mettre   jour';
+      panelTitle.textContent = 'Modifier un contrat';
+      const clientVal = guessClientValue(c.client_id);
+      const sel = document.getElementById('client-select');
+      if (clientVal) sel.value = clientVal; else sel.selectedIndex = 0;
+      const opt = sel.options[sel.selectedIndex];
+      const isMand = opt && opt.dataset.type === 'mandataire';
+      if (isMand) {
+        document.getElementById('site-block').classList.remove('hidden');
+        document.getElementById('site-name').value = c.residence || '';
+        document.getElementById('site-address').value = c.address || '';
+        document.getElementById('client-type-hint').textContent = 'Mandataire détecté';
+      } else {
+        document.getElementById('site-block').classList.add('hidden');
+        document.getElementById('site-name').value = '';
+        document.getElementById('site-address').value = '';
+        document.getElementById('client-type-hint').textContent = 'Client direct détecté';
+      }
+      document.getElementById('start-date').value = c.date_debut || '';
+      document.getElementById('end-date').value = c.date_fin || '';
+      if (c.statut) document.getElementById('status-select').value = c.statut;
+      if (typeof c.prix_ht !== 'undefined') document.getElementById('price-ht').value = c.prix_ht;
+      if (typeof c.tva !== 'undefined') document.getElementById('tva').value = c.tva;
+      if (c.periodicite) document.getElementById('periodicity').value = c.periodicite;
+      calcPrices();
+      updateRecap();
+    }
+
+    function updateRecap() {
+      const recap = document.getElementById('recap');
+      const sel = document.getElementById('client-select');
+      const siteName = document.getElementById('site-name').value.trim();
+      const siteAddr = document.getElementById('site-address').value.trim();
+      const start = document.getElementById('start-date').value;
+      const end = document.getElementById('end-date').value;
+      const status = document.getElementById('status-select').value;
+      const periodicity = document.getElementById('periodicity').value;
+      calcPrices();
+      const opt = sel.options[sel.selectedIndex];
+      if (!opt || !opt.value) { recap.innerHTML = '<p>Sélectionnez un client pour voir le récapitulatif.</p>'; return; }
+      const type = opt.dataset.type;
+      const addr = opt.dataset.address || '';
+      recap.innerHTML = `
+        <p><strong>Client:</strong> ${opt.dataset.display}</p>
+        <p><strong>Type:</strong> ${type === 'mandataire' ? 'Mandataire' : 'Direct'}</p>
+        <p><strong>Site:</strong> ${type === 'mandataire' ? (siteName || 'Non renseigné') : 'Adresse client'}</p>
+        <p><strong>Adresse:</strong> ${type === 'mandataire' ? (siteAddr || 'Non renseignée') : (addr || 'Non renseignée')}</p>
+        <p><strong>Période:</strong> ${start || 'N/A'} â??T ${end || 'N/A'}</p>
+        <p><strong>Statut:</strong> ${status}</p>
+        <p><strong>Périodicité:</strong> ${periodicity}</p>
+      `;
+    }
+
+    async function saveContract() {
+      const session = await requireSession();
+      if (!session) {
+        showToast('Session requise pour enregistrer un contrat.', 'error');
+        setTimeout(() => { window.location.href = 'societes_login.html'; }, 800);
+        return;
+      }
+      if (!currentSocieteId) {
+        await restoreSession();
+        await ensureSocieteContext();
+      }
+      if (!currentSocieteId) { showToast('Session expire, reconnectez-vous.', 'error'); return; }
+      const sel = document.getElementById('client-select');
+      const val = sel.value;
+      if (!val) { showToast('Choisissez un client', 'error'); return; }
+      const [type, idStr] = val.split(':');
+      const clientId = parseInt(idStr, 10);
+      const opt = sel.options[sel.selectedIndex];
+      const clientLabel = opt.dataset.display || '';
+      const addrClient = opt.dataset.address || '';
+      const isMand = type === 'mandataire';
+      const siteName = document.getElementById('site-name').value.trim();
+      const siteAddr = document.getElementById('site-address').value.trim();
+      const start = document.getElementById('start-date').value || null;
+      const end = document.getElementById('end-date').value || null;
+        const statut = document.getElementById('status-select').value;
+        const periodicity = document.getElementById('periodicity').value;
+        const prix_ht = parseFloat(document.getElementById('price-ht').value) || 0;
+        const tva = parseFloat(document.getElementById('tva').value) || 0;
+        const { ttc } = calcPrices();
+        const isEdit = !!editModeId;
+        const refValue = isEdit && editRef ? editRef : `CTR-${Date.now()}`;
+        const dataToSave = {
+          ref: refValue,
+          client_id: clientId,
+          client_name: clientLabel,
+          residence: isMand ? (siteName || clientLabel) : clientLabel,
+          address: isMand ? (siteAddr || '') : (addrClient || ''),
+          date_debut: start,
+          date_fin: end,
+          statut,
+          prix_ht,
+          tva,
+          periodicite: periodicity,
+          prix_ttc: ttc,
+          societe_id: currentSocieteId
+        };
+      let error;
+      if (isEdit) {
+        const { error: errUpdate } = await supabaseClient.from('contrats').update(dataToSave).eq('id', editModeId);
+        error = errUpdate;
+      } else {
+        const { error: errInsert } = await supabaseClient.from('contrats').insert([dataToSave]);
+        error = errInsert;
+      }
+      if (error) { console.error(error); showToast("Erreur lors de l'enregistrement", 'error'); return; }
+      showToast(isEdit ? 'Contrat mis   jour' : 'Contrat créé');
+      closePanel();
+      resetForm();
+      loadContracts();
+    }
+
+    function resetForm() {
+      editModeId = null; editRef = null;
+      panelTitle.textContent = 'Créer un contrat';
+      document.getElementById('client-select').value = '';
+      document.getElementById('site-name').value = '';
+      document.getElementById('site-address').value = '';
+      document.getElementById('start-date').value = '';
+      document.getElementById('end-date').value = '';
+      document.getElementById('status-select').value = 'en_attente';
+      document.getElementById('price-ht').value = '';
+      document.getElementById('tva').value = '20';
+      document.getElementById('periodicity').value = 'mensuel';
+      document.getElementById('site-block').classList.add('hidden');
+      document.getElementById('client-type-hint').textContent = 'Le type sera détecté automatiquement.';
+      saveBtn.textContent = 'Enregistrer';
+      updateRecap();
+    }
+
+    async function renderStaffForContract(contractId) {
+      const target = document.getElementById('staff-list');
+      if (!target) return;
+      if (!currentSocieteId) { target.innerHTML = '<p class="text-sm text-red-500">Session requise.</p>'; return; }
+      target.innerHTML = '<p class="text-sm text-slate-500">Chargement...</p>';
+      const { data, error } = await supabaseClient
+        .from('salaries')
+        .select('id, ref, prenom, nom, poste, site, statut, contrat_id, contrats!inner(id, societe_id)')
+        .eq('contrat_id', contractId)
+        .eq('contrats.societe_id', currentSocieteId);
+      if (error) { console.error(error); target.innerHTML = '<p class="text-sm text-red-500">Erreur de chargement des salaries.</p>'; return; }
+      if (!data || !data.length) { target.innerHTML = '<p class="text-sm text-slate-500">Aucun salarie assigne.</p>'; staffByContract[contractId] = []; return; }
+      staffByContract[contractId] = data;
+      target.innerHTML = data.map(s => `
+        <div class="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 bg-white">
+          <div>
+            <p class="text-sm font-semibold text-slate-800">${(s.prenom || '') + ' ' + (s.nom || '')}</p>
+            <p class="text-xs text-slate-500">${s.poste || 'Poste N/A'} - ${s.site || 'Site N/A'}</p>
+          </div>
+          <span class="text-[11px] px-2 py-1 rounded-full bg-slate-100 text-slate-700">${s.ref || 'EMP'}</span>
+        </div>
+      `).join('');
+    }
+    function showDetails(data) {
+      const statut = data.statut || 'en_attente';
+      const statutLabel = statut === 'actif' ? 'Actif' : (statut === 'resilie' ? 'R?sili?' : 'En attente');
+      const prix = data.prix_ttc || data.prix_ht ? `${(data.prix_ttc || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} ?'?` : '??"';
+      const qrApi = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=";
+      const pointageUrl = buildQrUrl('pointage', data);
+      const signalementUrl = buildQrUrl('signalement', data);
+      const agentLabel = data.agent_id || data.agent || null;
+      const html = `
+        <div class="space-y-3 text-sm text-slate-700">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-xs text-slate-500">Ref: ${data.ref || 'N/A'}</p>
+              <p class="text-base font-semibold text-slate-900">${data.client_name || 'Client'}</p>
+            </div>
+            <span class="px-3 py-1 rounded-full text-xs font-semibold ${statut === 'actif' ? 'bg-emerald-100 text-emerald-700' : (statut === 'resilie' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700')}">${statutLabel}</span>
+          </div>
+          <p><strong>Site:</strong> ${data.residence || 'N/A'}</p>
+          <p><strong>Adresse:</strong> ${data.address || 'N/A'}</p>
+          <p><strong>Dates:</strong> ${data.date_debut || 'N/A'} ??' ${data.date_fin || 'N/A'}</p>
+          <p><strong>Tarif:</strong> ${prix} (TVA ${data.tva || 0}%, p?riodicit? ${data.periodicite || 'N/A'})</p>
+        </div>
+        <div class="mt-4 space-y-4">
+          <div class="space-y-2">
+            <p class="section-title font-semibold">SALARIES ASSIGNES</p>
+            <div id="staff-list" class="grid gap-2"></div>
+          </div>
+          <p class="section-title font-semibold">DOCUMENTS & SUIVI</p>
+          <div id="documents-area" data-contract-id="${data.id}" class="grid gap-3 md:grid-cols-2">
+            <div class="card-surface p-3 space-y-2 border border-slate-100">
+              <div class="flex items-center justify-between gap-3">
+                <div>
+                  <p class="font-semibold text-slate-800">Contrat</p>
+                  <p class="text-xs text-slate-500">PDF, DOC ou image</p>
+                </div>
+                <label class="inline-flex items-center gap-2 px-3 py-2 bg-slate-900 text-white rounded-lg text-sm font-semibold cursor-pointer hover:bg-slate-800">
+                  <i class="ph-bold ph-upload-simple"></i>
+                  <span>Ajouter</span>
+                  <input type="file" class="hidden doc-input" data-type="contrat" accept=".pdf,.doc,.docx,image/*">
+                </label>
+              </div>
+              <div id="doc-list-contrat" class="text-sm text-slate-600">Aucun contrat depose</div>
+            </div>
+
+            <div class="card-surface p-3 space-y-3 border border-slate-100">
+              <div class="flex flex-col gap-3">
+                <div>
+                  <p class="font-semibold text-slate-800">Avenants</p>
+                  <p class="text-xs text-slate-500">Ajoutez un libelle puis importez le fichier</p>
+                </div>
+                <div class="flex gap-2 w-full">
+                  <input id="avenant-label" type="text" placeholder="Libelle de l'avenant" class="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+                  <label class="inline-flex items-center gap-2 px-3 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-semibold cursor-pointer hover:bg-slate-50">
+                    <i class="ph-bold ph-paperclip"></i>
+                    <span>Ajouter</span>
+                    <input type="file" class="hidden doc-input" data-type="avenant" accept=".pdf,.doc,.docx,image/*">
+                  </label>
+                </div>
+              </div>
+              <div id="doc-list-avenants" class="text-sm text-slate-600">Aucun avenant depose</div>
+            </div>
+
+            <div class="card-surface p-3 space-y-2 border border-slate-100">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="font-semibold text-slate-800">Rapports</p>
+                  <p class="text-xs text-slate-500">Centralisez vos rapports</p>
+                </div>
+                <label class="inline-flex items-center gap-2 px-3 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-semibold cursor-pointer hover:bg-slate-50">
+                  <i class="ph-bold ph-upload-simple"></i>
+                  <span>Ajouter</span>
+                  <input type="file" class="hidden doc-input" data-type="rapport" accept=".pdf,.doc,.docx,image/*">
+                </label>
+              </div>
+              <div id="doc-list-rapports" class="text-sm text-slate-600">Aucun rapport depose</div>
+            </div>
+
+            <div class="card-surface p-3 space-y-2 border border-slate-100">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="font-semibold text-slate-800">Cahier des charges</p>
+                  <p class="text-xs text-slate-500">Version a jour</p>
+                </div>
+                <label class="inline-flex items-center gap-2 px-3 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-semibold cursor-pointer hover:bg-slate-50">
+                  <i class="ph-bold ph-upload-simple"></i>
+                  <span>Ajouter</span>
+                  <input type="file" class="hidden doc-input" data-type="cdc" accept=".pdf,.doc,.docx,image/*">
+                </label>
+              </div>
+              <div id="doc-list-cdc" class="text-sm text-slate-600">Aucun cahier depose</div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-center">
+            <div class="bg-slate-50 border border-slate-200 rounded-lg p-4">
+              <p class="font-semibold mb-2">QR Pointage agent</p>
+              <img src="${qrApi}${encodeURIComponent(pointageUrl)}" alt="QR Pointage" class="mx-auto rounded-md">
+              <p class="text-xs text-slate-500 mt-2 break-all">${pointageUrl}</p>
+              ${agentLabel ? `<p class="text-xs text-slate-500 mt-1">Agent autorise: ${agentLabel}</p>` : `<p class="text-xs text-amber-600 mt-1">Aucun agent assigne (QR non restreint)</p>`}
+            </div>
+            <div class="bg-slate-50 border border-slate-200 rounded-lg p-4">
+              <p class="font-semibold mb-2">QR Signalement</p>
+              <img src="${qrApi}${encodeURIComponent(signalementUrl)}" alt="QR Signalement" class="mx-auto rounded-md">
+              <p class="text-xs text-slate-500 mt-2 break-all">${signalementUrl}</p>
+            </div>
+          </div>
+        </div>
+      `;
+      openDetailsPanel(html, data.residence || 'Contrat');
+      renderStaffForContract(data.id);
+      setupDocumentHandlers(data.id);
+    }
+
+    // Events
+    openBtn.addEventListener('click', () => { resetForm(); openPanel(); });
+    closeBtn.addEventListener('click', closePanel);
+    cancelBtn.addEventListener('click', closePanel);
+    backdrop.addEventListener('click', closePanel);
+    saveBtn.addEventListener('click', saveContract);
+    searchInput.addEventListener('input', renderContracts);
+
+    container.addEventListener('click', async (e) => {
+      const btn = e.target.closest('.action-btn');
+      const card = e.target.closest('.glass-card');
+      if (btn) {
+        e.stopPropagation();
+        const id = parseInt(btn.dataset.id, 10);
+        if (btn.classList.contains('delete-btn')) {
+          if (confirm('Supprimer ce contrat ?')) {
+            const { error } = await supabaseClient.from('contrats').delete().eq('id', id);
+            if (error) showToast('Suppression impossible', 'error');
+            else { showToast('Contrat supprimé'); loadContracts(); }
+          }
+        } else if (btn.classList.contains('edit-btn')) {
+          const { data, error } = await supabaseClient.from('contrats').select('*').eq('id', id).single();
+          if (error || !data) { showToast('Impossible de charger le contrat', 'error'); return; }
+          setFormFromContract(data);
+          openPanel();
+        } else if (btn.classList.contains('details-btn')) {
+          const { data, error } = await supabaseClient.from('contrats').select('*').eq('id', id).single();
+          if (error || !data) { showToast('Impossible de charger le contrat', 'error'); return; }
+          showDetails(data);
+        }
+        return;
+      }
+      if (card) {
+        const id = parseInt(card.dataset.id, 10);
+        const { data, error } = await supabaseClient.from('contrats').select('*').eq('id', id).single();
+        if (error || !data) { showToast('Impossible de charger le contrat', 'error'); return; }
+        showDetails(data);
+      }
+    });
+
+    document.getElementById('client-select').addEventListener('change', (e) => {
+      const opt = e.target.options[e.target.selectedIndex];
+      if (opt && opt.dataset.type === 'mandataire') {
+        document.getElementById('site-block').classList.remove('hidden');
+        document.getElementById('client-type-hint').textContent = 'Mandataire détecté';
+      } else {
+        document.getElementById('site-block').classList.add('hidden');
+        document.getElementById('client-type-hint').textContent = 'Client direct détecté';
+      }
+      updateRecap();
+    });
+
+    ['site-name','site-address','start-date','end-date','status-select','price-ht','tva','periodicity'].forEach(id => {
+      const el = document.getElementById(id);
+      el.addEventListener('input', updateRecap);
+      el.addEventListener('change', updateRecap);
+    });
+
+    document.querySelectorAll('.address-input').forEach(input => {
+      const results = input.parentElement.querySelector('.address-results');
+      attachAddressAutocomplete(input, results);
+    });
+    detailsBackdrop.addEventListener('click', closeDetailsPanel);
+    document.getElementById('details-close-btn').addEventListener('click', closeDetailsPanel);
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const session = await requireSession();
+      if (!session) {
+        showToast('Session introuvable, redirection vers la connexion...', 'error');
+        setTimeout(() => { window.location.href = 'societes_login.html'; }, 900);
+        return;
+      }
+      await ensureSocieteContext();
+      if (!currentSocieteId) {
+        showToast('Aucune societe associee, redirection...', 'error');
+        setTimeout(() => { window.location.href = 'societes_login.html'; }, 900);
+        return;
+      }
+      await loadClients();
+      await loadContracts();
+      updateRecap();
+    });
+  </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

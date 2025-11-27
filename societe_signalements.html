@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Suivi des Signalements - Nessaly's</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="vendor/phosphor/index.js"></script>
+    <style>
+        :root {
+          --ink: #0c2f35;
+          --navy: #0f304b;
+          --red: #ce3c35;
+          --sand: #b58a64;
+          --bg: #eaf3ff;
+        }
+        body { font-family: 'Outfit', sans-serif; background: radial-gradient(140% 120% at 20% 0%, #f3f8ff 0%, var(--bg) 50%, #f9fbff 100%); color: #0c2f35; }
+        .sidebar { background: linear-gradient(180deg, #0f304b, #0c2f35); border-right: 1px solid rgba(255,255,255,0.05); color: #e8eef2; }
+        .sidebar a { color: #cfd8dc; }
+        .sidebar a:hover { background: rgba(255,255,255,0.06); color: #ffffff; }
+        .nav-item.active { background: rgba(255,255,255,0.12); color: #ffffff; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); }
+        .stat-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 18px; box-shadow: 0 14px 40px rgba(15,48,75,0.08); }
+        .report-card { background: rgba(255,255,255,0.96); border: 1px solid #e2e8f0; border-radius: 18px; padding: 24px; box-shadow: 0 20px 60px rgba(15,48,75,0.08); backdrop-filter: blur(2px); }
+        .badge-soft { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 999px; font-weight: 700; font-size: 12px; border: 1px solid transparent; }
+        .pill { background: rgba(12,47,53,0.08); color: #0f304b; }
+        .gradient-chip { background: linear-gradient(120deg, var(--red), var(--navy)); box-shadow: 0 10px 30px rgba(12,47,53,0.22); }
+        .card-surface { border: 1px solid #e7e5e0; box-shadow: 0 12px 40px rgba(12,47,53,0.08); }
+    </style>
+</head>
+<body class="flex h-screen">
+    <aside class="w-64 sidebar flex flex-col p-6">
+        <div class="text-xl font-bold tracking-wide mb-10 text-center text-slate-100">ESPACE <span class="text-sky-200">CLIENT</span></div>
+        <nav class="flex-1 space-y-2">
+            <a href="dashboard_societe.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition">
+                <i class="ph-fill ph-squares-four text-lg"></i>
+                <span>Vue d'ensemble</span>
+            </a>
+            <a href="societe_signalements.html" class="flex items-center gap-3 p-3 rounded-xl nav-item active font-medium">
+                <i class="ph ph-warning-circle text-lg"></i>
+                <span>Suivi des signalements</span>
+            </a>
+            <a href="societe_clients.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition">
+                <i class="ph ph-users text-lg"></i>
+                <span>Suivi des clients</span>
+            </a>
+            <a href="societe_contrats.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition">
+                <i class="ph ph-file-text text-lg"></i>
+                <span>Suivi des contrats</span>
+            </a>
+            <a href="societe_rapports.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition">
+                <i class="ph ph-chart-bar text-lg"></i>
+                <span>Rapports</span>
+            </a>
+            <a href="societe_cahier_des_charges.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition">
+                <i class="ph ph-notebook text-lg"></i>
+                <span>Cahier des charges</span>
+            </a>
+            <a href="societe_salaries.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition">
+                <i class="ph ph-currency-eur text-lg"></i>
+                <span>Suivi des salariés</span>
+            </a>
+            <a href="societe_pointages.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition">
+                <i class="ph ph-timer text-lg"></i>
+                <span>Suivi des pointages</span>
+            </a>
+            <a href="societe_conges.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition">
+                <i class="ph ph-calendar-blank text-lg"></i>
+                <span>Suivi des demandes de congés</span>
+            </a>
+        </nav>
+        <a href="index.html" class="flex items-center gap-2 text-slate-200 hover:text-white transition mt-auto">
+            <i class="ph ph-sign-out"></i> Déconnexion
+        </a>
+    </aside>
+    <main class="flex-1 p-8 md:p-10 overflow-y-auto">
+        <div class="max-w-6xl mx-auto space-y-8">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <p class="text-xs uppercase text-slate-500 font-semibold tracking-wide">Signalements</p>
+                    <h1 class="text-4xl font-bold text-slate-900">Signalements Résidents</h1>
+                    <p class="text-sm text-slate-600 mt-1">Gérez les signalements de vos copropriétés avec le même affichage que pour vos résidents.</p>
+                </div>
+                <span class="px-3 py-2 rounded-full bg-white/70 border border-white/60 text-xs font-semibold text-slate-600 shadow-sm backdrop-blur">Mise à jour à 14:22</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="stat-card">
+                    <div class="flex items-center justify-between">
+                        <p class="text-sm font-semibold text-slate-600">Nouveaux</p>
+                        <span class="h-10 w-10 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center text-lg"><i class="ph ph-warning"></i></span>
+                    </div>
+                    <p class="text-3xl font-bold text-slate-900 mt-2">0</p>
+                    <p class="text-xs text-slate-500">Signalements à qualifier</p>
+                </div>
+                <div class="stat-card">
+                    <div class="flex items-center justify-between">
+                        <p class="text-sm font-semibold text-slate-600">En cours</p>
+                        <span class="h-10 w-10 rounded-full bg-sky-50 text-sky-500 flex items-center justify-center text-lg"><i class="ph ph-clock"></i></span>
+                    </div>
+                    <p class="text-3xl font-bold text-slate-900 mt-2">0</p>
+                    <p class="text-xs text-slate-500">Interventions planifiées</p>
+                </div>
+                <div class="stat-card">
+                    <div class="flex items-center justify-between">
+                        <p class="text-sm font-semibold text-slate-600">Résolus</p>
+                        <span class="h-10 w-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg"><i class="ph ph-check-circle"></i></span>
+                    </div>
+                    <p class="text-3xl font-bold text-slate-900 mt-2">2</p>
+                    <p class="text-xs text-slate-500">Clôturés et transmis</p>
+                </div>
+            </div>
+
+            <section class="space-y-4">
+                <div class="flex items-center justify-between flex-wrap gap-3">
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-xl font-bold text-slate-900">Résolus</h2>
+                        <span class="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-sm font-semibold border border-emerald-100">2</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button class="px-3 py-1.5 rounded-full text-sm font-semibold bg-slate-900 text-white shadow-sm">Tous</button>
+                        <button class="px-3 py-1.5 rounded-full text-sm font-semibold bg-white border border-slate-200 text-slate-600 hover:border-slate-300">En cours</button>
+                        <button class="px-3 py-1.5 rounded-full text-sm font-semibold bg-white border border-slate-200 text-slate-600 hover:border-slate-300">Nouveaux</button>
+                    </div>
+                </div>
+
+                <div class="space-y-5">
+                    <article class="report-card space-y-4">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="badge-soft bg-emerald-50 text-emerald-700 border-emerald-100"><i class="ph-fill ph-check-circle"></i> Résolu</span>
+                            <span class="badge-soft bg-slate-100 text-slate-700 border-slate-200"><i class="ph-bold ph-briefcase"></i> Ordres</span>
+                            <span class="badge-soft bg-violet-50 text-violet-700 border-violet-100"><i class="ph-bold ph-paper-plane-tilt"></i> Transmis au client</span>
+                        </div>
+
+                        <div class="grid md:grid-cols-[1.5fr,1fr] gap-4">
+                            <div class="space-y-2">
+                                <h3 class="text-xl font-semibold text-slate-900">Charlotte & Dylan</h3>
+                                <div class="flex items-center gap-2 text-sm text-slate-600"><i class="ph-bold ph-user"></i> Linais Dylan</div>
+                                <div class="flex items-center gap-2 text-sm text-slate-600"><i class="ph-bold ph-calendar-blank"></i> 4 novembre 2025 à 15:31</div>
+                            </div>
+                            <div class="space-y-2 text-sm text-slate-600">
+                                <div class="flex items-center gap-2"><i class="ph-bold ph-phone-call"></i> 06 08 89 23 13</div>
+                                <div class="flex items-center gap-2 text-emerald-700"><i class="ph-bold ph-check-circle"></i> Résolu le 04/11/2025 16:33</div>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-50 border border-slate-100 rounded-xl p-4 flex items-start gap-3 text-slate-700">
+                            <i class="ph-bold ph-note-pencil text-lg text-slate-400"></i>
+                            <div>
+                                <p class="text-base font-semibold text-slate-900">POUBELLE PAR TERRE</p>
+                                <p class="text-sm text-slate-600 mt-1">Observation faite dans le hall principal, photo ajoutée par le résident.</p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3">
+                            <div class="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                                <i class="ph-bold ph-images"></i> Photos (1)
+                            </div>
+                            <div class="flex gap-3 overflow-x-auto pb-1">
+                                <div class="min-w-[160px] bg-gradient-to-r from-amber-50 to-amber-100 rounded-xl border border-amber-100 p-3 shadow-inner">
+                                    <div class="w-10 h-10 rounded-lg bg-white text-amber-500 flex items-center justify-center shadow-sm mb-2"><i class="ph-bold ph-key"></i></div>
+                                    <p class="text-sm font-semibold text-amber-700 leading-tight">Serrurerie</p>
+                                    <p class="text-xs text-amber-700/80">Problèmes de clés ou serrures</p>
+                                </div>
+                                <div class="min-w-[160px] bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-xl text-white p-3 shadow-lg">
+                                    <div class="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center mb-2"><i class="ph-bold ph-fire text-lg"></i></div>
+                                    <p class="text-sm font-semibold leading-tight">Chauffage</p>
+                                    <p class="text-xs opacity-90">Problèmes de chauffage</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-slate-900 transition">
+                            <i class="ph-bold ph-clock-counter-clockwise"></i>
+                            Afficher l'historique (5)
+                        </button>
+
+                        <div class="flex flex-wrap gap-3 pt-2">
+                            <button class="px-4 py-2 rounded-lg bg-white border border-slate-200 text-sm font-semibold text-slate-700 hover:border-slate-300">Exporter PDF</button>
+                            <button class="px-4 py-2 rounded-lg bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 shadow-sm">Envoyer au résident</button>
+                        </div>
+                    </article>
+
+                    <article class="report-card space-y-4">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="badge-soft bg-emerald-50 text-emerald-700 border-emerald-100"><i class="ph-fill ph-check-circle"></i> Résolu</span>
+                            <span class="badge-soft bg-slate-100 text-slate-700 border-slate-200"><i class="ph-bold ph-wrench"></i> Intervention</span>
+                        </div>
+
+                        <div class="grid md:grid-cols-[1.5fr,1fr] gap-4">
+                            <div class="space-y-2">
+                                <h3 class="text-xl font-semibold text-slate-900">Paul Martin</h3>
+                                <div class="flex items-center gap-2 text-sm text-slate-600"><i class="ph-bold ph-user"></i> Résidence Étoile</div>
+                                <div class="flex items-center gap-2 text-sm text-slate-600"><i class="ph-bold ph-calendar-blank"></i> 2 novembre 2025 à 10:12</div>
+                            </div>
+                            <div class="space-y-2 text-sm text-slate-600">
+                                <div class="flex items-center gap-2"><i class="ph-bold ph-phone-call"></i> 07 58 12 45 09</div>
+                                <div class="flex items-center gap-2 text-emerald-700"><i class="ph-bold ph-check-circle"></i> Clôturé le 03/11/2025 09:30</div>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-50 border border-slate-100 rounded-xl p-4 flex items-start gap-3 text-slate-700">
+                            <i class="ph-bold ph-note-pencil text-lg text-slate-400"></i>
+                            <div>
+                                <p class="text-base font-semibold text-slate-900">Fuite radiateur</p>
+                                <p class="text-sm text-slate-600 mt-1">Le technicien est intervenu, réparation effectuée et photo de l'intervention jointe.</p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3">
+                            <div class="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                                <i class="ph-bold ph-images"></i> Photos (2)
+                            </div>
+                            <div class="flex gap-3 overflow-x-auto pb-1">
+                                <div class="min-w-[160px] bg-gradient-to-r from-blue-50 via-sky-50 to-white rounded-xl border border-sky-100 p-3 shadow-inner">
+                                    <div class="w-10 h-10 rounded-lg bg-white text-sky-500 flex items-center justify-center shadow-sm mb-2"><i class="ph-bold ph-drop"></i></div>
+                                    <p class="text-sm font-semibold text-sky-700 leading-tight">Avant</p>
+                                    <p class="text-xs text-sky-700/80">Zone impactée</p>
+                                </div>
+                                <div class="min-w-[160px] bg-gradient-to-r from-emerald-100 to-emerald-200 rounded-xl border border-emerald-200 p-3 shadow-inner">
+                                    <div class="w-10 h-10 rounded-lg bg-white/70 text-emerald-700 flex items-center justify-center shadow-sm mb-2"><i class="ph-bold ph-check"></i></div>
+                                    <p class="text-sm font-semibold text-emerald-800 leading-tight">Après</p>
+                                    <p class="text-xs text-emerald-800/80">Pièce changée</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-slate-900 transition">
+                            <i class="ph-bold ph-clock-counter-clockwise"></i>
+                            Afficher l'historique (3)
+                        </button>
+
+                        <div class="flex flex-wrap gap-3 pt-2">
+                            <button class="px-4 py-2 rounded-lg bg-white border border-slate-200 text-sm font-semibold text-slate-700 hover:border-slate-300">Exporter PDF</button>
+                            <button class="px-4 py-2 rounded-lg bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 shadow-sm">Envoyer au résident</button>
+                        </div>
+                    </article>
+                </div>
+            </section>
+        </div>
+    </main>
+</body>
+</html>

@@ -1,0 +1,1137 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Suivi des Clients - Nessaly's</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="vendor/phosphor/index.js"></script>
+    <script src="vendor/supabase/supabase.js"></script>
+    <style>
+        body { font-family: 'Outfit', sans-serif; background-color: #F0F9FF; color: #1E293B; }
+        .sidebar { background: white; border-right: 1px solid #E2E8F0; }
+        .nav-item.active { background-color: #E0F2FE; color: #0284C7; }
+        /* Pour l'animation du panneau latéral */
+        .translate-x-full { transform: translateX(100%); }
+        .transition-transform { transition-property: transform; }
+        .ease-in-out { transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }
+        /* Style pour les inputs du formulaire */
+        .form-input {
+            background: #F8FAFC; border: 1px solid #E2E8F0; transition: all 0.3s; width: 100%; border-radius: 0.5rem; padding: 0.75rem 1rem; font-size: 0.875rem;
+        }
+        .form-input:focus { background: white; border-color: #38BDF8; box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2); outline: none; }
+        /* Style pour l'autocomplétion d'adresse */
+        .autocomplete-results {
+            max-height: 200px; overflow-y: auto; border: 1px solid #E2E8F0; border-top: none; border-radius: 0 0 0.5rem 0.5rem;
+        }
+        .autocomplete-item {
+            padding: 0.75rem 1rem; cursor: pointer;
+        }
+        .autocomplete-item:hover { background-color: #F0F9FF; }
+        /* Style pour la notification */
+        .toast-notification {
+            transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out;
+            transform: translateY(-100%);
+            opacity: 0;
+        }
+        /* Style pour la carte client active/agrandie */
+        .client-card.is-active, .client-card:hover {
+            transform: scale(1.03);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+        .client-card.is-active .card-actions, .client-card:hover .card-actions {
+            opacity: 1;
+        }
+        .logo-preview {
+            width: 56px;
+            height: 56px;
+            border: 1px dashed #cbd5e1;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8fafc;
+            overflow: hidden;
+        }
+        .logo-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        .client-card {
+            overflow: hidden; /* cadre le watermark dans la carte */
+        }
+        .logo-watermark {
+            position: absolute;
+            right: 14px;
+            bottom: -6px; /* abaissé pour ne plus gêner la pillule */
+            width: 130px;
+            height: 130px;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain; /* ajuste automatiquement pour que le logo soit entier */
+            background-color: transparent;
+            opacity: var(--logo-opacity, 0.22);
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 0;
+        }
+        .logo-fallback {
+            position: absolute;
+            right: 14px;
+            bottom: -6px;
+            width: 130px;
+            height: 130px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 24px;
+            color: white;
+            border-radius: 14px;
+            opacity: 0.22;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .client-card:hover .logo-watermark {
+            opacity: var(--logo-hover-opacity, 0.08);
+        }
+        :root {
+      --ink: #0c2f35;
+      --navy: #0f304b;
+      --red: #ce3c35;
+      --sand: #b58a64;
+      --bg: #f7f5f2;
+    }
+    body { background: radial-gradient(140% 120% at 20% 0%, #f0f7f8 0%, var(--bg) 45%, #fdfdfb 100%); color: #0c2f35; }
+    .sidebar { background: linear-gradient(180deg, #0f304b, #0c2f35); border-right: 1px solid rgba(255,255,255,0.05); color: #e8eef2; }
+    .sidebar a { color: #cfd8dc; }
+    .sidebar a:hover { background: rgba(255,255,255,0.06); color: #ffffff; }
+    .nav-item.active { background: rgba(255,255,255,0.12); color: #ffffff; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); }
+    .pill { background: rgba(12,47,53,0.08); color: #0f304b; }
+    .gradient-chip { background: linear-gradient(120deg, var(--red), var(--navy)); box-shadow: 0 10px 30px rgba(12,47,53,0.22); }
+    .card-surface { border: 1px solid #e7e5e0; box-shadow: 0 12px 40px rgba(12,47,53,0.08); }
+</style>
+</head>
+<body class="flex h-screen">
+    <aside class="w-64 sidebar flex flex-col p-6">
+        <div class="text-xl font-bold tracking-wide mb-10 text-center text-slate-800">ESPACE <span class="text-sky-500">CLIENT</span></div>
+        <nav class="flex-1 space-y-2">
+            <a href="dashboard_societe.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition">
+                <i class="ph-fill ph-squares-four text-lg"></i>
+                <span>Vue d'ensemble</span>
+            </a>
+            <a href="societe_signalements.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition">
+                <i class="ph ph-warning-circle text-lg"></i>
+                <span>Suivi des signalements</span>
+            </a>
+            <a href="societe_clients.html" class="flex items-center gap-3 p-3 rounded-xl nav-item active font-medium">
+                <i class="ph ph-users text-lg"></i>
+                <span>Suivi des clients</span>
+            </a>
+            <a href="societe_contrats.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition">
+                <i class="ph ph-file-text text-lg"></i>
+                <span>Suivi des contrats</span>
+            </a>
+            <a href="societe_rapports.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition">
+                <i class="ph ph-chart-bar text-lg"></i>
+                <span>Rapports</span>
+            </a>
+            <a href="societe_cahier_des_charges.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition">
+                <i class="ph ph-notebook text-lg"></i>
+                <span>Cahier des charges</span>
+            </a>
+            <a href="societe_salaries.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition">
+                <i class="ph ph-currency-eur text-lg"></i>
+                <span>Suivi des salariés</span>
+            </a>
+            <a href="societe_pointages.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition">
+                <i class="ph ph-timer text-lg"></i>
+                <span>Suivi des pointages</span>
+            </a>
+            <a href="societe_conges.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition">
+                <i class="ph ph-calendar-blank text-lg"></i>
+                <span>Suivi des demandes de congés</span>
+            </a>
+        </nav>
+        <a href="index.html" class="flex items-center gap-2 text-slate-400 hover:text-slate-600 transition mt-auto">
+            <i class="ph ph-sign-out"></i> Déconnexion
+        </a>
+    </aside>
+    <main class="flex-1 p-10 overflow-y-auto">
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold text-slate-800">Suivi des clients</h1>
+        </div>
+
+        <div class="flex justify-between items-center mb-6">
+            <div class="relative w-full max-w-xs">
+                <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input type="text" placeholder="Rechercher un client..." class="w-full bg-white border border-slate-200 rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-sky-300 transition">
+            </div>
+            <button id="open-panel-button" class="flex items-center gap-2 bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded-lg shadow-sm transition-colors">
+                <i class="ph-fill ph-plus-circle text-lg"></i>
+                <span>Créer un client</span>
+            </button>
+        </div>
+
+        <div id="client-list-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+
+        <div id="success-notification" class="toast-notification fixed top-5 right-5 z-[100] flex items-center gap-4 bg-white p-4 rounded-xl shadow-lg border border-slate-100">
+            <div class="flex items-center justify-center w-10 h-10 rounded-full bg-green-100 text-green-600">
+                <i class="ph-fill ph-check-circle text-2xl"></i>
+            </div>
+            <p id="notification-message" class="text-sm font-semibold text-slate-700">Le client a été créé avec succès !</p>
+        </div>
+
+        <div id="error-notification" class="toast-notification fixed top-20 right-5 z-[99] flex items-center gap-4 bg-white p-4 rounded-xl shadow-lg border border-red-100">
+            <div class="flex items-center justify-center w-10 h-10 rounded-full bg-red-100 text-red-600">
+                <i class="ph-fill ph-warning-circle text-2xl"></i>
+            </div>
+            <p id="error-message" class="text-sm font-semibold text-slate-700">Une erreur est survenue.</p>
+        </div>
+
+        <div id="details-panel" class="fixed inset-0 z-50 overflow-hidden hidden" aria-labelledby="details-panel-title" role="dialog" aria-modal="true">
+            <div class="absolute inset-0 overflow-hidden">
+                <div id="details-backdrop" class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity duration-300 opacity-0" aria-hidden="true"></div>
+                <div class="fixed inset-y-0 right-0 flex max-w-full pl-10">
+                    <div id="details-content-wrapper" class="w-screen max-w-md transform transition-transform duration-500 ease-in-out translate-x-full">
+                        <div class="flex h-full flex-col overflow-y-scroll bg-white shadow-2xl p-6 sm:p-8">
+                            <div class="flex items-start justify-between mb-6">
+                                <h2 id="details-panel-title" class="text-2xl font-bold text-slate-800">Détails du client</h2>
+                                <button type="button" id="close-details-panel-button" class="rounded-md text-slate-400 hover:text-slate-600">
+                                    <i class="ph-bold ph-x text-2xl"></i>
+                                </button>
+                            </div>
+                            <div id="details-panel-content" class="flex-1 space-y-4 text-sm">
+                                </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="slide-over-panel" class="fixed inset-0 z-50 overflow-hidden hidden" aria-labelledby="slide-over-title" role="dialog" aria-modal="true">
+            <div class="absolute inset-0 overflow-hidden">
+                <div id="slide-over-backdrop" class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity duration-300 opacity-0" aria-hidden="true"></div>
+
+                <div class="fixed inset-y-0 right-0 flex max-w-full pl-10">
+                    <div id="slide-over-content" class="w-screen max-w-2xl transform transition-transform duration-500 ease-in-out translate-x-full">
+                        <div class="flex h-full flex-col overflow-y-scroll bg-white shadow-2xl">
+                            <div class="flex-1 p-6 sm:p-8">
+                                <div class="flex items-start justify-between mb-8">
+                                    <div class="space-y-2">
+                                        <h2 id="slide-over-title" class="text-2xl font-bold text-slate-800">Créer un nouveau client</h2>
+                                        <p class="text-sm text-slate-500">Choisissez le type de client pour commencer.</p>
+                                    </div>
+                                    <button type="button" id="close-panel-button-x" class="rounded-md text-slate-400 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-sky-500">
+                                        <span class="sr-only">Fermer</span>
+                                        <i class="ph-bold ph-x text-2xl"></i>
+                                    </button>
+                                </div>
+
+                                <div class="mb-10">
+                                    <div id="progress-bar" class="flex items-center">
+                                        <div id="step-1-indicator" class="flex items-center text-sky-600 relative">
+                                            <div class="step-icon rounded-full transition duration-500 ease-in-out h-10 w-10 flex items-center justify-center border-2 border-sky-600 bg-sky-100">
+                                                <i class="ph-fill ph-user-list text-xl"></i>
+                                            </div>
+                                            <div class="step-label absolute top-0 -ml-10 text-center mt-12 w-32 text-xs font-medium uppercase text-sky-600">Type</div>
+                                        </div>
+                                        <div id="line-1-2" class="flex-auto border-t-2 transition duration-500 ease-in-out border-slate-200"></div>
+                                        <div id="step-2-indicator" class="flex items-center text-slate-500 relative">
+                                            <div class="step-icon rounded-full transition duration-500 ease-in-out h-10 w-10 flex items-center justify-center border-2 border-slate-200">
+                                                <i class="ph-fill ph-info text-xl"></i>
+                                            </div>
+                                            <div class="step-label absolute top-0 -ml-10 text-center mt-12 w-32 text-xs font-medium uppercase text-slate-400">Infos</div>
+                                        </div>
+                                        <div id="line-2-3" class="flex-auto border-t-2 transition duration-500 ease-in-out border-slate-200"></div>
+                                        <div id="step-3-indicator" class="flex items-center text-slate-500 relative">
+                                            <div class="step-icon rounded-full transition duration-500 ease-in-out h-10 w-10 flex items-center justify-center border-2 border-slate-200">
+                                                <i class="ph-fill ph-check-circle text-xl"></i>
+                                            </div>
+                                            <div class="step-label absolute top-0 -ml-10 text-center mt-12 w-32 text-xs font-medium uppercase text-slate-400">Terminé</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="step-1-content">
+                                    <div class="space-y-4">
+                                        <div id="select-client-direct" class="group relative cursor-pointer rounded-xl border-2 border-slate-200 p-6 hover:border-sky-500 hover:bg-sky-50/50 transition-all duration-300">
+                                            <h3 class="text-lg font-bold text-slate-800">Client direct</h3>
+                                            <p class="text-sm text-slate-500 mt-1">Le client est géré directement par notre société.</p>
+                                            <i class="ph-bold ph-arrow-right absolute top-1/2 right-6 -translate-y-1/2 text-slate-300 group-hover:text-sky-500 transition-colors"></i>
+                                        </div>
+                                        <div id="select-mandataire" class="group relative cursor-pointer rounded-xl border-2 border-slate-200 p-6 hover:border-sky-500 hover:bg-sky-50/50 transition-all duration-300">
+                                            <h3 class="text-lg font-bold text-slate-800">Mandataire</h3>
+                                            <p class="text-sm text-slate-500 mt-1">Le client est géré via un tiers (mandataire).</p>
+                                            <i class="ph-bold ph-arrow-right absolute top-1/2 right-6 -translate-y-1/2 text-slate-300 group-hover:text-sky-500 transition-colors"></i>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="step-2-wrapper" class="hidden">
+                                    <form id="direct-form" class="space-y-6 hidden">
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div>
+                                                <label class="block text-sm font-medium text-slate-600 mb-1">Prénom</label>
+                                                <input name="prenom" type="text" class="form-input" placeholder="Jean">
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-slate-600 mb-1">Nom</label>
+                                                <input name="nom" type="text" class="form-input" placeholder="Dupont">
+                                            </div>
+                                        </div>
+                                        <div class="relative">
+                                            <label class="block text-sm font-medium text-slate-600 mb-1">Adresse Postale</label>
+                                            <input name="adresse" type="text" id="address-input-direct" class="form-input address-input" placeholder="Commencez à taper votre adresse...">
+                                            <div id="address-results-direct" class="autocomplete-results absolute z-10 w-full bg-white shadow-lg hidden"></div>
+                                        </div>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div>
+                                                <label class="block text-sm font-medium text-slate-600 mb-1">Email</label>
+                                                <input name="email" type="email" class="form-input" placeholder="jean.dupont@email.com">
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-slate-600 mb-1">Téléphone</label>
+                                                <input name="telephone" type="tel" class="form-input" placeholder="06 12 34 56 78">
+                                            </div>
+                                        </div>
+                                        <div class="border-t border-slate-200 pt-6">
+                                            <label class="block text-sm font-medium text-slate-600 mb-2">Logo du client <span class="text-slate-400 font-normal">(PNG ou SVG)</span></label>
+                                            <div class="flex items-center gap-4">
+                                                <div class="logo-preview" id="logo-preview-direct">
+                                                    <span class="text-[10px] text-slate-400 text-center leading-tight px-1">PNG/SVG</span>
+                                                </div>
+                                                <div class="flex-1 space-y-1">
+                                                    <input id="logo-upload-direct" type="file" accept=".png,.svg,image/png,image/svg+xml" class="block w-full text-sm text-slate-700 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200">
+                                                    <p id="logo-filename-direct" class="text-xs text-slate-500">Aucun fichier sélectionné</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </form>
+                                    <form id="mandataire-form" class="space-y-6 hidden">
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div class="md:col-span-2">
+                                                <label class="block text-sm font-medium text-slate-600 mb-1">Nom de l'entreprise</label>
+                                                <input name="nom_entreprise" type="text" class="form-input" placeholder="Nom de la société mandataire">
+                                            </div>
+                                            <div class="md:col-span-2">
+                                                <label class="block text-sm font-medium text-slate-600 mb-1">Numéro de SIRET <span class="text-slate-400 font-normal">(Optionnel)</span></label>
+                                                <input name="siret" type="text" class="form-input" placeholder="123 456 789 00012">
+                                            </div>
+                                        </div>
+                                        <div class="relative">
+                                            <label class="block text-sm font-medium text-slate-600 mb-1">Adresse postale de l'entreprise</label>
+                                            <input name="adresse_entreprise" type="text" id="address-input-mandataire" class="form-input address-input" placeholder="Commencez à taper l'adresse...">
+                                            <div id="address-results-mandataire" class="autocomplete-results absolute z-10 w-full bg-white shadow-lg hidden"></div>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-slate-600 mb-1">Téléphone du standard</label>
+                                            <input name="telephone_standard" type="tel" class="form-input" placeholder="01 23 45 67 89">
+                                        </div>
+                                        <div class="border-t border-slate-200 pt-6">
+                                            <h4 class="text-md font-semibold text-slate-700 mb-4">Contact principal</h4>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <div>
+                                                    <label class="block text-sm font-medium text-slate-600 mb-1">Prénom du contact</label>
+                                                    <input name="prenom_contact" type="text" class="form-input" placeholder="Marie">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-sm font-medium text-slate-600 mb-1">Nom du contact</label>
+                                                    <input name="nom_contact" type="text" class="form-input" placeholder="Martin">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-sm font-medium text-slate-600 mb-1">Téléphone du contact</label>
+                                                    <input name="telephone_contact" type="tel" class="form-input" placeholder="06 98 76 54 32">
+                                                </div>
+                                            </div>
+                                            <div class="mt-6">
+                                                <label class="block text-sm font-medium text-slate-600 mb-1">Email du contact</label>
+                                                <input name="email_contact" type="email" class="form-input" placeholder="marie.martin@entreprise.com">
+                                            </div>
+                                            <div class="mt-6 border-t border-slate-200 pt-6">
+                                                <label class="block text-sm font-medium text-slate-600 mb-2">Logo du client <span class="text-slate-400 font-normal">(PNG ou SVG)</span></label>
+                                                <div class="flex items-center gap-4">
+                                                    <div class="logo-preview" id="logo-preview-mandataire">
+                                                        <span class="text-[10px] text-slate-400 text-center leading-tight px-1">PNG/SVG</span>
+                                                    </div>
+                                                    <div class="flex-1 space-y-1">
+                                                        <input id="logo-upload-mandataire" type="file" accept=".png,.svg,image/png,image/svg+xml" class="block w-full text-sm text-slate-700 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200">
+                                                        <p id="logo-filename-mandataire" class="text-xs text-slate-500">Aucun fichier sélectionné</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+
+                                <div id="step-3-content" class="hidden">
+                                    <div class="space-y-4 rounded-lg bg-slate-50 p-6 border border-slate-200">
+                                        <h4 class="font-semibold text-slate-700">Récapitulatif des informations</h4>
+                                        <div id="summary-content" class="text-sm text-slate-600 space-y-2">
+                                            </div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div id="panel-footer" class="bg-slate-50 px-6 py-4 border-t border-slate-200 mt-auto">
+                                <div id="footer-step-1">
+                                    <button type="button" id="close-panel-button-back" class="w-full text-center rounded-md border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-100">
+                                        Annuler
+                                    </button>
+                                </div>
+                                <div id="footer-step-2" class="hidden flex gap-4">
+                                    <button type="button" id="back-to-step-1-button" class="w-1/3 text-center rounded-md border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-100">
+                                        Précédent
+                                    </button>
+                                    <button type="button" id="go-to-step-3-button" class="w-2/3 text-center rounded-md border border-transparent bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-sky-700">
+                                        Suivant
+                                    </button>
+                                </div>
+                                <div id="footer-step-3" class="hidden flex gap-4">
+                                    <button type="button" id="back-to-step-2-button" class="w-1/3 text-center rounded-md border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-100">
+                                        Modifier
+                                    </button>
+                                    <button type="button" id="confirm-create-button" class="w-2/3 text-center rounded-md border border-transparent bg-green-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-green-700">
+                                        Confirmer et Créer</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // --- Configuration de Supabase ---
+        const supabaseUrl = 'https://fmfylsykljkvyurcprij.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZtZnlsc3lrbGprdnl1cmNwcmlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1ODQ3OTgsImV4cCI6MjA3OTE2MDc5OH0.hfgBflnh-nr1Ljfl5Chkp0y1EbZbm5XiyyDhsQcdSqE';
+        const { createClient } = supabase;
+        const supabaseClient = createClient(supabaseUrl, supabaseKey);
+
+        // --- VARIABLES GLOBALES ---
+        let editModeState = null; // Stocke l'ID et la table si on est en modification
+        let currentFormType = ''; // 'direct' ou 'mandataire'
+        let logoFile = null; // Fichier de logo sélectionné
+        let currentLogoUrl = ''; // URL du logo déjà enregistré (mode édition)
+        let isSubmittingClient = false; // Empêche les doubles envois
+        let isLoadingClients = false; // Evite les chargements concurrents
+        let allClientsCache = []; // Cache local pour pagination fluide
+        let currentPage = 1;
+        const pageSize = 9;
+
+        // --- Gestion du panneau de détails ---
+        const detailsPanel = document.getElementById('details-panel');
+        const detailsBackdrop = document.getElementById('details-backdrop');
+        const detailsContentWrapper = document.getElementById('details-content-wrapper');
+
+        function openDetailsPanel() {
+            detailsPanel.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                detailsBackdrop.classList.remove('opacity-0');
+                detailsContentWrapper.classList.remove('translate-x-full');
+            });
+        }
+
+        function closeDetailsPanel() {
+            detailsBackdrop.classList.add('opacity-0');
+            detailsContentWrapper.classList.add('translate-x-full');
+            setTimeout(() => {
+                detailsPanel.classList.add('hidden');
+            }, 500);
+        }
+
+        document.getElementById('close-details-panel-button').addEventListener('click', closeDetailsPanel);
+        detailsBackdrop.addEventListener('click', closeDetailsPanel);
+
+
+        // --- Gestion de la notification ---
+        function showNotification(message) {
+            const notification = document.getElementById('success-notification');
+            document.getElementById('notification-message').textContent = message;
+            notification.style.transform = 'translateY(0)';
+            notification.style.opacity = '1';
+            setTimeout(() => {
+                notification.style.transform = 'translateY(-100%)';
+                notification.style.opacity = '0';
+            }, 4000);
+        }
+        function showError(message) {
+            const notification = document.getElementById('error-notification');
+            document.getElementById('error-message').textContent = message;
+            notification.style.transform = 'translateY(0)';
+            notification.style.opacity = '1';
+            setTimeout(() => {
+                notification.style.transform = 'translateY(-100%)';
+                notification.style.opacity = '0';
+            }, 4500);
+        }
+
+        function computeInitials(name = '') {
+            const parts = name.trim().split(' ').filter(Boolean);
+            if (parts.length === 0) return 'CL';
+            if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+            return (parts[0][0] + parts[1][0]).toUpperCase();
+        }
+
+        function computeColor(seed = '') {
+            let hash = 0;
+            for (let i = 0; i < seed.length; i++) hash = seed.charCodeAt(i) + ((hash << 5) - hash);
+            const hue = Math.abs(hash) % 360;
+            return `hsl(${hue}, 65%, 55%)`;
+        }
+
+        // --- Gestion du panneau latéral ---
+        const panel = document.getElementById('slide-over-panel');
+        const backdrop = document.getElementById('slide-over-backdrop');
+        const content = document.getElementById('slide-over-content');
+        const openButton = document.getElementById('open-panel-button');
+        const closeButtonX = document.getElementById('close-panel-button-x');
+        
+        function openPanel() {
+            panel.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            requestAnimationFrame(() => {
+                backdrop.classList.remove('opacity-0');
+                content.classList.remove('translate-x-full');
+            });
+        }
+        
+        function closePanel() {
+            backdrop.classList.add('opacity-0');
+            content.classList.add('translate-x-full');
+            setTimeout(() => {
+                panel.classList.add('hidden');
+                document.body.style.overflow = '';
+                // Réinitialiser à l'étape 1 à la fermeture si pas en mode édition
+                if (!editModeState) {
+                    goToStep(1); 
+                }
+                // Toujours réinitialiser l'état du formulaire
+                resetFormState();
+            }, 500);
+        }
+        
+        openButton.addEventListener('click', () => {
+            resetFormState(); // Assure qu'on est en mode création
+            goToStep(1);      // S'assure de commencer à l'étape 1
+            openPanel();      // Ouvre le panneau
+        });
+        closeButtonX.addEventListener('click', closePanel);
+        backdrop.addEventListener('click', closePanel);
+
+        // --- Gestion des étapes du formulaire ---
+        const stepContents = {
+            1: document.getElementById('step-1-content'),
+            2: document.getElementById('step-2-wrapper'),
+            3: document.getElementById('step-3-content')
+        };
+        const footerSteps = {
+            1: document.getElementById('footer-step-1'),
+            2: document.getElementById('footer-step-2'),
+            3: document.getElementById('footer-step-3')
+        };
+        const panelTitle = document.getElementById('slide-over-title');
+        const panelSubtitle = panelTitle.nextElementSibling;
+
+        function setLogoPreview(type, url = null, filenameText = 'Aucun fichier sélectionné') {
+            const preview = document.getElementById(`logo-preview-${type}`);
+            const filename = document.getElementById(`logo-filename-${type}`);
+            if (filename) filename.textContent = filenameText;
+            if (!preview) return;
+
+            preview.innerHTML = '';
+            if (url) {
+                const img = document.createElement('img');
+                img.src = url;
+                img.alt = `Logo ${type}`;
+                preview.appendChild(img);
+            } else {
+                const placeholder = document.createElement('span');
+                placeholder.className = 'text-[10px] text-slate-400 text-center leading-tight px-1';
+                placeholder.textContent = 'PNG/SVG';
+                preview.appendChild(placeholder);
+            }
+        }
+
+        function resetLogoState() {
+            logoFile = null;
+            currentLogoUrl = '';
+            ['direct', 'mandataire'].forEach(type => {
+                const input = document.getElementById(`logo-upload-${type}`);
+                if (input) input.value = '';
+                setLogoPreview(type);
+            });
+        }
+
+        function resetFormState() {
+            editModeState = null;
+            // Correction des IDs pour correspondre au HTML
+            const directForm = document.getElementById('direct-form');
+            const mandataireForm = document.getElementById('mandataire-form');
+            if (directForm) directForm.reset();
+            if (mandataireForm) mandataireForm.reset();
+            resetLogoState();
+
+            const confirmButton = document.getElementById('confirm-create-button');
+            if (confirmButton) {
+                confirmButton.textContent = 'Confirmer et Créer';
+                confirmButton.classList.replace('bg-sky-600', 'bg-green-600');
+                confirmButton.classList.replace('hover:bg-sky-700', 'hover:bg-green-700');
+            }
+        }
+
+        const stepTitles = {
+            1: 'Créer un nouveau client',
+            '2_direct': 'Informations du client',
+            '2_mandataire': 'Informations du mandataire',
+            3: 'Confirmation',
+            'edit_direct': 'Modifier le client',
+            'edit_mandataire': 'Modifier le mandataire'
+        };
+        const stepSubtitles = {
+            1: 'Choisissez le type de client pour commencer.',
+            '2_direct': 'Renseignez les détails du client direct.',
+            '2_mandataire': 'Renseignez les détails de l\'entreprise mandataire.',
+            3: 'Vérifiez les informations avant de finaliser.'
+        };
+
+        function updateProgressBar(step) {
+            const indicators = ['step-1-indicator', 'step-2-indicator', 'step-3-indicator'];
+
+            indicators.forEach((id, index) => {
+                const indicator = document.getElementById(id);
+                if (!indicator) return;
+
+                const stepNumber = index + 1;
+                const icon = indicator.querySelector('.step-icon');
+                const label = indicator.querySelector('.step-label');
+                const line = document.getElementById(`line-${stepNumber}-${stepNumber + 1}`);
+
+                // Si la structure attendue n'est pas là, on saute l'élément
+                if (!icon || !label) return;
+
+                // Réinitialisation du style de base
+                indicator.className = 'flex items-center text-slate-500 relative';
+                icon.className = 'step-icon rounded-full h-10 w-10 flex items-center justify-center border-2 border-slate-200';
+                label.className = 'step-label absolute top-0 -ml-10 text-center mt-12 w-32 text-xs font-medium uppercase text-slate-400';
+                if (line) line.className = 'flex-auto border-t-2 transition duration-500 border-slate-200';
+
+                // Application du style actif
+                if (stepNumber < step) {
+                    indicator.classList.replace('text-slate-500', 'text-sky-600');
+                    icon.classList.replace('border-slate-200', 'border-sky-600');
+                    icon.classList.add('bg-sky-100');
+                    label.classList.replace('text-slate-400', 'text-sky-600');
+                    if (line) line.classList.replace('border-slate-200', 'border-sky-600');
+                } else if (stepNumber === step) {
+                    indicator.classList.replace('text-slate-500', 'text-sky-600');
+                    icon.classList.replace('border-slate-200', 'border-sky-600');
+                    icon.classList.add('bg-sky-100');
+                    label.classList.replace('text-slate-400', 'text-sky-600');
+                }
+            });
+        }
+
+        function goToStep(stepNumber, formType = null) {
+    if (formType) currentFormType = formType;
+
+    // Masquer toutes les étapes et footers
+    ['step-1-content', 'step-2-wrapper', 'step-3-content'].forEach(id => {
+        const el = document.getElementById(id);
+        if(el) el.classList.add('hidden');
+    });
+    ['footer-step-1', 'footer-step-2', 'footer-step-3'].forEach(id => {
+        const el = document.getElementById(id);
+        if(el) el.classList.add('hidden');
+    });
+
+    // Afficher l'étape courante
+    const contentId = {1: 'step-1-content', 2: 'step-2-wrapper', 3: 'step-3-content'}[stepNumber];
+    const footerId = {1: 'footer-step-1', 2: 'footer-step-2', 3: 'footer-step-3'}[stepNumber];
+    
+    if(document.getElementById(contentId)) document.getElementById(contentId).classList.remove('hidden');
+    if(document.getElementById(footerId)) document.getElementById(footerId).classList.remove('hidden');
+
+    // Logique spécifique étape 2
+    if (stepNumber === 2) {
+        document.getElementById('direct-form').classList.add('hidden');
+        document.getElementById('mandataire-form').classList.add('hidden');
+        
+        const formId = `${currentFormType}-form`;
+        const form = document.getElementById(formId);
+        if(form) form.classList.remove('hidden');
+    }
+
+    // Titres dynamiques (SÉCURISÉ : on récupère l'élément ici pour être sûr qu'il existe)
+    const titleEl = document.getElementById('slide-over-title');
+    const subTitleEl = document.getElementById('slide-over-subtitle');
+
+    if (titleEl && subTitleEl) {
+        if (stepNumber === 1) {
+            titleEl.textContent = "Créer un nouveau client";
+            subTitleEl.textContent = "Type de client";
+        } else if (stepNumber === 2) {
+            titleEl.textContent = editModeState ? "Modifier les informations" : "Informations";
+            subTitleEl.textContent = currentFormType === 'direct' ? "Client direct" : "Mandataire";
+        } else if (stepNumber === 3) {
+            titleEl.textContent = "Confirmation";
+            subTitleEl.textContent = "Vérifiez les détails";
+        }
+    }
+
+    updateProgressBar(stepNumber);
+}
+
+        function handleLogoChange(type, event) {
+            const file = event.target.files[0];
+            if (!file) {
+                logoFile = null;
+                setLogoPreview(type);
+                return;
+            }
+
+            const allowedTypes = ['image/png', 'image/svg+xml'];
+            if (!allowedTypes.includes(file.type)) {
+                alert('Veuillez sélectionner un fichier PNG ou SVG.');
+                event.target.value = '';
+                setLogoPreview(type);
+                return;
+            }
+
+            logoFile = file;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                setLogoPreview(type, e.target.result, file.name);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        ['direct', 'mandataire'].forEach(type => {
+            const input = document.getElementById(`logo-upload-${type}`);
+            if (input) {
+                input.addEventListener('change', (e) => handleLogoChange(type, e));
+            }
+        });
+
+        document.getElementById('close-panel-button-back').addEventListener('click', () => {
+            resetFormState();
+            closePanel();
+        });
+        document.getElementById('select-client-direct').addEventListener('click', () => { 
+            resetFormState();
+            goToStep(2, 'direct'); 
+        });
+        document.getElementById('select-mandataire').addEventListener('click', () => goToStep(2, 'mandataire'));
+        document.getElementById('back-to-step-1-button').addEventListener('click', () => {
+            editModeState ? closePanel() : goToStep(1);
+        });
+
+        document.getElementById('go-to-step-3-button').addEventListener('click', () => {
+            const formId = `${currentFormType === 'direct' ? 'direct' : 'mandataire'}-form`;
+            const formElement = document.getElementById(formId);
+            if (!formElement) return; 
+
+            const formData = new FormData(formElement);
+            const summaryDiv = document.getElementById('summary-content');
+            let summaryHTML = '';
+
+            if (currentFormType === 'direct') {
+                summaryHTML = `
+                    <p><strong>Type:</strong> Client Direct</p>
+                    <p><strong>Nom:</strong> ${formData.get('prenom')} ${formData.get('nom')}</p>
+                    <p><strong>Adresse:</strong> ${formData.get('adresse')}</p>
+                    <p><strong>Email:</strong> ${formData.get('email')}</p>
+                    <p><strong>Téléphone:</strong> ${formData.get('telephone')}</p>
+                `;
+            } else if (currentFormType === 'mandataire') {
+                summaryHTML = `
+                    <p><strong>Type:</strong> Mandataire</p>
+                    <p><strong>Entreprise:</strong> ${formData.get('nom_entreprise')}</p>
+                    <p><strong>SIRET:</strong> ${formData.get('siret') || 'Non renseigné'}</p>
+                    <p><strong>Adresse:</strong> ${formData.get('adresse_entreprise')}</p>
+                    <p><strong>Standard:</strong> ${formData.get('telephone_standard')}</p>
+                    <hr class="my-2 border-slate-200">
+                    <p><strong>Contact:</strong> ${formData.get('prenom_contact')} ${formData.get('nom_contact')}</p>
+                    <p><strong>Email Contact:</strong> ${formData.get('email_contact')}</p>
+                    <p><strong>Téléphone Contact:</strong> ${formData.get('telephone_contact')}</p>
+                `;
+            }
+            summaryDiv.innerHTML = summaryHTML;
+            goToStep(3);
+        });
+
+        document.getElementById('back-to-step-2-button').addEventListener('click', () => goToStep(2));
+
+        async function uploadLogoIfNeeded() {
+            // Si aucun nouveau fichier sélectionné, on conserve l'URL actuelle (mode édition)
+            if (!logoFile) return { url: currentLogoUrl, error: null };
+
+            const extension = logoFile.name.split('.').pop() || 'png';
+            const uniqueName = `clients/${Date.now()}-${Math.random().toString(36).slice(2)}.${extension}`;
+
+            const { data, error } = await supabaseClient.storage
+                .from('client-logos')
+                .upload(uniqueName, logoFile, {
+                    cacheControl: '3600',
+                    upsert: false,
+                    contentType: logoFile.type
+                });
+
+            if (error) {
+                return { error };
+            }
+
+            const { data: publicUrlData } = supabaseClient.storage
+                .from('client-logos')
+                .getPublicUrl(data?.path || uniqueName);
+
+            return { url: publicUrlData?.publicUrl || '', error: null };
+        }
+
+        // --- Logique de création / Modification finale ---
+        document.getElementById('confirm-create-button').addEventListener('click', async () => {
+            if (isSubmittingClient) return; // bloque les double-clics
+            isSubmittingClient = true;
+            const confirmBtn = document.getElementById('confirm-create-button');
+            if (confirmBtn) confirmBtn.disabled = true;
+
+            try {
+                const formId = `${currentFormType === 'direct' ? 'direct' : 'mandataire'}-form`;
+                const form = document.getElementById(formId);
+                if (!form) return;
+
+            const formData = new FormData(form);
+            let dataToInsert = {};
+            let tableName = '';
+
+            if (currentFormType === 'direct') {
+                tableName = 'clients_directs';
+                dataToInsert = {
+                    prenom: formData.get('prenom'),
+                    nom: formData.get('nom'),
+                    adresse: formData.get('adresse'),
+                    email: formData.get('email'),
+                    telephone: formData.get('telephone'),
+                };
+            } else if (currentFormType === 'mandataire') {
+                tableName = 'mandataires';
+                dataToInsert = {
+                    nom_entreprise: formData.get('nom_entreprise'),
+                    siret: formData.get('siret'),
+                    adresse_entreprise: formData.get('adresse_entreprise'),
+                    telephone_standard: formData.get('telephone_standard'),
+                    prenom_contact: formData.get('prenom_contact'),
+                    nom_contact: formData.get('nom_contact'),
+                    email_contact: formData.get('email_contact'),
+                    telephone_contact: formData.get('telephone_contact'),
+                };
+            }
+
+            const { url: uploadedLogoUrl, error: logoError } = await uploadLogoIfNeeded();
+            if (logoError) {
+                alert("Impossible d'uploader le logo (vérifiez le bucket 'client-logos').");
+                return;
+            }
+            if (uploadedLogoUrl) {
+                dataToInsert.logo_url = uploadedLogoUrl;
+            }
+
+            let error;
+            let successMessage = '';
+
+            if (editModeState) {
+                const { error: updateError } = await supabaseClient
+                    .from(tableName)
+                    .update(dataToInsert)
+                    .eq('id', editModeState.id);
+                error = updateError;
+                successMessage = 'Le client a été modifié avec succès !';
+            } else {
+                const { error: insertError } = await supabaseClient
+                    .from(tableName)
+                    .insert([dataToInsert]);
+                error = insertError;
+                successMessage = 'Le client a été créé avec succès !';
+            }
+
+            if (error) {
+                console.error('Erreur Supabase:', error);
+                alert("Une erreur est survenue lors de l'enregistrement.");
+            } else {
+                closePanel();
+                showNotification(successMessage);
+                loadClients();
+            }
+            } finally {
+                isSubmittingClient = false;
+                if (confirmBtn) confirmBtn.disabled = false;
+            }
+        });
+
+        // --- Chargement et affichage des clients ---
+        async function loadClients() {
+    if (isLoadingClients) return;
+    isLoadingClients = true;
+    const container = document.getElementById("client-list-container");
+    container.innerHTML = '<p class="text-slate-500 col-span-full">Chargement des clients...</p>';
+    try {
+        const [{ data: clientsDirects, error: errorDirects }, { data: mandataires, error: errorMandataires }] = await Promise.all([
+            supabaseClient.from("clients_directs").select("*").order("created_at", { ascending: false }),
+            supabaseClient.from("mandataires").select("*").order("created_at", { ascending: false })
+        ]);
+        if (errorDirects || errorMandataires) {
+            console.error("Erreur:", errorDirects || errorMandataires);
+            showError("Erreur lors du chargement des clients.");
+            container.innerHTML = '<p class="text-red-500 col-span-full">Erreur lors du chargement des clients.</p>';
+            return;
+        }
+        allClientsCache = [
+            ...(clientsDirects || []).map(c => ({ ...c, type: "Client Direct", table: "clients_directs", formType: "direct" })),
+            ...(mandataires || []).map(m => ({ ...m, type: "Mandataire", table: "mandataires", formType: "mandataire" }))
+        ].sort((a, b) => b.id - a.id);
+        currentPage = 1;
+        renderClientsPage(container);
+    } finally {
+        isLoadingClients = false;
+    }
+}
+
+function renderClientsPage(container) {
+    const startIndex = (currentPage - 1) * pageSize;
+    const pageItems = allClientsCache.slice(startIndex, startIndex + pageSize);
+    container.innerHTML = '';
+    if (pageItems.length === 0) {
+        container.innerHTML = `
+            <div class="col-span-full text-center bg-white p-12 rounded-2xl border border-slate-100 shadow-sm">
+                <i class="ph-light ph-users text-5xl text-slate-300 mb-4"></i>
+                <h3 class="text-lg font-semibold text-slate-700">Aucun client trouvé</h3>
+                <p class="text-sm text-slate-500 mt-1">Cliquez sur "Créer un client" pour commencer.</p>
+            </div>
+        `;
+        renderPagination(container.parentElement);
+        return;
+    }
+    const fragment = document.createDocumentFragment();
+    pageItems.forEach(client => {
+        const card = document.createElement("div");
+        card.className = "client-card bg-white p-6 rounded-2xl shadow-sm border border-slate-100 transition-all duration-300 flex flex-col relative";
+        const isMandataire = client.type === "Mandataire";
+        const name = isMandataire ? client.nom_entreprise : `${client.prenom} ${client.nom}`;
+        const contact = isMandataire ? client.email_contact : client.email;
+        const logoUrl = client.logo_url;
+        const phone = isMandataire ? (client.telephone_contact || client.telephone_standard) : client.telephone;
+        const watermark = logoUrl
+            ? `<div class="logo-watermark" style="background-image:url('${logoUrl}')"></div>`
+            : `<div class="logo-fallback" style="background-color:${computeColor(name)}">${computeInitials(name)}</div>`;
+        card.innerHTML = `
+            ${watermark}
+            <div class="flex-1 relative z-[1]">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <h3 class="font-bold text-lg text-slate-800">${name}</h3>
+                        <p class="text-sm text-slate-500">${contact || 'N/A'}</p>
+                        <p class="text-sm text-slate-500">${phone || 'N/A'}</p>
+                    </div>
+                    <span class="text-xs font-semibold ${isMandataire ? 'bg-amber-100 text-amber-800' : 'bg-sky-100 text-sky-800'} px-2 py-1 rounded-full self-start flex-shrink-0">${client.type}</span>
+                </div>
+            </div>
+            <div class="card-actions border-t border-slate-100 pt-4 mt-auto flex justify-end items-center gap-2 opacity-0 transition-opacity duration-300">
+                <button title="Modifier" class="action-btn edit-btn text-slate-400 hover:text-sky-600" data-id="${client.id}" data-table="${client.table}" data-type="${client.formType}">
+                    <i class="ph-bold ph-pencil-simple text-xl"></i>
+                </button>
+                <button title="Détails" class="action-btn details-btn text-slate-400 hover:text-blue-600" data-id="${client.id}" data-table="${client.table}" data-type="${client.formType}">
+                    <i class="ph-bold ph-eye text-xl"></i>
+                </button>
+                <button title="Supprimer" class="action-btn delete-btn text-slate-400 hover:text-red-600" data-id="${client.id}" data-table="${client.table}" data-type="${client.formType}">
+                    <i class="ph-bold ph-trash text-xl"></i>
+                </button>
+            </div>
+        `;
+        fragment.appendChild(card);
+    });
+    container.appendChild(fragment);
+    renderPagination(container.parentElement);
+}
+
+function renderPagination(parent) {
+    const totalPages = Math.max(1, Math.ceil(allClientsCache.length / pageSize));
+    let pagination = document.getElementById('clients-pagination');
+    if (!pagination) {
+        pagination = document.createElement('div');
+        pagination.id = 'clients-pagination';
+        pagination.className = 'mt-4 flex items-center justify-center gap-2';
+        parent.appendChild(pagination);
+    }
+    pagination.innerHTML = `
+        <button id="prev-page" class="px-3 py-1 rounded border border-slate-200 text-slate-600 hover:bg-slate-50" ${currentPage === 1 ? 'disabled' : ''}>Précédent</button>
+        <span class="text-sm text-slate-600">Page ${currentPage} / ${totalPages}</span>
+        <button id="next-page" class="px-3 py-1 rounded border border-slate-200 text-slate-600 hover:bg-slate-50" ${currentPage === totalPages ? 'disabled' : ''}>Suivant</button>
+    `;
+    document.getElementById('prev-page').onclick = () => {
+        if (currentPage > 1) {
+            currentPage--;
+            renderClientsPage(document.getElementById('client-list-container'));
+        }
+    };
+    document.getElementById('next-page').onclick = () => {
+        if (currentPage < totalPages) {
+            currentPage++;
+            renderClientsPage(document.getElementById('client-list-container'));
+        }
+    };
+}
+
+// --- Gestion des actions sur les cartes ---
+        document.getElementById('client-list-container').addEventListener('click', async (e) => {
+            const card = e.target.closest('.client-card');
+            const button = e.target.closest('.action-btn');
+
+            if (card && !button) {
+                // Gestion de l'effet de sélection de la carte
+                const isActive = card.classList.contains('is-active');
+                document.querySelectorAll('.client-card.is-active').forEach(c => c.classList.remove('is-active'));
+                if (!isActive) card.classList.add('is-active');
+            }
+
+            if (!button) return;
+
+            e.stopPropagation(); // Empêche l'ouverture de la carte lors du clic sur un bouton
+
+            const id = button.dataset.id;
+            const table = button.dataset.table;
+            const type = button.dataset.type; // 'direct' ou 'mandataire'
+
+            // Action: Supprimer
+            if (button.classList.contains('delete-btn')) {
+                if (confirm('Êtes-vous sûr de vouloir supprimer ce client ?')) {
+                    const { error } = await supabaseClient.from(table).delete().eq('id', id);
+                    if (error) {
+                        alert('Erreur lors de la suppression.');
+                    } else {
+                        showNotification('Client supprimé.');
+                        loadClients();
+                    }
+                }
+            }
+
+            // Action: Détails
+            if (button.classList.contains('details-btn')) {
+                const { data, error } = await supabaseClient.from(table).select('*').eq('id', id).single();
+                if (error) { alert('Erreur de chargement.'); return; }
+                
+                const detailsContainer = document.getElementById('details-panel-content');
+                let detailsHTML = '';
+                const displayName = type === 'direct' ? `${data.prenom} ${data.nom}` : data.nom_entreprise;
+                const logoBlock = data.logo_url ? `<div class="mb-3"><div class="logo-preview bg-slate-50"><img src="${data.logo_url}" alt="Logo ${displayName}"></div></div>` : '';
+                if (type === 'direct') {
+                    detailsHTML = `${logoBlock}<p><strong>Nom:</strong> ${data.prenom} ${data.nom}</p><p><strong>Email:</strong> ${data.email}</p><p><strong>Téléphone:</strong> ${data.telephone}</p><p><strong>Adresse:</strong> ${data.adresse}</p>`;
+                } else {
+                    detailsHTML = `${logoBlock}<p><strong>Entreprise:</strong> ${data.nom_entreprise}</p><p><strong>SIRET:</strong> ${data.siret || 'N/A'}</p><p><strong>Adresse:</strong> ${data.adresse_entreprise}</p><p><strong>Standard:</strong> ${data.telephone_standard}</p><hr class="my-2"><p class="font-semibold">Contact:</p><p>${data.prenom_contact} ${data.nom_contact}</p><p>${data.email_contact}</p><p>${data.telephone_contact}</p>`;
+                }
+                detailsContainer.innerHTML = detailsHTML;
+                openDetailsPanel();
+            }
+
+            // Action: Modifier
+            if (button.classList.contains('edit-btn')) {
+                const { data, error } = await supabaseClient.from(table).select('*').eq('id', id).single();
+                if (error) { alert('Impossible de charger les données.'); return; }
+
+                // Préparer le mode édition
+                editModeState = { id, table };
+                currentFormType = type;
+                logoFile = null;
+                currentLogoUrl = data.logo_url || '';
+                setLogoPreview(type, currentLogoUrl || null, currentLogoUrl ? 'Logo actuel' : 'Aucun fichier sélectionné');
+                // On réinitialise l'autre formulaire pour éviter un prévisualisation résiduelle
+                setLogoPreview(type === 'direct' ? 'mandataire' : 'direct');
+
+                // Remplir le formulaire
+                const form = document.getElementById(`${type === 'direct' ? 'direct' : 'mandataire'}-form`);
+                if(form) {
+                    for (const key in data) {
+                        if (form.elements[key]) {
+                            form.elements[key].value = data[key];
+                        }
+                    }
+                    
+                    // Mettre à jour le bouton de confirmation
+                    const btn = document.getElementById('confirm-create-button');
+                    btn.textContent = 'Enregistrer les modifications';
+                    btn.classList.replace('bg-green-600', 'bg-sky-600');
+                    btn.classList.replace('hover:bg-green-700', 'hover:bg-sky-700');
+                    
+                    goToStep(2, type);
+                    openPanel();
+                } else {
+                    console.error(`Formulaire non trouvé pour le type: ${type}`);
+                }
+            }
+        });
+
+        // Désactiver la carte si on clique en dehors
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.client-card')) {
+                document.querySelectorAll('.client-card.is-active').forEach(c => c.classList.remove('is-active'));
+            }
+        });
+
+        // Charger les clients au chargement de la page
+        document.addEventListener('DOMContentLoaded', loadClients);
+
+        // --- API Adresse GOUV FR ---
+        document.querySelectorAll('.address-input').forEach(input => {
+            const resultsContainer = input.nextElementSibling;
+            let debounceTimer;
+
+            input.addEventListener('input', () => {
+                clearTimeout(debounceTimer);
+                const query = input.value;
+
+                if (query.length < 3) {
+                    resultsContainer.classList.add('hidden');
+                    return;
+                }
+
+                debounceTimer = setTimeout(() => {
+                    fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(query)}&limit=5`)
+                        .then(response => response.json())
+                        .then(data => {
+                            resultsContainer.innerHTML = '';
+                            if (data.features.length > 0) {
+                                resultsContainer.classList.remove('hidden');
+                                data.features.forEach(feature => {
+                                    const item = document.createElement('div');
+                                    item.classList.add('autocomplete-item');
+                                    item.textContent = feature.properties.label;
+                                    item.addEventListener('click', () => {
+                                        input.value = feature.properties.label;
+                                        resultsContainer.classList.add('hidden');
+                                    });
+                                    resultsContainer.appendChild(item);
+                                });
+                            } else {
+                                resultsContainer.classList.add('hidden');
+                            }
+                        });
+                }, 300);
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!input.contains(e.target) && !resultsContainer.contains(e.target)) {
+                    resultsContainer.classList.add('hidden');
+                }
+            });
+        });
+    </script>
+</body>
+
+
+
+
+

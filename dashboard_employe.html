@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Espace Employé</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <script src="vendor/phosphor/index.js"></script>
+  <script src="vendor/supabase/supabase.js"></script>
+  <style>
+    :root { --ink:#0c2f35; --navy:#0f304b; --green:#0f5132; --bg:#f7f5f2; }
+    body { font-family:'Outfit',sans-serif; background: radial-gradient(140% 120% at 20% 0%, #f0f7f8 0%, var(--bg) 45%, #fdfdfb 100%); color:#0c2f35; }
+    .sidebar { background: linear-gradient(180deg, #0f304b, #0c2f35); color:#e8eef2; }
+    .sidebar a { color:#cfd8dc; }
+    .sidebar a:hover { background:rgba(255,255,255,0.06); color:#fff; }
+    .nav-item.active { background:rgba(255,255,255,0.12); color:#fff; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); }
+    .card { background:#fff; border:1px solid #e7e5e0; border-radius:18px; box-shadow:0 10px 30px rgba(12,47,53,0.08); }
+    .chip { display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:999px; background:rgba(12,47,53,0.08); color:#0f304b; font-weight:600; font-size:12px; }
+  </style>
+</head>
+<body class="flex h-screen">
+  <aside class="w-64 sidebar flex flex-col p-6">
+    <div class="text-xl font-bold tracking-wide mb-10 text-center text-white">ESPACE <span class="text-green-300">RH</span></div>
+    <nav class="flex-1 space-y-2">
+      <a href="dashboard_employe.html" class="flex items-center gap-3 p-3 rounded-xl nav-item active font-medium"><i class="ph-fill ph-house"></i> Accueil</a>
+      <a href="planning_employe.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-slate-200 transition"><i class="ph ph-calendar"></i> Planning</a>
+      <a href="signalements_employe.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-slate-200 transition"><i class="ph ph-warning-circle"></i> Signalements</a>
+      <a href="bulletins_employe.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-slate-200 transition"><i class="ph ph-files"></i> Bulletins</a>
+    </nav>
+    <a href="index.html" class="flex items-center gap-2 text-slate-200 hover:text-white transition mt-auto"><i class="ph ph-sign-out"></i> Déconnexion</a>
+  </aside>
+
+  <main class="flex-1 p-6 md:p-10 overflow-y-auto">
+    <div class="card p-5 md:p-6 mb-6">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div>
+          <p class="chip mb-2"><i class="ph ph-butterfly"></i> Espace employé</p>
+          <h1 id="employee-name" class="text-3xl font-bold text-slate-900">Bonjour</h1>
+          <p id="employee-subtitle" class="text-slate-500">Chargement...</p>
+        </div>
+        <div class="flex flex-wrap gap-3">
+          <div class="flex items-center gap-2 bg-emerald-50 text-emerald-800 border border-emerald-100 rounded-xl px-3 py-2 shadow-sm">
+            <i class="ph ph-map-pin text-lg"></i>
+            <span id="geo-status" class="text-sm">Géo: en attente</span>
+          </div>
+          <div class="flex items-center gap-2 bg-white border border-green-100 rounded-xl px-3 py-2 shadow-sm">
+            <span class="text-xs font-semibold text-green-800">Prochain pointage :</span>
+            <span id="next-type-label" class="px-2 py-1 rounded-full bg-green-50 text-green-700 text-xs font-semibold">Arrivée</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div class="lg:col-span-2 space-y-3">
+          <div class="flex flex-col md:flex-row md:items-center md:gap-3">
+            <div class="flex-1 bg-white border border-green-100 rounded-xl px-3 py-2 shadow-sm">
+              <label class="text-xs text-slate-500">Site</label>
+              <select id="pointage-site-select" class="w-full text-sm text-green-900 bg-transparent focus:outline-none">
+                <option value="">Choisir un site</option>
+              </select>
+            </div>
+            <div class="flex-1 bg-white border border-green-100 rounded-xl px-3 py-2 shadow-sm">
+              <label class="text-xs text-slate-500">Adresse</label>
+              <input id="pointage-site-address" type="text" placeholder="Adresse du site" class="w-full text-sm text-green-900 bg-transparent focus:outline-none">
+            </div>
+            <div class="flex-1 bg-white border border-green-100 rounded-xl px-3 py-2 shadow-sm">
+              <label class="text-xs text-slate-500">Note (optionnelle)</label>
+              <input id="pointage-note" type="text" placeholder="Ex: badge oublié" class="w-full text-sm text-green-900 bg-transparent focus:outline-none">
+            </div>
+          </div>
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div class="flex items-center gap-2 text-sm text-slate-600">
+              <i class="ph ph-info text-lg text-green-600"></i>
+              <span>Activez la géolocalisation et restez à moins de 50m du site pour pointer.</span>
+            </div>
+            <button id="btn-pointage-manual" class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-xl font-semibold shadow-lg shadow-green-200 transition w-full md:w-auto">
+              Pointer maintenant
+            </button>
+          </div>
+        </div>
+        <div class="bg-white border border-green-100 rounded-xl p-4 shadow-sm space-y-3">
+          <h4 class="font-semibold text-green-800">Scan rapide</h4>
+          <input id="scan-input" type="text" placeholder="Scannez / collez un code QR" class="w-full rounded-lg border border-green-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+          <button id="scan-submit" class="w-full bg-green-50 border border-green-200 text-green-700 rounded-lg px-3 py-2 text-sm font-semibold hover:bg-green-100">Enregistrer via le code</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+      <div class="card p-5 space-y-3">
+        <h3 class="font-bold text-green-800">Profil</h3>
+        <div class="text-sm text-slate-700 space-y-1">
+          <p><strong>Réf:</strong> <span id="emp-ref">-</span></p>
+          <p><strong>Poste:</strong> <span id="emp-poste">-</span></p>
+          <p><strong>Email:</strong> <span id="emp-email">-</span></p>
+          <p><strong>Téléphone:</strong> <span id="emp-phone">-</span></p>
+        </div>
+      </div>
+      <div class="card p-5 space-y-3">
+        <h3 class="font-bold text-green-800">Site / Contrat</h3>
+        <div class="text-sm text-slate-700 space-y-1">
+          <p><strong>Site:</strong> <span id="emp-site">-</span></p>
+          <p><strong>Contrat:</strong> <span id="emp-contrat">-</span></p>
+          <p><strong>Adresse:</strong> <span id="emp-address">-</span></p>
+        </div>
+      </div>
+      <div class="card p-5 space-y-3">
+        <h3 class="font-bold text-green-800">Documents</h3>
+        <div id="doc-list" class="space-y-2 text-sm text-slate-700">
+          <p class="text-green-500">Chargement...</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card p-5 border-2 border-amber-200 bg-amber-50/60">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="font-bold text-amber-900 flex items-center gap-2"><i class="ph ph-warning-circle"></i> Signalements</h3>
+        <span class="text-xs px-3 py-1 rounded-full bg-white text-amber-700 border border-amber-200" id="signalement-count">--</span>
+      </div>
+      <p class="text-xs text-amber-800 mb-2">Consultez vos signalements ou allez sur la rubrique dédiée.</p>
+      <div id="signalement-list" class="space-y-3 text-sm text-amber-900">
+        <p class="text-amber-700">Aucun signalement pour l'instant.</p>
+      </div>
+      <div class="mt-3">
+        <a href="signalements_employe.html" class="inline-flex items-center gap-2 text-sm text-amber-900 hover:text-amber-700 font-semibold"><i class="ph ph-arrow-right"></i> Ouvrir la rubrique signalements</a>
+      </div>
+    </div>
+
+    <div class="card p-5">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-bold text-green-800">Mes pointages</h3>
+        <span class="text-xs px-3 py-1 rounded-full bg-green-50 text-green-700" id="pointage-count">--</span>
+      </div>
+      <div id="pointage-list" class="space-y-3 text-sm text-green-800">
+        <p class="text-green-500">Aucun pointage pour l'instant.</p>
+      </div>
+    </div>
+  </main>
+
+  <div id="toast" class="fixed bottom-4 right-4 bg-green-900 text-white px-4 py-3 rounded-lg shadow-lg opacity-0 pointer-events-none text-sm transition-all duration-300">Message</div>
+
+  <script>
+    const supabaseUrl = 'https://fmfylsykljkvyurcprij.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZtZnlsc3lrbGprdnl1cmNwcmlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1ODQ3OTgsImV4cCI6MjA3OTE2MDc5OH0.hfgBflnh-nr1Ljfl5Chkp0y1EbZbm5XiyyDhsQcdSqE';
+  const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey, {
+    auth: { persistSession: true, autoRefreshToken: true, storage: localStorage }
+  });
+  const documentsBucket = 'salarie-documents';
+  let currentProfil = null;
+  let currentPointages = [];
+  let siteOptions = [];
+  let nextType = 'entree';
+  const geoCache = new Map();
+  let currentSignalements = [];
+  let lastScanContext = null;
+
+    function showToast(msg, type='info') {
+      const el = document.getElementById('toast');
+      if (!el) return;
+      el.textContent = msg;
+      el.classList.remove('opacity-0','pointer-events-none');
+      el.style.backgroundColor = type === 'error' ? '#b91c1c' : '#166534';
+      setTimeout(() => el.classList.add('opacity-0','pointer-events-none'), 2000);
+    }
+
+    function setText(id, value) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value || '-';
+    }
+
+    function renderSiteOptions() {
+      const select = document.getElementById('pointage-site-select');
+      if (!select) return;
+      const uniq = [];
+      siteOptions.forEach(opt => {
+        if (opt?.label && !uniq.find(o => o.label === opt.label)) uniq.push(opt);
+      });
+      select.innerHTML = '<option value="">Choisir un site</option>';
+      uniq.forEach(opt => {
+        const o = document.createElement('option');
+        o.value = opt.label;
+        o.textContent = opt.label;
+        o.dataset.address = opt.address || '';
+        select.appendChild(o);
+      });
+      if (uniq.length) {
+        const addrInput = document.getElementById('pointage-site-address');
+        if (addrInput && !addrInput.value) addrInput.value = uniq[0].address || '';
+      }
+    }
+
+    async function requireSession() {
+      const { data } = await supabaseClient.auth.getSession();
+      const session = data?.session;
+      if (!session) {
+        const stored = localStorage.getItem('supabaseSession');
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            const { data: setData } = await supabaseClient.auth.setSession({
+              access_token: parsed?.access_token,
+              refresh_token: parsed?.refresh_token
+            });
+            return setData?.session || null;
+          } catch (e) { console.warn('Session locale invalide', e); }
+        }
+      }
+      return session || null;
+    }
+
+    async function fetchDocs(id, folder) {
+      const path = `salaries/${id}/${folder}`;
+      const { data, error } = await supabaseClient.storage.from(documentsBucket).list(path, { limit: 30, sortBy: { column: 'created_at', order: 'desc' } });
+      if (error) { console.error(error); return []; }
+      const files = await Promise.all((data || []).map(async f => {
+        const fullPath = `${path}/${f.name}`;
+        const { data: signed } = await supabaseClient.storage.from(documentsBucket).createSignedUrl(fullPath, 3600);
+        return { name: f.name, url: signed?.signedUrl || '#', created_at: f.created_at };
+      }));
+      return files;
+    }
+
+    function renderDocs(files) {
+      const container = document.getElementById('doc-list');
+      if (!container) return;
+      if (!files.length) { container.innerHTML = '<p class="text-sm text-green-500">Aucun document disponible.</p>'; return; }
+      container.innerHTML = files.map(f => {
+        const label = f.name.replace(/\.[^.]+$/, '').replace(/^[0-9]+-/, '').replace(/-/g, ' ');
+        const dateStr = f.created_at ? new Date(f.created_at).toLocaleDateString() : '';
+        return `<a href="${f.url}" target="_blank" rel="noopener" class="flex items-center justify-between px-3 py-2 rounded-lg border border-green-100 hover:border-green-300">
+          <span>${label}</span>
+          <span class="text-xs text-green-500">${dateStr}</span>
+        </a>`;
+      }).join('');
+    }
+
+    async function loadProfile() {
+      const session = await requireSession();
+      if (!session) { window.location.href = 'employes_login.html'; return; }
+      const email = session.user?.email || '';
+      if (!email) { alert('Email manquant sur le compte.'); return; }
+      const { data: salarie, error } = await supabaseClient
+        .from('salaries')
+        .select('id, ref, prenom, nom, email, telephone, poste, site, contrat_id, contrats:contrat_id(ref, residence, address)')
+        .eq('email', email)
+        .maybeSingle();
+      let profil = salarie;
+      if ((!profil || error) && email) {
+        const { data: salarieIlike } = await supabaseClient
+          .from('salaries')
+          .select('id, ref, prenom, nom, email, telephone, poste, site, contrat_id, contrats:contrat_id(ref, residence, address)')
+          .ilike('email', email)
+          .maybeSingle();
+        profil = salarieIlike;
+      }
+      if (!profil) { alert('Profil salarié introuvable.'); return; }
+      currentProfil = profil;
+
+      let siteLabel = profil.site || profil.contrats?.residence || '';
+      let contratLabel = profil.contrats?.ref || (profil.contrat_id ? `CTR-${profil.contrat_id}` : '');
+      let contratAddress = profil.contrats?.address || '';
+      if (!siteLabel && profil.contrat_id) {
+        const { data: contratRow } = await supabaseClient.from('contrats').select('ref, residence, address').eq('id', profil.contrat_id).maybeSingle();
+        siteLabel = contratRow?.residence || siteLabel;
+        contratLabel = contratRow?.ref || contratLabel;
+        contratAddress = contratRow?.address || contratAddress;
+      }
+
+      const nomComplet = `${profil.prenom || ''} ${profil.nom || ''}`.trim();
+      setText('employee-name', `Bonjour, ${nomComplet || 'Collaborateur'}`);
+      setText('employee-subtitle', profil.poste ? `${profil.poste} · ${siteLabel || 'Site à venir'}` : 'Bienvenue dans votre espace');
+      setText('emp-ref', profil.ref || 'N/A');
+      setText('emp-poste', profil.poste || 'N/A');
+      setText('emp-email', profil.email || 'N/A');
+      setText('emp-phone', profil.telephone || 'N/A');
+      setText('emp-site', siteLabel || 'N/A');
+      setText('emp-contrat', contratLabel || 'N/A');
+      setText('emp-address', contratAddress || 'N/A');
+
+      siteOptions = [];
+      if (siteLabel) siteOptions.push({ label: siteLabel, address: contratAddress });
+
+      const [docsContrat, docsAvenants, docsAutres] = await Promise.all([
+        fetchDocs(profil.id, 'contrat'),
+        fetchDocs(profil.id, 'avenants'),
+        fetchDocs(profil.id, 'autres')
+      ]);
+      renderDocs([...docsContrat, ...docsAvenants, ...docsAutres]);
+    await loadPointages();
+    renderSiteOptions();
+    await loadSignalements();
+  }
+
+    function renderPointages(list) {
+      const container = document.getElementById('pointage-list');
+      const countChip = document.getElementById('pointage-count');
+      if (countChip) countChip.textContent = `${list.length} pointage${list.length>1?'s':''}`;
+      if (!container) return;
+      if (!list.length) { container.innerHTML = '<p class="text-green-500">Aucun pointage pour l\'instant.</p>'; return; }
+      container.innerHTML = list.map(p => {
+        const date = new Date(p.created_at || Date.now());
+        const typeLabel = p.type === 'sortie' ? 'Départ' : 'Arrivée';
+        const badgeColor = p.type === 'sortie' ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700';
+        const modeLabel = p.mode ? p.mode.toUpperCase() : 'MANUEL';
+        const note = p.note ? `<p class="text-xs text-green-500 mt-1">${p.note}</p>` : '';
+        const site = p.site || currentProfil?.site || currentProfil?.contrats?.residence || '';
+        return `<div class="rounded-xl border border-green-100 p-3 bg-white shadow-sm">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="px-3 py-1 rounded-full text-xs font-semibold ${badgeColor}">${typeLabel}</span>
+              <span class="text-xs px-2 py-1 rounded-full bg-green-50 text-green-700">${modeLabel}</span>
+            </div>
+            <span class="text-sm text-green-700 font-semibold">${date.toLocaleTimeString()} · ${date.toLocaleDateString()}</span>
+          </div>
+          <p class="text-sm text-green-800 mt-1">${site || 'Site non renseigné'}</p>
+          ${note}
+        </div>`;
+      }).join('');
+    }
+
+    async function loadPointages() {
+      if (!currentProfil?.id) return;
+      const { data, error } = await supabaseClient
+        .from('pointages')
+        .select('id, type, mode, note, site, created_at')
+        .eq('salarie_id', currentProfil.id)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (error) { console.error(error); showToast('Impossible de charger les pointages', 'error'); return; }
+      currentPointages = data || [];
+      currentPointages.forEach(p => { if (p.site) siteOptions.push({ label: p.site, address: '' }); });
+      renderSiteOptions();
+      renderPointages(currentPointages);
+      computeNextType();
+    }
+
+  function computeNextType() {
+    if (!currentPointages.length) { nextType = 'entree'; }
+    else {
+      const last = currentPointages[0];
+      nextType = last.type === 'entree' ? 'sortie' : 'entree';
+      }
+      const badge = document.getElementById('next-type-label');
+      if (badge) {
+        badge.textContent = nextType === 'sortie' ? 'Départ' : 'Arrivée';
+        badge.classList.toggle('bg-rose-50', nextType === 'sortie');
+        badge.classList.toggle('text-rose-700', nextType === 'sortie');
+        badge.classList.toggle('bg-green-50', nextType === 'entree');
+        badge.classList.toggle('text-green-700', nextType === 'entree');
+    }
+  }
+
+    function renderSignalements(list) {
+      const container = document.getElementById('signalement-list');
+      const badge = document.getElementById('signalement-count');
+      if (badge) badge.textContent = `${list.length} signalement${list.length>1?'s':''}`;
+      if (!container) return;
+      if (!list.length) { container.innerHTML = '<p class="text-green-500">Aucun signalement pour l\'instant.</p>'; return; }
+      container.innerHTML = list.map(s => {
+        const date = s.created_at ? new Date(s.created_at).toLocaleDateString() : '';
+        const status = s.status || 'nouveau';
+        const badgeColor = status === 'cloture' ? 'bg-emerald-100 text-emerald-700' : status === 'en_cours' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-700';
+        return `<div class="rounded-xl border border-green-100 p-3 bg-white shadow-sm">
+          <div class="flex items-center justify-between gap-2">
+            <div>
+              <div class="font-semibold text-slate-900">${s.titre || 'Signalement'}</div>
+              <p class="text-xs text-slate-500">${date} · ${s.type || ''}</p>
+            </div>
+            <span class="px-2 py-1 rounded-full text-xs font-semibold ${badgeColor}">${status}</span>
+          </div>
+          <p class="text-sm text-slate-700 mt-1">${s.description || ''}</p>
+          <p class="text-xs text-slate-500 mt-1">${s.site || ''}</p>
+        </div>`;
+      }).join('');
+    }
+
+    async function loadSignalements() {
+      if (!currentProfil) return;
+      const filters = [];
+      if (currentProfil.email) filters.push(`contact_email.ilike.${currentProfil.email}`);
+      if (currentProfil.contrats?.ref) filters.push(`contrat_ref.eq.${currentProfil.contrats.ref}`);
+      if (currentProfil.site || currentProfil.contrats?.residence) {
+        const site = currentProfil.site || currentProfil.contrats?.residence;
+        filters.push(`site.ilike.%25${encodeURIComponent(site)}%25`);
+      }
+      const query = supabaseClient
+        .from('signalements')
+        .select('id, titre, type, description, status, site, created_at, contrat_ref, contact_email')
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (filters.length) query.or(filters.join(','));
+      const { data, error } = await query;
+      if (error) { console.error(error); showToast('Impossible de charger les signalements', 'error'); return; }
+      currentSignalements = data || [];
+      renderSignalements(currentSignalements);
+    }
+
+    function parseScanPayload(raw) {
+      if (!raw) return {};
+      try {
+        const url = raw.startsWith('http') ? new URL(raw) : new URL(`https://dummy.local/?${raw}`);
+        const type = (url.searchParams.get('direction') || url.searchParams.get('type') || '').toLowerCase();
+        const note = url.searchParams.get('note') || undefined;
+        const site = url.searchParams.get('site') || undefined;
+        const address = url.searchParams.get('address') || undefined;
+        const agent = url.searchParams.get('agent') || undefined;
+        const contrat = url.searchParams.get('contrat') || url.searchParams.get('contract') || undefined;
+        return { type, note, site, address, agent, contrat, payload: raw };
+      } catch (e) {
+        return { payload: raw };
+      }
+    }
+
+    function applyScanContext(ctx) {
+      if (!ctx) return;
+      const select = document.getElementById('pointage-site-select');
+      if (select && ctx.site) {
+        let opt = Array.from(select.options).find(o => o.value === ctx.site);
+        if (!opt) {
+          opt = document.createElement('option');
+          opt.value = ctx.site;
+          opt.textContent = ctx.site;
+          opt.dataset.address = ctx.address || '';
+          select.appendChild(opt);
+        }
+        select.value = ctx.site;
+      }
+      if (ctx.address) {
+        const addrInput = document.getElementById('pointage-site-address');
+        if (addrInput) addrInput.value = ctx.address;
+      }
+      if (ctx.note) {
+        const noteInput = document.getElementById('pointage-note');
+        if (noteInput) noteInput.value = ctx.note;
+      }
+    }
+
+    function haversine(lat1, lon1, lat2, lon2) {
+      const toRad = d => d * Math.PI / 180;
+      const R = 6371000;
+      const dLat = toRad(lat2 - lat1);
+      const dLon = toRad(lon2 - lon1);
+      const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+      return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    async function geocodeAddress(addr) {
+      if (!addr) return null;
+      if (geoCache.has(addr)) return geoCache.get(addr);
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(addr)}`, { headers: { 'Accept-Language': 'fr' } });
+        const json = await res.json();
+        const first = json?.[0];
+        if (first) {
+          const coords = { lat: parseFloat(first.lat), lon: parseFloat(first.lon) };
+          geoCache.set(addr, coords);
+          return coords;
+        }
+      } catch (e) { console.warn('Geocode failed', e); }
+      return null;
+    }
+
+    function updateGeoStatus(text, ok=true) {
+      const el = document.getElementById('geo-status');
+      if (!el) return;
+      el.textContent = text;
+      el.classList.toggle('text-emerald-800', ok);
+      el.classList.toggle('text-rose-700', !ok);
+    }
+
+    async function getPositionWithFallback() {
+      if (!navigator.geolocation) throw new Error('Géolocalisation indisponible');
+      const optsHigh = { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 };
+      const optsCoarse = { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 };
+      const request = (opts) => new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, opts);
+      });
+      try { return await request(optsHigh); }
+      catch (e) {
+        // Fallback moins précis si le GPS est indisponible
+        try { return await request(optsCoarse); }
+        catch (err) { throw err; }
+      }
+    }
+
+    function geoHelpText() {
+      const ua = navigator.userAgent.toLowerCase();
+      if (/android/.test(ua)) return 'Activez la localisation (GPS) dans les réglages système et autorisez le navigateur.';
+      if (/iphone|ipad|ipod/.test(ua)) return 'iOS : Réglages > Confidentialité > Service de localisation > activez pour le navigateur.';
+      return 'Activez la localisation (Wi-Fi/GPS) et autorisez le navigateur à l’utiliser.';
+    }
+
+    async function ensureWithinRange(address) {
+      const coords = await geocodeAddress(address);
+      if (!coords) { showToast('Adresse introuvable pour géolocalisation', 'error'); updateGeoStatus('Adresse introuvable', false); return false; }
+      if (!navigator.geolocation) {
+        showToast('Géolocalisation non disponible sur cet appareil', 'error');
+        updateGeoStatus('Géo indisponible', false);
+        return false;
+      }
+      try {
+        const pos = await getPositionWithFallback();
+        const dist = haversine(pos.coords.latitude, pos.coords.longitude, coords.lat, coords.lon);
+        const ok = dist <= 50;
+        if (!ok) {
+          showToast(`Trop loin du site (${Math.round(dist)}m)`, 'error');
+          updateGeoStatus(`Distance ${Math.round(dist)}m`, false);
+        } else {
+          updateGeoStatus(`À ${Math.round(dist)}m du site`, true);
+        }
+        return ok;
+      } catch (err) {
+        console.warn(err);
+        const code = err?.code;
+        if (code === 1) {
+          showToast('Autorisez la géolocalisation pour pointer', 'error');
+          updateGeoStatus('Permission refusée', false);
+        } else if (code === 2) {
+          showToast(geoHelpText(), 'error');
+          updateGeoStatus('Position indisponible', false);
+        } else if (code === 3) {
+          showToast('Géolocalisation trop longue, réessayez', 'error');
+          updateGeoStatus('Timeout géoloc', false);
+        } else {
+          showToast('Géolocalisation impossible', 'error');
+          updateGeoStatus('Géo indisponible', false);
+        }
+        return false;
+      }
+    }
+
+    async function recordPointage({ mode='manual', payload='' } = {}) {
+      if (!currentProfil?.id) { showToast('Profil absent', 'error'); return; }
+      const type = nextType || 'entree';
+      const note = document.getElementById('pointage-note')?.value.trim() || '';
+      const select = document.getElementById('pointage-site-select');
+      const selectVal = select?.value || '';
+      const selectAddr = select?.selectedOptions?.[0]?.dataset?.address || '';
+      const scanCtx = mode === 'scan' ? lastScanContext : null;
+      const manualSite = selectVal || scanCtx?.site || currentProfil.site || currentProfil.contrats?.residence || '';
+      const addressVal = document.getElementById('pointage-site-address')?.value.trim() || scanCtx?.address || selectAddr || '';
+      if (!manualSite || !addressVal) { showToast('Site ou adresse manquant', 'error'); return; }
+      if (scanCtx?.agent) {
+        const agent = String(scanCtx.agent).toLowerCase();
+        const ref = (currentProfil.ref || '').toLowerCase();
+        const email = (currentProfil.email || '').toLowerCase();
+        if (agent !== String(currentProfil.id) && agent !== ref && agent !== email) {
+          showToast('Ce QR est reserve a un autre agent', 'error');
+          return;
+        }
+      }
+      const withinRange = await ensureWithinRange(addressVal);
+      if (!withinRange) return;
+      const insertPayload = {
+        salarie_id: currentProfil.id,
+        type,
+        mode,
+        note,
+        site: manualSite,
+        contrat_id: currentProfil.contrat_id || null,
+        raw_payload: payload || null
+      };
+      const { error } = await supabaseClient.from('pointages').insert([insertPayload]);
+      if (error) { console.error(error); showToast('Pointage impossible', 'error'); return; }
+      showToast('Pointage enregistré');
+      document.getElementById('pointage-note').value = '';
+      await loadPointages();
+    }
+
+    document.addEventListener('DOMContentLoaded', loadProfile);
+    document.getElementById('btn-pointage-manual')?.addEventListener('click', () => recordPointage({ mode:'manual' }));
+    document.getElementById('scan-submit')?.addEventListener('click', () => {
+      const val = document.getElementById('scan-input')?.value.trim() || '';
+      const parsed = parseScanPayload(val);
+      lastScanContext = parsed;
+      if (parsed.type === 'sortie' || parsed.type === 'depart') {
+        nextType = 'sortie';
+        computeNextType();
+      } else if (parsed.type === 'entree' || parsed.type === 'arrivee') {
+        nextType = 'entree';
+        computeNextType();
+      }
+      applyScanContext(parsed);
+      recordPointage({ mode:'scan', payload: val });
+      document.getElementById('scan-input').value = '';
+    });
+    document.getElementById('pointage-site-select')?.addEventListener('change', (e) => {
+      const addr = e.target.selectedOptions?.[0]?.dataset?.address || '';
+      if (addr) document.getElementById('pointage-site-address').value = addr;
+    });
+  </script>
+</body>
+</html>
