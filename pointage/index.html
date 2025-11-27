@@ -86,7 +86,8 @@
       address: params.get('address') || '',
       agent: params.get('agent') || '',
       note: params.get('note') || '',
-      directionHint: (params.get('type') || params.get('direction') || '').toLowerCase()
+      directionHint: (params.get('type') || params.get('direction') || '').toLowerCase(),
+      qrToken: params.get('qr') || ''
     };
     let currentProfil = null;
     let contractMeta = null;
@@ -176,6 +177,29 @@
         if (!ctx.agent && data.agent_id) ctx.agent = data.agent_id;
       }
       return contractMeta;
+    }
+
+    async function loadQrRecord() {
+      if (!ctx.qrToken) return;
+      try {
+        const { data, error } = await supabaseClient
+          .from('qr_codes')
+          .select('token, type, contrat_id, site, address, agent, note, direction, contrats:contrat_id(ref, residence, address)')
+          .eq('token', ctx.qrToken)
+          .maybeSingle();
+        if (error || !data) { showToast('QR invalide ou expiré', 'error'); return; }
+        if (data.site) ctx.site = data.site;
+        if (data.address) ctx.address = data.address;
+        if (data.agent) ctx.agent = data.agent;
+        if (data.note) ctx.note = data.note;
+        if (data.direction) ctx.directionHint = data.direction;
+        if (data.contrats?.ref) ctx.contratRef = data.contrats.ref;
+        else if (data.contrat_id) ctx.contratRef = data.contrat_id;
+        if (data.contrats?.residence && !ctx.site) ctx.site = data.contrats.residence;
+        if (data.contrats?.address && !ctx.address) ctx.address = data.contrats.address;
+      } catch (e) {
+        console.warn('QR lookup failed', e);
+      }
     }
 
     function updateGeoStatus(text, ok=true) {
@@ -328,6 +352,7 @@
     document.getElementById('btn-pointage').addEventListener('click', recordPointage);
 
     document.addEventListener('DOMContentLoaded', async () => {
+      await loadQrRecord();
       renderContext();
       const session = await requireSession();
       if (!session) {

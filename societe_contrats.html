@@ -438,30 +438,74 @@
     }
 
     function resolveBaseUrl() {
-      if (window.location?.origin && window.location.origin !== 'null') return window.location.origin;
-      return 'https://nessaly.app';
+      const { origin, hostname } = window.location;
+      if (hostname.endsWith('github.io')) return `${origin}/MCC1`;
+      return origin || 'https://nessalyspro-source.github.io/MCC1';
     }
 
-    function buildQrUrl(type, data) {
+    function generateQrToken() {
+      const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let out = '';
+      for (let i = 0; i < 16; i++) out += chars[Math.floor(Math.random() * chars.length)];
+      return out;
+    }
+
+    async function getOrCreateQrToken(type, data) {
+      const contratId = data.id || null;
+      const site = data.residence || data.address || '';
+      const address = data.address || '';
+      const agent = data.agent_id || data.agent || data.agent_assign_id || null;
+      const note = data.note || null;
+      const direction = data.direction || null;
+      const key = `${type}:${contratId || 'noctr'}:${site}:${address}:${agent || 'noagent'}`;
+      if (qrTokenCache.has(key)) return qrTokenCache.get(key);
+      let query = supabaseClient
+        .from('qr_codes')
+        .select('token')
+        .eq('contrat_id', contratId)
+        .eq('type', type)
+        .eq('site', site)
+        .eq('address', address)
+        .limit(1);
+      query = agent ? query.eq('agent', agent) : query.is('agent', null);
+      const { data: existing } = await query.maybeSingle();
+      if (existing?.token) {
+        qrTokenCache.set(key, existing.token);
+        return existing.token;
+      }
+      const token = generateQrToken();
+      const payload = { token, type, contrat_id: contratId, site, address, agent, note, direction };
+      const { error } = await supabaseClient.from('qr_codes').insert([payload]);
+      if (error) {
+        console.warn('QR insert failed, fallback URL params', error);
+        return null;
+      }
+      qrTokenCache.set(key, token);
+      return token;
+    }
+
+    async function buildQrUrlWithToken(type, data) {
       const base = resolveBaseUrl();
-      const siteLabel = data.residence || data.address || 'site';
-      const site = slugifyString(siteLabel);
-      const contractId = data.ref || data.id;
+      const path = type === 'pointage' ? '/pointage/' : '/signalement.html';
+      try {
+        const token = await getOrCreateQrToken(type, data);
+        if (token) return `${base}${path}?qr=${encodeURIComponent(token)}`;
+      } catch (e) {
+        console.warn('QR token build failed', e);
+      }
       const params = new URLSearchParams();
+      const siteLabel = data.residence || data.address || 'site';
+      params.set('contrat', data.ref || data.id || '');
+      params.set('site', siteLabel);
+      params.set('address', data.address || '');
       if (type === 'pointage') {
-        params.set('contrat', contractId);
-        params.set('site', siteLabel);
-        if (data.address) params.set('address', data.address);
         const agentId = data.agent_id || data.agent || data.agent_assign_id;
         if (agentId) params.set('agent', agentId);
-        return `${base}/pointage/?${params.toString()}`;
+        return `${base}${path}?${params.toString()}`;
       } else {
-        params.set('contrat', contractId);
-        params.set('site', siteLabel);
-        params.set('address', data.address || '');
         params.set('societe', data.client_name || data.societe_nom || '');
         params.set('contact', data.contact_societe || '');
-        return `${base}/signalement.html?${params.toString()}`;
+        return `${base}${path}?${params.toString()}`;
       }
     }
 
@@ -844,13 +888,13 @@
         </div>
       `).join('');
     }
-    function showDetails(data) {
+    async function showDetails(data) {
       const statut = data.statut || 'en_attente';
       const statutLabel = statut === 'actif' ? 'Actif' : (statut === 'resilie' ? 'R?sili?' : 'En attente');
       const prix = data.prix_ttc || data.prix_ht ? `${(data.prix_ttc || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} ?'?` : '??"';
       const qrApi = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=";
-      const pointageUrl = buildQrUrl('pointage', data);
-      const signalementUrl = buildQrUrl('signalement', data);
+      const pointageUrl = await buildQrUrlWithToken('pointage', data);
+      const signalementUrl = await buildQrUrlWithToken('signalement', data);
       const agentLabel = data.agent_id || data.agent || null;
       const html = `
         <div class="space-y-3 text-sm text-slate-700">
@@ -985,7 +1029,7 @@
         } else if (btn.classList.contains('details-btn')) {
           const { data, error } = await supabaseClient.from('contrats').select('*').eq('id', id).single();
           if (error || !data) { showToast('Impossible de charger le contrat', 'error'); return; }
-          showDetails(data);
+          await showDetails(data);
         }
         return;
       }
@@ -993,7 +1037,7 @@
         const id = parseInt(card.dataset.id, 10);
         const { data, error } = await supabaseClient.from('contrats').select('*').eq('id', id).single();
         if (error || !data) { showToast('Impossible de charger le contrat', 'error'); return; }
-        showDetails(data);
+        await showDetails(data);
       }
     });
 

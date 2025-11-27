@@ -96,7 +96,7 @@
     };
     let currentStep = 1;
     let selectedType = '';
-    let context = { societe_nom:'', contrat_ref:'', site:'', address:'', contact:'' };
+    let context = { societe_nom:'', contrat_ref:'', site:'', address:'', contact:'', qrToken: (new URLSearchParams(window.location.search)).get('qr') || '' };
 
     function showToast(msg, type='info') {
       const el = document.getElementById('toast');
@@ -122,6 +122,27 @@
       context.address = params.get('address') || '';
       context.contact = params.get('contact') || '';
       setHeader();
+    }
+
+    async function loadQrRecord() {
+      if (!context.qrToken) return;
+      try {
+        const { data, error } = await supabaseClient
+          .from('qr_codes')
+          .select('token, type, contrat_id, site, address, agent, note, direction, contrats:contrat_id(ref, residence, address)')
+          .eq('token', context.qrToken)
+          .maybeSingle();
+        if (error || !data) { showToast('QR invalide ou expiré', 'error'); return; }
+        if (data.site) context.site = data.site;
+        if (data.address) context.address = data.address;
+        if (data.contrats?.ref) context.contrat_ref = data.contrats.ref;
+        else if (data.contrat_id) context.contrat_ref = data.contrat_id;
+        if (data.contrats?.residence && !context.site) context.site = data.contrats.residence;
+        if (data.contrats?.address && !context.address) context.address = data.contrats.address;
+        setHeader();
+      } catch (e) {
+        console.warn('QR lookup failed', e);
+      }
     }
 
     function renderTypes() {
@@ -201,8 +222,9 @@
     });
     document.getElementById('prev-btn').addEventListener('click', () => goStep(Math.max(1, currentStep - 1)));
 
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
       parseUrlContext();
+      await loadQrRecord();
       renderTypes();
       goStep(1);
     });
