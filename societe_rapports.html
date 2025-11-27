@@ -163,13 +163,13 @@
 
     async function loadContracts() {
       if (!actorType) return;
-      let query = supabaseClient.from('contrats').select('id, ref, site_nom, adresse_site, societe_id, salarie_id');
+      let query = supabaseClient.from('contrats').select('id, ref, site_nom, adresse_site, societe_id, salarie_id, responsable_id');
       if (actorType === 'societe') query = query.eq('societe_id', actor.id);
-      if (actorType === 'employe') query = query.or(`salarie_id.eq.${actor.id},responsable_id.eq.${actor.id}`);
+      if (actorType === 'employe') query = query.or(`salarie_id.eq.${actor.id},responsable_id.eq.${actor.id},societe_id.eq.${actor.societe_id || 0}`);
       const { data, error } = await query;
       if (!error && data) contracts = data;
       const sel = document.getElementById('rapport-contrat');
-      sel.innerHTML = '<option value=\"\">Selectionner...</option>' + (contracts || []).map(c => `<option value=\"${c.id}\" data-site=\"${c.site_nom || ''}\" data-addr=\"${c.adresse_site || ''}\">${c.ref || 'Contrat'} - ${c.site_nom || ''}</option>`).join('');
+      sel.innerHTML = '<option value="\">Selectionner...</option>' + (contracts || []).map(c => `<option value="${c.id}" data-site="${c.site_nom || ''}" data-addr="${c.adresse_site || ''}">${c.ref || 'Contrat'} - ${c.site_nom || ''}</option>`).join('');
     }
 
     async function loadRapports() {
@@ -387,6 +387,12 @@
     document.getElementById('btn-open-form').addEventListener('click', () => {
       document.getElementById('form-wrapper').classList.remove('hidden');
       if (!document.getElementById('sections').children.length) addSection();
+    });
+    document.getElementById('rapport-contrat').addEventListener('change', (e) => {
+      const opt = e.target.selectedOptions[0];
+      if (opt) {
+        document.getElementById('rapport-site').value = opt.dataset.site || '';
+      }
     });
     document.getElementById('btn-close-form').addEventListener('click', () => document.getElementById('form-wrapper').classList.add('hidden'));
     document.getElementById('btn-add-section').addEventListener('click', addSection);
