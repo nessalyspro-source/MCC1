@@ -119,8 +119,12 @@
       if (!session) { window.location.href = 'employes_login.html'; return; }
       currentEmail = session.user?.email || '';
       if (!currentEmail) { document.getElementById('sig-list').innerHTML = '<p class="text-red-500">Email absent.</p>'; return; }
-      const { data: salarie } = await supabaseClient.from('salaries').select('contrat_id, contrats:contrat_id(ref)').ilike('email', currentEmail).maybeSingle();
-      const contratRef = salarie?.contrats?.ref || null;
+      const { data: salarie } = await supabaseClient.from('salaries').select('contrat_id').ilike('email', currentEmail).maybeSingle();
+      let contratRef = null;
+      if (salarie?.contrat_id) {
+        const { data: ctr } = await supabaseClient.from('contrats').select('ref').eq('id', salarie.contrat_id).maybeSingle();
+        contratRef = ctr?.ref || null;
+      }
       let query = supabaseClient
         .from('signalements')
         .select('id, titre, type, description, status, site, created_at, contact_email, contrat_ref')
