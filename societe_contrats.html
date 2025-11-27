@@ -510,71 +510,73 @@
     }
 
             function openQrPrintable(type, url, data) {
-      const site = data.residence || data.address || "Site";
-      const address = data.address || "";
-      const client = data.client_name || data.societe_nom || "Client";
-      const contractRef = data.ref || data.id || "";
-      const contact = data.contact_societe || "";
-      const title = type === "pointage" ? "QR CODE EMPLOYES" : "QR CODE RESIDENTS";
-      const usage = type === "pointage"
-        ? "Ce QR code permet aux employes de pointer leur arrivee/depart sur site."
-        : "Ce QR code permet aux residents ou clients de signaler un incident ou probleme.";
-      const steps = type === "pointage"
-        ? ["Ouvrez l'appareil photo de votre smartphone", "Visez le QR code", "Validez votre pointage"]
-        : ["Ouvrez l'appareil photo de votre smartphone", "Visez le QR code", "Remplissez le formulaire de signalement"];
-      const win = window.open("", "_blank");
-      if (!win) { showToast("Autorisez les popups pour imprimer", "error"); return; }
-      const escapedUrl = encodeURIComponent(url);
-      const stepsHtml = steps.map(s => `<li>${s}</li>`).join('');
-      win.document.write(`<!DOCTYPE html>
-        <html><head><title>${client} - ${title}</title>
-        <style>
-          body { font-family: 'Outfit', Arial, sans-serif; color:#0f304b; padding:32px; background:#ededed; }
-          .sheet { width:794px; min-height:1123px; margin:0 auto; background:#fff; border:1px solid #d1d5db; box-shadow:0 10px 40px rgba(15,23,42,0.12); padding:28px 30px; box-sizing:border-box; }
-          .row-top { display:flex; gap:16px; margin-bottom:18px; }
-          .box-logo { flex:0 0 160px; height:160px; border:2px solid #0f304b; border-radius:24px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; color:#0f304b; background:#f5f7fa; }
-          .box-info { flex:1; border:2px solid #0f304b; border-radius:18px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-weight:700; font-size:15px; color:#0f304b; background:#f5f7fa; padding:10px; gap:6px; }
-          .divider { height:2px; background:#0f304b; margin:18px 0; }
-          .title { text-align:center; font-size:28px; font-weight:800; letter-spacing:0.04em; margin:12px 0; }
-          .qr-frame { width:440px; height:440px; margin:0 auto 18px; border:3px solid #0f304b; border-radius:36px; display:flex; align-items:center; justify-content:center; background:#f5f7fa; }
-          .qr-frame img { width:340px; height:340px; }
-          .usage { font-size:14px; font-weight:700; color:#0f304b; margin:12px auto; max-width:640px; text-align:center; }
-          .steps { max-width:520px; margin:0 auto; font-size:13px; color:#0f304b; }
-          .steps ul { margin:6px 0 0 18px; }
-          .footer { margin-top:32px; font-size:12px; color:#475569; text-align:center; }
-        </style></head>
-        <body>
-          <div class="sheet">
-            <div class="row-top">
-              <div class="box-logo">LOGO ENTREPRISE</div>
-              <div class="box-info">
-                <div>INFORMATION DE LA SOCIETE</div>
-                <div style="font-size:13px; font-weight:600;">${client}</div>
-                <div style="font-size:12px; font-weight:500;">Site: ${site}</div>
-                <div style="font-size:12px; font-weight:500;">Contrat: ${contractRef}</div>
-                <div style="font-size:12px; font-weight:500;">Contact: ${contact}</div>
-              </div>
-            </div>
-            <div style="text-align:center; font-size:14px; color:#0f304b; margin-bottom:8px;">${address}</div>
-            <div class="divider"></div>
-            <div class="title">SCANNER MOI</div>
-            <div class="qr-frame">
-              <img src="https://api.qrserver.com/v1/create-qr-code/?size=340x340&data=${escapedUrl}" alt="QR">
-            </div>
-            <div class="usage">${usage}</div>
-            <div class="steps">
-              <div style="font-weight:700; margin-bottom:4px;">Comment utiliser ?</div>
-              <ul>${stepsHtml}</ul>
-            </div>
-            <div class="footer">
-              <div>${address}</div>
-              <div>Powered by Nessaly</div>
-            </div>
+  const site = data.residence || data.address || "Site";
+  const address = data.address || "";
+  const client = data.client_name || data.societe_nom || "Client";
+  const contractRef = data.ref || data.id || "";
+  const contact = data.contact_societe || "";
+  const title = type === "pointage" ? "QR CODE EMPLOYES" : "QR CODE RESIDENTS";
+  const usage = type === "pointage"
+    ? "Ce QR code permet aux employes de pointer leur arrivee/depart sur site."
+    : "Ce QR code permet aux residents ou clients de signaler un incident ou probleme.";
+  const steps = type === "pointage"
+    ? ["Ouvrez l'appareil photo de votre smartphone", "Visez le QR code", "Validez votre pointage"]
+    : ["Ouvrez l'appareil photo de votre smartphone", "Visez le QR code", "Remplissez le formulaire de signalement"];
+  const win = window.open("", "_blank");
+  if (!win) { showToast("Autorisez les popups pour imprimer", "error"); return; }
+  const escapedUrl = encodeURIComponent(url);
+  const stepsHtml = steps.map(s => `<li>${s}</li>`).join('');
+  win.document.write(`<!DOCTYPE html>
+    <html><head><title>${client} - ${title}</title>
+    <style>
+      @media print {@page { size: A4; margin: 0; }}
+      body { margin:0; background:#e9edf3; font-family: 'Outfit', Arial, sans-serif; color:#0f304b; }
+      .sheet { width:794px; min-height:1123px; margin:16px auto; background:#ffffff; border:1px solid #d7dce3; box-shadow:0 18px 50px rgba(15,23,42,0.18); border-radius:18px; padding:34px 36px; box-sizing:border-box; }
+      .row-top { display:flex; gap:18px; align-items:center; margin-bottom:22px; }
+      .logo { width:140px; height:140px; border-radius:28px; border:2px dashed #94a3b8; display:flex; align-items:center; justify-content:center; background:#f6f7fb; font-weight:700; font-size:13px; color:#475569; }
+      .info { flex:1; border:2px solid #0f304b; border-radius:18px; padding:14px 16px; background:linear-gradient(135deg,#f6fbff,#eef2f7); display:grid; gap:6px; text-align:left; }
+      .info-title { font-weight:800; letter-spacing:0.04em; font-size:13px; color:#0f304b; }
+      .info-line { font-size:12px; color:#0f304b; }
+      .divider { height:2px; background:#0f304b; margin:14px 0 18px; }
+      .title { text-align:center; font-size:30px; font-weight:800; letter-spacing:0.06em; margin:10px 0 6px; }
+      .qr-frame { width:440px; height:440px; margin:12px auto 14px; border:3px solid #0f304b; border-radius:42px; display:flex; align-items:center; justify-content:center; background:#f5f7fb; box-shadow:0 16px 40px rgba(15,47,53,0.18); }
+      .qr-frame img { width:340px; height:340px; }
+      .usage { font-size:14px; font-weight:700; color:#0f304b; margin:0 auto 12px; max-width:640px; text-align:center; }
+      .steps { max-width:540px; margin:0 auto; font-size:13px; color:#0f304b; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:12px 14px; }
+      .steps ul { margin:6px 0 0 18px; }
+      .footer { margin-top:30px; font-size:12px; color:#475569; text-align:center; }
+    </style></head>
+    <body>
+      <div class="sheet">
+        <div class="row-top">
+          <div class="logo">LOGO ENTREPRISE</div>
+          <div class="info">
+            <div class="info-title">INFORMATION DE LA SOCIETE</div>
+            <div class="info-line"><strong>Société:</strong> ${client}</div>
+            <div class="info-line"><strong>Site:</strong> ${site}</div>
+            <div class="info-line"><strong>Contrat:</strong> ${contractRef}</div>
+            <div class="info-line"><strong>Contact:</strong> ${contact}</div>
           </div>
-          <script>window.print();<\/script>
-        </body></html>`);
-      win.document.close();
-    }
+        </div>
+        <div class="divider"></div>
+        <div class="title">SCANNER MOI</div>
+        <div class="qr-frame">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=340x340&data=${escapedUrl}" alt="QR">
+        </div>
+        <div class="usage">${usage}</div>
+        <div class="steps">
+          <div style="font-weight:700; margin-bottom:4px;">Comment utiliser ?</div>
+          <ul>${stepsHtml}</ul>
+        </div>
+        <div class="footer">
+          <div>${address}</div>
+          <div>Powered by Nessaly</div>
+        </div>
+      </div>
+      <script>window.print();<\/script>
+    </body></html>`);
+  win.document.close();
+}
 
     function attachAddressAutocomplete(input, results) {
       let t;
@@ -1159,6 +1161,7 @@
   </script>
 </body>
 </html>
+
 
 
 
