@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
@@ -96,7 +96,7 @@
     };
     let currentStep = 1;
     let selectedType = '';
-    let context = { societe_nom:'', contrat_ref:'', site:'', address:'', contact:'', qrToken: (new URLSearchParams(window.location.search)).get('qr') || '' };
+    let context = { societe_nom:'', societe_id:null, contrat_ref:'', contrat_id:null, site:'', address:'', contact:'', qrToken: (new URLSearchParams(window.location.search)).get('qr') || '' };
 
     function showToast(msg, type='info') {
       const el = document.getElementById('toast');
@@ -124,21 +124,25 @@
       setHeader();
     }
 
-    async function loadQrRecord() {
+        async function loadQrRecord() {
       if (!context.qrToken) return;
       try {
         const { data, error } = await supabaseClient
           .from('qr_codes')
-          .select('token, type, contrat_id, site, address, agent, note, direction, contrats:contrat_id(ref, residence, address)')
+          .select('token, type, contrat_id, site, address, agent, note, direction, contrats:contrat_id(ref, residence, address, societe_id, contact_email, contact_nom)')
           .eq('token', context.qrToken)
           .maybeSingle();
-        if (error || !data) { showToast('QR invalide ou expiré', 'error'); return; }
+        if (error || !data) { showToast('QR invalide ou expire', 'error'); return; }
+        if (data.contrat_id) context.contrat_id = data.contrat_id;
+        if (data.contrats?.societe_id) context.societe_id = data.contrats.societe_id;
         if (data.site) context.site = data.site;
         if (data.address) context.address = data.address;
         if (data.contrats?.ref) context.contrat_ref = data.contrats.ref;
         else if (data.contrat_id) context.contrat_ref = data.contrat_id;
         if (data.contrats?.residence && !context.site) context.site = data.contrats.residence;
         if (data.contrats?.address && !context.address) context.address = data.contrats.address;
+        if (data.contrats?.contact_nom) context.contact = data.contrats.contact_nom;
+        else if (data.contrats?.contact_email) context.contact = data.contrats.contact_email;
         setHeader();
       } catch (e) {
         console.warn('QR lookup failed', e);
@@ -202,11 +206,13 @@
       const contactNom = document.getElementById('contact-nom').value.trim();
       const contactEmail = document.getElementById('contact-email').value.trim();
       const contactTel = document.getElementById('contact-tel').value.trim();
-      const payload = {
+            const payload = {
         raison, type: selectedType, titre, description: desc,
         contact_nom: contactNom, contact_email: contactEmail, contact_tel: contactTel,
-        societe_nom: context.societe_nom, contrat_ref: context.contrat_ref, site: context.site, address: context.address,
-        status: 'nouveau'
+        societe_nom: context.societe_nom, societe_id: context.societe_id,
+        contrat_ref: context.contrat_ref, contrat_id: context.contrat_id,
+        site: context.site, address: context.address,
+        statut: 'nouveau'
       };
       const { data, error } = await supabaseClient.from('signalements').insert([payload]).select().single();
       if (error) { console.error(error); showToast('Envoi impossible', 'error'); return; }
@@ -231,3 +237,6 @@
   </script>
 </body>
 </html>
+
+
+
