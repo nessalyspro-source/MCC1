@@ -1,86 +1,405 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Rapports - Nessaly's</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <script src="vendor/phosphor/index.js"></script>
-    <style>
-        body { font-family: 'Outfit', sans-serif; background-color: #F0F9FF; color: #1E293B; }
-        .sidebar { background: white; border-right: 1px solid #E2E8F0; }
-        .nav-item.active { background-color: #E0F2FE; color: #0284C7; }
-        :root {
-      --ink: #0c2f35;
-      --navy: #0f304b;
-      --red: #ce3c35;
-      --sand: #b58a64;
-      --bg: #f7f5f2;
-    }
-    body { background: radial-gradient(140% 120% at 20% 0%, #f0f7f8 0%, var(--bg) 45%, #fdfdfb 100%); color: #0c2f35; }
+  <meta charset="UTF-8">
+  <title>Rapports - Nessaly's</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <script src="vendor/phosphor/index.js"></script>
+  <script src="vendor/supabase/supabase.js"></script>
+  <style>
+    :root { --ink:#0c2f35; --navy:#0f304b; --red:#ce3c35; --sand:#b58a64; --bg:#f7f5f2; }
+    body { font-family:'Outfit',sans-serif; background: radial-gradient(140% 120% at 20% 0%, #f0f7f8 0%, var(--bg) 45%, #fdfdfb 100%); color:#0c2f35; }
     .sidebar { background: linear-gradient(180deg, #0f304b, #0c2f35); border-right: 1px solid rgba(255,255,255,0.05); color: #e8eef2; }
     .sidebar a { color: #cfd8dc; }
     .sidebar a:hover { background: rgba(255,255,255,0.06); color: #ffffff; }
     .nav-item.active { background: rgba(255,255,255,0.12); color: #ffffff; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); }
-    .pill { background: rgba(12,47,53,0.08); color: #0f304b; }
-    .gradient-chip { background: linear-gradient(120deg, var(--red), var(--navy)); box-shadow: 0 10px 30px rgba(12,47,53,0.22); }
-    .card-surface { border: 1px solid #e7e5e0; box-shadow: 0 12px 40px rgba(12,47,53,0.08); }
-</style>
+    .card { background:#fff; border:1px solid #e2e8f0; border-radius:18px; box-shadow:0 16px 50px rgba(12,47,53,0.08); }
+    .pill { display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:999px; background: rgba(12,47,53,0.08); color: #0f304b; font-weight:600; font-size:12px; letter-spacing:0.04em; }
+  </style>
 </head>
 <body class="flex h-screen">
-    <aside class="w-64 sidebar flex flex-col p-6">
-        <div class="text-xl font-bold tracking-wide mb-10 text-center text-slate-800">ESPACE <span class="text-sky-500">CLIENT</span></div>
-        <nav class="flex-1 space-y-2">
-            <a href="dashboard_societe.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition">
-                <i class="ph-fill ph-squares-four text-lg"></i>
-                <span>Vue d'ensemble</span>
-            </a>
-            <a href="societe_signalements.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition">
-                <i class="ph ph-warning-circle text-lg"></i>
-                <span>Suivi des signalements</span>
-            </a>
-            <a href="societe_clients.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition">
-                <i class="ph ph-users text-lg"></i>
-                <span>Suivi des clients</span>
-            </a>
-            <a href="societe_contrats.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition">
-                <i class="ph ph-file-text text-lg"></i>
-                <span>Suivi des contrats</span>
-            </a>
-            <a href="societe_rapports.html" class="flex items-center gap-3 p-3 rounded-xl nav-item active font-medium">
-                <i class="ph ph-chart-bar text-lg"></i>
-                <span>Rapports</span>
-            </a>
-            <a href="societe_cahier_des_charges.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition">
-                <i class="ph ph-notebook text-lg"></i>
-                <span>Cahier des charges</span>
-            </a>
-            <a href="societe_salaries.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition">
-                <i class="ph ph-currency-eur text-lg"></i>
-                <span>Suivi des salariés</span>
-            </a>
-            <a href="societe_pointages.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition">
-                <i class="ph ph-timer text-lg"></i>
-                <span>Suivi des pointages</span>
-            </a>
-            <a href="societe_conges.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition">
-                <i class="ph ph-calendar-blank text-lg"></i>
-                <span>Suivi des demandes de congés</span>
-            </a>
-        </nav>
-        <a href="index.html" class="flex items-center gap-2 text-slate-400 hover:text-slate-600 transition mt-auto">
-            <i class="ph ph-sign-out"></i> Déconnexion
-        </a>
-    </aside>
-    <main class="flex-1 p-10 overflow-y-auto">
-        <h1 class="text-3xl font-bold mb-8 text-slate-800">Rapports</h1>
-        <!-- Contenu de la page ici -->
-        <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
-            <p class="text-slate-500">Le contenu pour les rapports apparaîtra ici.</p>
+  <aside class="w-64 sidebar flex flex-col p-6">
+    <div class="text-xl font-bold tracking-wide mb-10 text-center text-slate-100">ESPACE <span class="text-sand-200">CLIENT</span></div>
+    <nav class="flex-1 space-y-2">
+      <a href="dashboard_societe.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition"><i class="ph-fill ph-squares-four text-lg"></i><span>Vue d'ensemble</span></a>
+      <a href="societe_signalements.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition"><i class="ph ph-warning-circle text-lg"></i><span>Suivi des signalements</span></a>
+      <a href="societe_clients.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition"><i class="ph ph-users text-lg"></i><span>Suivi des clients</span></a>
+      <a href="societe_contrats.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition"><i class="ph ph-file-text text-lg"></i><span>Suivi des contrats</span></a>
+      <a href="societe_rapports.html" class="flex items-center gap-3 p-3 rounded-xl nav-item active font-medium"><i class="ph ph-clipboard-text text-lg"></i><span>Rapports</span></a>
+      <a href="societe_cahier_des_charges.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition"><i class="ph ph-notebook text-lg"></i><span>Cahier des charges</span></a>
+      <a href="societe_salaries.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition"><i class="ph ph-currency-eur text-lg"></i><span>Suivi des salaries</span></a>
+      <a href="societe_pointages.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition"><i class="ph ph-timer text-lg"></i><span>Suivi des pointages</span></a>
+      <a href="societe_conges.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition"><i class="ph ph-calendar-blank text-lg"></i><span>Suivi des demandes de conges</span></a>
+    </nav>
+    <a href="index.html" class="flex items-center gap-2 text-slate-200 hover:text-white transition mt-auto"><i class="ph ph-sign-out"></i> Deconnexion</a>
+  </aside>
+
+  <main class="flex-1 p-6 md:p-10 overflow-y-auto">
+    <div class="max-w-6xl mx-auto space-y-8">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <p class="text-xs uppercase text-slate-500 font-semibold tracking-wide">Rapports</p>
+          <h1 class="text-4xl font-bold text-slate-900">Rediger et archiver vos rapports</h1>
+          <p class="text-sm text-slate-600 mt-1">Selectionnez un contrat, ajoutez des sections (photos incluses) et exportez en PDF. Statuts : en cours ou archive.</p>
         </div>
-    </main>
+        <span id="actor-chip" class="px-3 py-2 rounded-full bg-white/70 border border-white/60 text-xs font-semibold text-slate-600 shadow-sm backdrop-blur">--</span>
+      </div>
+
+      <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="card p-4">
+          <p class="text-xs font-semibold text-slate-500 uppercase">En cours</p>
+          <p id="count-en-cours" class="text-3xl font-bold text-slate-900">--</p>
+          <p class="text-sm text-slate-500">Rapports en redaction</p>
+        </div>
+        <div class="card p-4">
+          <p class="text-xs font-semibold text-slate-500 uppercase">Archives</p>
+          <p id="count-archive" class="text-3xl font-bold text-slate-900">--</p>
+          <p class="text-sm text-slate-500">Rapports classes</p>
+        </div>
+        <div class="card p-4 flex flex-col gap-3">
+          <p class="text-xs font-semibold text-slate-500 uppercase">Nouvelle redaction</p>
+          <button id="btn-open-form" class="px-4 py-3 rounded-lg bg-slate-900 text-white font-semibold hover:bg-slate-800 flex items-center gap-2 justify-center"><i class="ph-bold ph-plus"></i> Creer un rapport</button>
+        </div>
+      </section>
+
+      <section class="card p-5 space-y-4">
+        <div class="flex items-center justify-between gap-3 flex-wrap">
+          <div class="flex items-center gap-2">
+            <h2 class="text-xl font-bold text-slate-900">Mes rapports</h2>
+            <span id="total-rapports" class="px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-sm font-semibold">--</span>
+          </div>
+          <select id="filter-statut" class="border border-slate-200 rounded-lg px-3 py-2 bg-white text-sm text-slate-700">
+            <option value="">Tous les statuts</option>
+            <option value="en_cours">En cours</option>
+            <option value="archive">Archive</option>
+          </select>
+        </div>
+        <div id="rapport-list" class="space-y-3 text-sm"></div>
+      </section>
+
+      <section id="form-wrapper" class="card p-5 space-y-4 hidden">
+        <div class="flex items-center justify-between">
+          <h3 class="text-xl font-bold text-slate-900">Nouveau rapport</h3>
+          <button id="btn-close-form" class="text-sm text-slate-500 hover:text-slate-700">Fermer</button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+          <label class="block">Contrat
+            <select id="rapport-contrat" class="w-full mt-1 rounded-lg border border-slate-200 px-3 py-2">
+              <option value="">Selectionner...</option>
+            </select>
+          </label>
+          <label class="block">Date et heure
+            <input id="rapport-date" type="datetime-local" class="w-full mt-1 rounded-lg border border-slate-200 px-3 py-2">
+          </label>
+          <label class="block">Participants (noms, separes par virgule)
+            <input id="rapport-participants" type="text" class="w-full mt-1 rounded-lg border border-slate-200 px-3 py-2">
+          </label>
+          <label class="block">Site / adresse
+            <input id="rapport-site" type="text" class="w-full mt-1 rounded-lg border border-slate-200 px-3 py-2">
+          </label>
+        </div>
+        <div id="sections" class="space-y-3">
+          <!-- sections dynamiques -->
+        </div>
+        <div class="flex items-center gap-3">
+          <button id="btn-add-section" class="px-3 py-2 rounded-lg bg-slate-100 text-slate-800 text-sm font-semibold hover:bg-slate-200">Ajouter une section</button>
+          <span class="text-xs text-slate-500">5 photos max par section</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <button id="btn-save-rapport" class="px-4 py-2 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700">Enregistrer</button>
+          <div id="form-status" class="text-sm text-slate-500"></div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const supabaseUrl = 'https://fmfylsykljkvyurcprij.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZtZnlsc3lrbGprdnl1cmNwcmlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1ODQ3OTgsImV4cCI6MjA3OTE2MDc5OH0.hfgBflnh-nr1Ljfl5Chkp0y1EbZbm5XiyyDhsQcdSqE';
+    const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+    const bucket = 'rapports-documents';
+    let actorType = null; // 'societe' ou 'employe'
+    let actor = null;
+    let contracts = [];
+    let rapports = [];
+
+    function fmtDate(d) { return d ? new Date(d).toLocaleString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '--'; }
+    function chip(stat) {
+      const s = (stat || 'en_cours').toLowerCase();
+      if (s === 'archive') return 'bg-slate-100 text-slate-700';
+      return 'bg-emerald-100 text-emerald-700';
+    }
+
+    async function ensureActor() {
+      const { data: sessionData } = await supabaseClient.auth.getSession();
+      const userId = sessionData?.session?.user?.id || null;
+      const email = sessionData?.session?.user?.email || '';
+      if (!userId && !email) return;
+      const { data: societeData } = await supabaseClient
+        .from('societes')
+        .select('id, nom, logo_url, auth_id, email_contact')
+        .or(`auth_id.eq.${userId},email_contact.eq.${email}`)
+        .limit(1)
+        .single();
+      if (societeData) {
+        actorType = 'societe';
+        actor = societeData;
+        document.getElementById('actor-chip').textContent = `Societe : ${societeData.nom || ''}`;
+        return;
+      }
+      const { data: salarieData } = await supabaseClient
+        .from('salaries')
+        .select('id, nom, prenom, email, auth_id, societe_id')
+        .or(`auth_id.eq.${userId},email.eq.${email}`)
+        .limit(1)
+        .single();
+      if (salarieData) {
+        actorType = 'employe';
+        actor = salarieData;
+        document.getElementById('actor-chip').textContent = `Employe : ${salarieData.prenom || ''} ${salarieData.nom || ''}`;
+      }
+    }
+
+    async function loadContracts() {
+      if (!actorType) return;
+      let query = supabaseClient.from('contrats').select('id, ref, site_nom, adresse_site, societe_id, salarie_id');
+      if (actorType === 'societe') query = query.eq('societe_id', actor.id);
+      if (actorType === 'employe') query = query.or(`salarie_id.eq.${actor.id},responsable_id.eq.${actor.id}`);
+      const { data, error } = await query;
+      if (!error && data) contracts = data;
+      const sel = document.getElementById('rapport-contrat');
+      sel.innerHTML = '<option value=\"\">Selectionner...</option>' + (contracts || []).map(c => `<option value=\"${c.id}\" data-site=\"${c.site_nom || ''}\" data-addr=\"${c.adresse_site || ''}\">${c.ref || 'Contrat'} - ${c.site_nom || ''}</option>`).join('');
+    }
+
+    async function loadRapports() {
+      const listEl = document.getElementById('rapport-list');
+      listEl.innerHTML = '<p class=\"text-slate-500 text-sm\">Chargement...</p>';
+      if (!actorType) return;
+      let query = supabaseClient
+        .from('rapports')
+        .select('id, titre, contrat_id, contrat_ref, site, adresse, date_rapport, statut, auteur_type, auteur_nom, created_at')
+        .order('created_at', { ascending:false });
+      if (actorType === 'societe') query = query.eq('societe_id', actor.id);
+      if (actorType === 'employe') query = query.eq('auteur_id', actor.id);
+      const { data, error } = await query;
+      if (error) { listEl.innerHTML = '<p class=\"text-red-600 text-sm\">Erreur de chargement.</p>'; return; }
+      rapports = data || [];
+      renderRapports();
+    }
+
+    function renderRapports() {
+      const filter = document.getElementById('filter-statut').value || '';
+      const listEl = document.getElementById('rapport-list');
+      const filtered = rapports.filter(r => !filter || (r.statut || 'en_cours') === filter);
+      const countEnCours = rapports.filter(r => (r.statut || 'en_cours') === 'en_cours').length;
+      const countArchive = rapports.filter(r => (r.statut || '') === 'archive').length;
+      document.getElementById('count-en-cours').textContent = countEnCours;
+      document.getElementById('count-archive').textContent = countArchive;
+      document.getElementById('total-rapports').textContent = `${filtered.length} affiches`;
+      if (!filtered.length) { listEl.innerHTML = '<p class=\"text-slate-500 text-sm\">Aucun rapport.</p>'; return; }
+      listEl.innerHTML = filtered.map(r => {
+        const contrat = contracts.find(c => c.id === r.contrat_id) || {};
+        return `
+          <div class=\"p-4 border border-slate-200 rounded-xl bg-white shadow-sm flex flex-col gap-2\">
+            <div class=\"flex items-start justify-between gap-3\">
+              <div>
+                <p class=\"text-xs text-slate-500 uppercase\">Contrat ${r.contrat_ref || ''}</p>
+                <h3 class=\"text-lg font-semibold text-slate-900\">${r.titre || 'Rapport'}</h3>
+                <p class=\"text-xs text-slate-500\">${r.site || contrat.site_nom || ''}${r.adresse || contrat.adresse_site ? ' · ' + (r.adresse || contrat.adresse_site) : ''}</p>
+                <p class=\"text-xs text-slate-500\">Date : ${fmtDate(r.date_rapport || r.created_at)}</p>
+              </div>
+              <span class=\"px-3 py-1 rounded-full text-[11px] font-semibold ${chip(r.statut)}\">${r.statut || 'en_cours'}</span>
+            </div>
+            <div class=\"flex flex-wrap gap-2\">
+              <button data-action=\"pdf\" data-id=\"${r.id}\" class=\"px-3 py-2 rounded-lg text-sm font-semibold bg-slate-900 text-white hover:bg-slate-800\">Exporter PDF</button>
+              <button data-action=\"archive\" data-id=\"${r.id}\" class=\"px-3 py-2 rounded-lg text-sm font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200\">Archiver</button>
+              <button data-action=\"delete\" data-id=\"${r.id}\" class=\"px-3 py-2 rounded-lg text-sm font-semibold bg-red-100 text-red-700 hover:bg-red-200\">Supprimer</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      bindListActions();
+    }
+
+    function bindListActions() {
+      document.querySelectorAll('[data-action]').forEach(btn => {
+        btn.onclick = async () => {
+          const id = btn.dataset.id;
+          const action = btn.dataset.action;
+          if (action === 'archive') {
+            await supabaseClient.from('rapports').update({ statut:'archive' }).eq('id', id);
+            await loadRapports();
+          }
+          if (action === 'delete') {
+            if (!confirm('Supprimer ce rapport ?')) return;
+            await supabaseClient.from('rapports').delete().eq('id', id);
+            await loadRapports();
+          }
+          if (action === 'pdf') {
+            generatePdf(id);
+          }
+        };
+      });
+    }
+
+    function addSection() {
+      const container = document.getElementById('sections');
+      const idx = container.children.length + 1;
+      const div = document.createElement('div');
+      div.className = 'border border-slate-200 rounded-xl p-3';
+      div.innerHTML = `
+        <div class=\"flex items-center justify-between\">
+          <h4 class=\"font-semibold text-slate-800\">Section ${idx}</h4>
+          <button type=\"button\" class=\"text-xs text-red-500\" onclick=\"this.closest('.border').remove()\">Supprimer</button>
+        </div>
+        <label class=\"block text-sm mt-2\">Titre
+          <input type=\"text\" class=\"w-full mt-1 rounded-lg border border-slate-200 px-3 py-2 section-title\">
+        </label>
+        <label class=\"block text-sm mt-2\">Description
+          <textarea rows=\"3\" class=\"w-full mt-1 rounded-lg border border-slate-200 px-3 py-2 section-desc\"></textarea>
+        </label>
+        <label class=\"block text-sm mt-2\">Photos (max 5)
+          <input type=\"file\" accept=\"image/*\" multiple class=\"mt-1 block w-full section-photos\">
+        </label>
+      `;
+      container.appendChild(div);
+    }
+
+    async function saveReport() {
+      const formStatus = document.getElementById('form-status');
+      formStatus.textContent = 'Enregistrement...';
+      const contratId = document.getElementById('rapport-contrat').value;
+      if (!contratId) { formStatus.textContent = 'Choisissez un contrat'; return; }
+      const contrat = contracts.find(c => String(c.id) === String(contratId)) || {};
+      const titre = `Rapport ${contrat.ref || ''}`;
+      const dateRapport = document.getElementById('rapport-date').value || new Date().toISOString();
+      const participants = document.getElementById('rapport-participants').value || '';
+      const siteVal = document.getElementById('rapport-site').value || contrat.site_nom || '';
+
+      const sections = Array.from(document.querySelectorAll('#sections > div')).map((div, idx) => {
+        return {
+          ordre: idx + 1,
+          titre: div.querySelector('.section-title')?.value || `Section ${idx+1}`,
+          description: div.querySelector('.section-desc')?.value || '',
+          files: Array.from(div.querySelector('.section-photos')?.files || []).slice(0,5)
+        };
+      });
+
+      const payload = {
+        titre,
+        contrat_id: Number(contratId),
+        contrat_ref: contrat.ref || '',
+        societe_id: actorType === 'societe' ? actor.id : (contrat.societe_id || null),
+        site: siteVal,
+        adresse: contrat.adresse_site || '',
+        participants,
+        date_rapport: dateRapport,
+        statut: 'en_cours',
+        auteur_type: actorType,
+        auteur_id: actor?.id || null,
+        auteur_nom: actorType === 'societe' ? (actor?.nom || '') : `${actor?.prenom || ''} ${actor?.nom || ''}`
+      };
+
+      const { data: rep, error } = await supabaseClient.from('rapports').insert([payload]).select().single();
+      if (error || !rep) { formStatus.textContent = 'Erreur sauvegarde'; return; }
+
+      for (const section of sections) {
+        const { data: sec } = await supabaseClient.from('rapport_sections').insert([{ rapport_id: rep.id, titre: section.titre, description: section.description, ordre: section.ordre }]).select().single();
+        if (sec && section.files.length) {
+          for (const file of section.files) {
+            const path = `rapports/${rep.id}/sec${sec.id}-${Date.now()}-${file.name}`;
+            const upload = await supabaseClient.storage.from(bucket).upload(path, file, { upsert:false, contentType:file.type });
+            if (upload?.data?.path) {
+              const url = `${supabaseUrl}/storage/v1/object/public/${bucket}/${upload.data.path}`;
+              await supabaseClient.from('rapport_photos').insert([{ section_id: sec.id, url }]);
+            }
+          }
+        }
+      }
+
+      formStatus.textContent = 'Enregistre';
+      await loadRapports();
+      document.getElementById('form-wrapper').classList.add('hidden');
+    }
+
+    async function fetchFullReport(id) {
+      const { data: rep } = await supabaseClient.from('rapports').select('*').eq('id', id).maybeSingle();
+      const { data: sections } = await supabaseClient.from('rapport_sections').select('id, titre, description, ordre').eq('rapport_id', id).order('ordre');
+      const sectionIds = (sections || []).map(s => s.id);
+      let photos = [];
+      if (sectionIds.length) {
+        const { data: ph } = await supabaseClient.from('rapport_photos').select('id, section_id, url').in('section_id', sectionIds);
+        photos = ph || [];
+      }
+      return { rep, sections: sections || [], photos };
+    }
+
+    async function generatePdf(id) {
+      const { rep, sections, photos } = await fetchFullReport(id);
+      if (!rep) return;
+      const photoBySection = {};
+      photos.forEach(p => {
+        if (!photoBySection[p.section_id]) photoBySection[p.section_id] = [];
+        photoBySection[p.section_id].push(p.url);
+      });
+      const win = window.open('', '_blank', 'width=900,height=1200');
+      const html = `
+        <html><head><title>Rapport ${rep.titre}</title>
+        <style>
+          body { font-family: 'Outfit', sans-serif; padding: 32px; color: #0c2f35; }
+          h1,h2,h3 { margin: 0; }
+          .header { display:flex; align-items:center; justify-content:space-between; border-bottom:2px solid #0f304b; padding-bottom:12px; margin-bottom:24px; }
+          .badge { padding:4px 10px; border-radius:999px; background:#0f304b; color:#fff; font-weight:700; font-size:12px; }
+          .section { border:1px solid #e2e8f0; border-radius:12px; padding:16px; margin-top:16px; }
+          .photos { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+          .photos img { width:140px; height:140px; object-fit:cover; border-radius:10px; border:1px solid #e2e8f0; }
+          .footer { margin-top:32px; font-size:12px; color:#64748b; text-align:center; }
+        </style>
+        </head><body>
+          <div class="header">
+            <div>
+              <h1>${rep.titre || 'Rapport'}</h1>
+              <p style="margin:4px 0 0 0; color:#475569;">Contrat ${rep.contrat_ref || ''} · ${rep.site || ''}</p>
+              <p style="margin:4px 0 0 0; color:#475569;">Date : ${fmtDate(rep.date_rapport || rep.created_at)}</p>
+              <p style="margin:4px 0 0 0; color:#475569;">Participants : ${rep.participants || '-'}</p>
+            </div>
+            <span class="badge">${rep.auteur_type || ''}</span>
+          </div>
+          ${sections.map(s => `
+            <div class="section">
+              <h3 style="color:#0f304b;">${s.titre || ''}</h3>
+              <p style="margin:6px 0 0 0; color:#475569;">${s.description || ''}</p>
+              <div class="photos">
+                ${(photoBySection[s.id] || []).map(url => `<img src="${url}" />`).join('')}
+              </div>
+            </div>
+          `).join('')}
+          <div class="footer">Rapport genere par Nessaly's · ${new Date().toLocaleString('fr-FR')}</div>
+        </body></html>
+      `;
+      win.document.write(html);
+      win.document.close();
+      win.focus();
+      win.print();
+    }
+
+    document.getElementById('btn-open-form').addEventListener('click', () => {
+      document.getElementById('form-wrapper').classList.remove('hidden');
+      if (!document.getElementById('sections').children.length) addSection();
+    });
+    document.getElementById('btn-close-form').addEventListener('click', () => document.getElementById('form-wrapper').classList.add('hidden'));
+    document.getElementById('btn-add-section').addEventListener('click', addSection);
+    document.getElementById('btn-save-rapport').addEventListener('click', saveReport);
+    document.getElementById('filter-statut').addEventListener('change', renderRapports);
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await ensureActor();
+      await loadContracts();
+      await loadRapports();
+      // defaults
+      document.getElementById('rapport-date').value = new Date().toISOString().slice(0,16);
+    });
+  </script>
 </body>
 </html>
-
-
-
