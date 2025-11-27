@@ -116,6 +116,18 @@
       if (lr) lr.textContent = `Mis à jour ${new Date().toLocaleTimeString()}`;
     }
 
+    async function updateStatus(id, status) {
+      try {
+        await supabaseClient.from('signalements').update({ status }).eq('id', id);
+        const msg = status === 'en_cours' ? 'Prise en charge' : (status === 'cloture' ? 'Signalement resolu' : `Statut: ${status}`);
+        await postMessage(id, `${msg} • ${new Date().toLocaleString()}`);
+      } catch(e) {
+        console.error(e);
+        showToast('Mise à jour impossible', 'error');
+      }
+      await hydrate();
+    }
+
     function renderReports(list) {
       const container = document.getElementById('reports');
       if (!container) return;
@@ -143,9 +155,26 @@
                 ${s.contact_tel ? `<div class="flex items-center gap-2"><i class="ph-bold ph-phone-call"></i> ${s.contact_tel}</div>` : ''}
               </div>
             </div>
+            <div class="flex flex-wrap gap-2 pt-1">
+              <button class="px-3 py-2 rounded bg-blue-50 text-blue-700 border border-blue-100 hover:bg-blue-100 text-xs font-semibold" data-action="take" data-id="${s.id}">Prendre en charge</button>
+              <button class="px-3 py-2 rounded bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100 text-xs font-semibold" data-action="done" data-id="${s.id}">Marquer résolu</button>
+              <button class="px-3 py-2 rounded bg-white border border-slate-200 text-xs font-semibold text-slate-700 hover:border-slate-300" data-action="detail" data-id="${s.id}">Détails & commentaires</button>
+            </div>
           </article>
         `;
       }).join('');
+
+      container.querySelectorAll('button[data-action]').forEach(btn => {
+        btn.onclick = (e) => {
+          const id = parseInt(btn.dataset.id, 10);
+          const action = btn.dataset.action;
+          const sig = list.find(x => x.id === id);
+          if (!id || !action || !sig) return;
+          if (action === 'take') updateStatus(id, 'en_cours');
+          else if (action === 'done') updateStatus(id, 'cloture');
+          else if (action === 'detail') openDetail(sig);
+        };
+      });
     }
 
     async function requireSession() {
@@ -196,11 +225,15 @@
         root.innerHTML = '<div class="report-card text-sm text-amber-700">Session société introuvable. Merci de vous reconnecter.</div>';
         return;
       }
+      await hydrate();
+    });
+
+    async function hydrate() {
       await loadContrats();
       const sigs = await loadSignalements();
       renderStats(counters(sigs));
       renderReports(sigs);
-    });
+    }
   </script>
 </body>
 </html>

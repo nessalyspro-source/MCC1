@@ -1,8 +1,8 @@
-ï»¿ï»¿<!DOCTYPE html>
+?<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Espace SociÃ©tÃ© - Nessaly's</title>
+  <title>Espace Société - Nessaly's</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
   <script src="vendor/phosphor/index.js"></script>
@@ -39,7 +39,7 @@
   <main class="flex-1 p-8 overflow-y-auto max-w-7xl mx-auto w-full">
     <div class="flex items-center justify-between mb-6">
       <div>
-        <span class="pill"><i class="ph-bold ph-buildings"></i> Portail SociÃ©tÃ©</span>
+        <span class="pill"><i class="ph-bold ph-buildings"></i> Portail Société</span>
         <h1 class="text-3xl font-bold text-slate-900">Vue d'ensemble</h1>
         <p id="societe-label" class="text-sm text-slate-600"></p>
       </div>
@@ -55,12 +55,12 @@
       <div class="card p-5">
         <p class="text-xs font-semibold text-slate-500 uppercase">Contrats qui se terminent</p>
         <p id="contrats-fin" class="text-3xl font-bold text-amber-700">--</p>
-        <p class="text-sm text-slate-500">Ã‰chÃ©ance &lt;= 30 jours</p>
+        <p class="text-sm text-slate-500">Échéance &lt;= 30 jours</p>
       </div>
       <div class="card p-5">
-        <p class="text-xs font-semibold text-slate-500 uppercase">SalariÃ©s</p>
+        <p class="text-xs font-semibold text-slate-500 uppercase">Salariés</p>
         <p id="salaries-count" class="text-3xl font-bold text-slate-900">--</p>
-        <p class="text-sm text-slate-500">Total des salariÃ©s associÃ©s</p>
+        <p class="text-sm text-slate-500">Total des salariés associés</p>
       </div>
       <div class="card p-5">
         <p class="text-xs font-semibold text-slate-500 uppercase">CA HT Mensuel</p>
@@ -84,9 +84,22 @@
       </div>
       <div class="card p-5 space-y-3">
         <p class="text-xs font-semibold text-slate-500 uppercase">Actions rapides</p>
-        <a href="societe_clients.html" class="w-full inline-flex items-center justify-between px-4 py-3 border border-slate-200 rounded-lg hover:bg-slate-50 text-sm">CrÃ©er un client <i class="ph-bold ph-arrow-up-right"></i></a>
-        <a href="societe_contrats.html" class="w-full inline-flex items-center justify-between px-4 py-3 border border-slate-200 rounded-lg hover:bg-slate-50 text-sm">CrÃ©er un contrat <i class="ph-bold ph-arrow-up-right"></i></a>
-        <a href="societe_salaries.html" class="w-full inline-flex items-center justify-between px-4 py-3 border border-slate-200 rounded-lg hover:bg-slate-50 text-sm">CrÃ©er un salariÃ© <i class="ph-bold ph-arrow-up-right"></i></a>
+        <a href="societe_clients.html" class="w-full inline-flex items-center justify-between px-4 py-3 border border-slate-200 rounded-lg hover:bg-slate-50 text-sm">Créer un client <i class="ph-bold ph-arrow-up-right"></i></a>
+        <a href="societe_contrats.html" class="w-full inline-flex items-center justify-between px-4 py-3 border border-slate-200 rounded-lg hover:bg-slate-50 text-sm">Créer un contrat <i class="ph-bold ph-arrow-up-right"></i></a>
+        <a href="societe_salaries.html" class="w-full inline-flex items-center justify-between px-4 py-3 border border-slate-200 rounded-lg hover:bg-slate-50 text-sm">Créer un salarié <i class="ph-bold ph-arrow-up-right"></i></a>
+      </div>
+    </section>
+
+    <section class="card p-5 mt-4">
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <p class="text-xs font-semibold text-slate-500 uppercase">Nouveaux signalements</p>
+          <h2 class="text-lg font-semibold text-slate-900">À traiter</h2>
+        </div>
+        <a href="societe_signalements.html" class="text-xs font-semibold text-sky-700 hover:text-sky-900">Ouvrir le suivi</a>
+      </div>
+      <div id="signalements-recents" class="space-y-3 text-sm">
+        <p class="text-slate-500">Chargement...</p>
       </div>
     </section>
   </main>
@@ -120,7 +133,7 @@
         const period = (c.periodicite || c.periodicite || '').toLowerCase();
         if (period === 'trimestriel') mensual += ht / 3;
         else if (period === 'annuel') mensual += ht / 12;
-        else mensual += ht; // mensuel par dÃ©faut
+        else mensual += ht; // mensuel par défaut
       });
       return { mensual, annuel: mensual * 12 };
     }
@@ -133,16 +146,15 @@
         <div class="py-2 flex items-center justify-between">
           <div>
             <p class="text-sm font-semibold text-slate-800">${c.client_name || 'Contrat'}</p>
-            <p class="text-xs text-slate-500">Fin le ${c.date_fin || 'N/A'} Â· Ref ${c.ref || ''}</p>
+            <p class="text-xs text-slate-500">Fin le ${c.date_fin || 'N/A'} · Ref ${c.ref || ''}</p>
           </div>
           <span class="text-[11px] px-2 py-1 rounded-full bg-amber-100 text-amber-700">Fin proche</span>
         </div>
       `).join('');
     }
-
     async function loadStats() {
       if (!societeId) {
-        ['contrats-actifs','contrats-fin','salaries-count','ca-mensuel','ca-annuel','facture-date','facture-amount'].forEach(id => {
+        [''contrats-actifs'',''contrats-fin'',''salaries-count'',''ca-mensuel'',''ca-annuel'',''facture-date'',''facture-amount''].forEach(id => {
           const el = document.getElementById(id);
           if (el) el.textContent = '--';
         });
@@ -184,18 +196,64 @@
         const f = factures[0];
         const fd = document.getElementById('facture-date');
         const fa = document.getElementById('facture-amount');
-        if (fd) fd.textContent = f.periode || 'PÃ©riode non renseignÃ©e';
+        if (fd) fd.textContent = f.periode || 'Période non renseignée';
         if (fa) fa.textContent = f.montant ? formatCurrency(f.montant) : '';
       }
+    }
+
+    let contratsCache = [];
+    async function loadSignalementsRecents() {
+      const container = document.getElementById('signalements-recents');
+      if (!societeId || !container) return;
+      if (!contratsCache.length) {
+        const { data } = await supabaseClient.from('contrats').select('id, ref, residence').eq('societe_id', societeId);
+        contratsCache = data || [];
+      }
+      const refs = contratsCache.map(c => c.ref).filter(Boolean);
+      const sites = contratsCache.map(c => c.residence).filter(Boolean);
+      if (!refs.length && !sites.length) {
+        container.innerHTML = '<p class="text-slate-500">Aucun site/contrat pour filtrer.</p>';
+        return;
+      }
+      const filters = [];
+      if (refs.length) filters.push(`contrat_ref.in.(${refs.join(',')})`);
+      sites.forEach(site => filters.push(`site.ilike.%${encodeURIComponent(site)}%`));
+      let query = supabaseClient
+        .from('signalements')
+        .select('id, titre, type, site, status, created_at')
+        .order('created_at', { ascending:false })
+        .limit(5);
+      if (filters.length) query = query.or(filters.join(','));
+      const { data, error } = await query;
+      if (error) { console.error(error); container.innerHTML = '<p class="text-red-500 text-sm">Impossible de charger les signalements.</p>'; return; }
+      const list = (data || []).filter(s => {
+        const st = (s.status || 'nouveau').toLowerCase();
+        return st.includes('nouveau') || st === 'nouveau';
+      });
+      if (!list.length) { container.innerHTML = '<p class="text-slate-500 text-sm">Aucun nouveau signalement.</p>'; return; }
+      container.innerHTML = list.map(s => {
+        const date = s.created_at ? new Date(s.created_at).toLocaleString() : '';
+        return `<div class="rounded-lg border border-slate-200 px-3 py-2 bg-white shadow-sm flex items-start justify-between gap-2">
+          <div>
+            <p class="font-semibold text-slate-900 text-sm">${s.titre || 'Signalement'}</p>
+            <p class="text-xs text-slate-500">${s.type || ''} • ${s.site || ''}</p>
+            <p class="text-[11px] text-slate-400">${date}</p>
+          </div>
+          <span class="px-2 py-1 rounded-full bg-amber-50 text-amber-700 text-[11px] font-semibold">Nouveau</span>
+        </div>`;
+      }).join('');
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
       await ensureSociete();
       await loadStats();
+      await loadSignalementsRecents();
     });
   </script>
 </body>
 </html>
+
+
 
 
 
