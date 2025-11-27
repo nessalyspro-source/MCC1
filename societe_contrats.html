@@ -514,6 +514,7 @@
       const address = data.address || "";
       const client = data.client_name || data.societe_nom || "Client";
       const contractRef = data.ref || data.id || "";
+      const contact = data.contact_societe || "";
       const title = type === "pointage" ? "QR CODE EMPLOYES" : "QR CODE RESIDENTS";
       const usage = type === "pointage"
         ? "Ce QR code permet aux employes de pointer leur arrivee/depart sur site."
@@ -551,6 +552,7 @@
                 <div style="font-size:13px; font-weight:600;">${client}</div>
                 <div style="font-size:12px; font-weight:500;">Site: ${site}</div>
                 <div style="font-size:12px; font-weight:500;">Contrat: ${contractRef}</div>
+                <div style="font-size:12px; font-weight:500;">Contact: ${contact}</div>
               </div>
             </div>
             <div style="text-align:center; font-size:14px; color:#0f304b; margin-bottom:8px;">${address}</div>
@@ -1157,6 +1159,7 @@
   </script>
 </body>
 </html>
+
 
 
 
