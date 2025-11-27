@@ -88,6 +88,7 @@
             <select id="rapport-contrat" class="w-full mt-1 rounded-lg border border-slate-200 px-3 py-2">
               <option value="">Selectionner...</option>
             </select>
+            <div id="contracts-status" class="text-xs text-slate-500 mt-1"></div>
           </label>
           <label class="block">Date et heure
             <input id="rapport-date" type="datetime-local" class="w-full mt-1 rounded-lg border border-slate-200 px-3 py-2">
@@ -165,6 +166,8 @@
       if (!actorType) return;
       const sel = document.getElementById('rapport-contrat');
       sel.innerHTML = '<option value="">Chargement...</option>';
+      const statusEl = document.getElementById('contracts-status');
+      statusEl.textContent = 'Chargement...';
       let data = null;
       let error = null;
       // tentative avec colonnes employe/responsable
@@ -182,9 +185,11 @@
       if (!error && data) contracts = data;
       if (error || !contracts.length) {
         sel.innerHTML = '<option value="">Aucun contrat disponible</option>';
+        statusEl.textContent = 'Aucun contrat trouve pour ce compte.';
         return;
       }
       sel.innerHTML = '<option value="">Selectionner...</option>' + (contracts || []).map(c => `<option value="${c.id}" data-site="${c.site_nom || ''}" data-addr="${c.adresse_site || ''}">${c.ref || 'Contrat'} - ${c.site_nom || ''}</option>`).join('');
+      statusEl.textContent = '';
     }
 
     async function loadRapports() {
