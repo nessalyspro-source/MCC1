@@ -235,12 +235,28 @@
     function exportCsv() {
       const list = filteredPointages();
       if (!list.length) { showToast('Aucune donnee a exporter', 'error'); return; }
-      const header = ['Date','Heure','Agent','Type','Mode','Site','Note'];
+      const header = ['Date','Heure','Agent','Type','Mode','Site','Note','Contrat','Salarie ID'];
+      const dateIso = (iso) => {
+        if (!iso) return '';
+        const d = new Date(iso);
+        return d.toISOString().slice(0,10);
+      };
       const rows = list.map(p => {
         const dt = formatDateTime(p.created_at);
-        return [dt.date, dt.time, p.agent || '', p.type || '', p.mode || '', p.site || '', (p.note || '').replace(/\\r?\\n/g, ' ')];
+        return [
+          dateIso(p.created_at),
+          dt.time,
+          p.agent || '',
+          p.type || '',
+          p.mode || '',
+          p.site || '',
+          (p.note || '').replace(/\\r?\\n/g, ' '),
+          p.contrat_id || '',
+          p.salarie_id || ''
+        ];
       });
-      const csv = [header, ...rows].map(r => r.map(val => `"${(val||'').toString().replace(/\"/g,'\"\"')}"`).join(';')).join('\\n');
+      const csvBody = [header, ...rows].map(r => r.map(val => `"${(val||'').toString().replace(/\"/g,'\"\"')}"`).join(';')).join('\\n');
+      const csv = '\\uFEFF' + csvBody; // BOM for Excel/UTF-8 accents
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -256,27 +272,41 @@
       const list = filteredPointages();
       if (!list.length) { showToast('Aucune donnee a exporter', 'error'); return; }
       const doc = new window.jspdf.jsPDF({ orientation: 'landscape' });
-      doc.setFontSize(12);
-      doc.text(`Pointages ${periodLabel.textContent}`, 14, 14);
-      doc.setFontSize(9);
       const headers = ['Date','Heure','Agent','Type','Mode','Site','Note'];
-      let y = 22;
-      const lineHeight = 6;
-      const maxWidth = [25,20,45,20,20,50,90];
-      const drawRow = (cols) => {
-        let x = 14;
+      const widths = [25,20,55,20,20,55,90];
+      const marginX = 14;
+      const marginY = 18;
+      const rowH = 8;
+
+      doc.setFontSize(12);
+      doc.text(`Pointages ${periodLabel.textContent}`, marginX, marginY - 6);
+      doc.setFontSize(9);
+
+      const drawRow = (cols, y, fill=false) => {
+        let x = marginX;
+        if (fill) {
+          doc.setFillColor(248,250,252);
+          doc.rect(marginX - 2, y - rowH + 2, widths.reduce((a,b)=>a+b,0) + 4, rowH, 'F');
+        }
         cols.forEach((txt, idx) => {
           const str = (txt || '').toString();
-          doc.text(str.length > 60 ? str.slice(0,60)+'…' : str, x, y, { maxWidth: maxWidth[idx] });
-          x += maxWidth[idx];
+          doc.text(str.length > 80 ? str.slice(0,77)+'…' : str, x, y, { maxWidth: widths[idx] - 2 });
+          x += widths[idx];
         });
-        y += lineHeight;
-        if (y > 190) { doc.addPage(); y = 20; }
       };
-      drawRow(headers);
-      list.forEach(p => {
+
+      // Header
+      doc.setFillColor(226,232,240);
+      doc.rect(marginX - 2, marginY - rowH + 2, widths.reduce((a,b)=>a+b,0) + 4, rowH, 'F');
+      drawRow(headers, marginY, false);
+
+      let y = marginY + rowH;
+      list.forEach((p, idx) => {
         const dt = formatDateTime(p.created_at);
-        drawRow([dt.date, dt.time, p.agent || '', p.type || '', p.mode || '', p.site || '', p.note || '']);
+        const cols = [dt.date, dt.time, p.agent || '', p.type || '', p.mode || '', p.site || '', p.note || ''];
+        if (y > 195) { doc.addPage(); y = marginY; drawRow(headers, y, false); y += rowH; }
+        drawRow(cols, y, idx % 2 === 1);
+        y += rowH;
       });
       doc.save(`pointages-${monthFilter.value || 'periode'}.pdf`);
     }
