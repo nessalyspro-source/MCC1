@@ -1,4 +1,4 @@
-﻿﻿<!DOCTYPE html>
+﻿?<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
@@ -169,7 +169,7 @@
   </aside>
 
   <div id="toast" class="fixed top-4 right-4 bg-slate-900 text-white px-4 py-3 rounded-lg shadow-lg opacity-0 pointer-events-none flex items-center gap-2">
-    <span id="toast-icon">✅</span>
+    <span id="toast-icon">?</span>
     <span id="toast-message" class="text-sm">Message</span>
   </div>
   <script>
@@ -204,11 +204,12 @@
     let userId = null;
     let cached = [];
     let contractsCache = [];
+    let contractIds = [];
     let selectedContractId = null;
 
     function showToast(msg, type='info') {
       toastMessage.textContent = msg;
-      toastIcon.textContent = type === 'error' ? '⚠️' : '✅';
+      toastIcon.textContent = type === 'error' ? '??' : '?';
       toastEl.classList.remove('opacity-0','pointer-events-none');
       toastEl.style.transform = 'translateY(0)';
       setTimeout(() => {
@@ -284,6 +285,7 @@
       const { data, error } = await supabaseClient.from('contrats').select('id, residence, address, ref').eq('societe_id', societeId);
       if (error) { console.error(error); return; }
       contractsCache = data || [];
+      contractIds = contractsCache.map(c => c.id).filter(Boolean);
       renderContractOptions();
     }
 
@@ -421,23 +423,27 @@
       });
     }
 
-    async function loadSalaries() {
+        async function loadSalaries() {
       if (!societeId) {
-        cards.innerHTML = '<div class="col-span-full text-center text-red-500 py-12">Session société requise.</div>';
+        cards.innerHTML = '<div class="col-span-full text-center text-red-500 py-12">Session societe requise.</div>';
+        return;
+      }
+      if (!contractIds.length) {
+        cards.innerHTML = '<div class="col-span-full text-center text-slate-500 py-12">Aucun contrat associe pour charger les salaries.</div>';
+        cached = [];
         return;
       }
       cards.innerHTML = '<div class="col-span-full text-center text-slate-500 py-12">Chargement...</div>';
       const { data, error } = await supabaseClient
         .from('salaries')
-        .select('*, contrats:contrat_id!salaries_contrat_fk(id, societe_id)')
-        .eq('contrats.societe_id', societeId)
+        .select('*')
+        .in('contrat_id', contractIds)
         .order('created_at', { ascending: false });
       if (error) { console.error(error); cards.innerHTML = '<div class="col-span-full text-center text-red-500">Erreur de chargement.</div>'; return; }
       cached = data || [];
       renderCards();
       lastRefresh.textContent = 'Mis a jour a ' + new Date().toLocaleTimeString();
     }
-
     async function saveSalarie() {
       if (!societeId) { showToast('Session société requise', 'error'); return; }
       const nom = document.getElementById('last-name').value.trim();
@@ -617,22 +623,16 @@
         if (btn.classList.contains('delete-btn')) {
           deleteSalarie(id);
         } else if (btn.classList.contains('edit-btn')) {
-          const { data, error } = await supabaseClient
-            .from('salaries')
-            .select('*, contrats!inner(id, societe_id)')
-            .eq('id', id)
-            .eq('contrats.societe_id', societeId)
-            .single();
+          let query = supabaseClient.from('salaries').select('*').eq('id', id);
+          if (contractIds.length) query = query.in('contrat_id', contractIds);
+          const { data, error } = await query.single();
           if (error || !data) { showToast('Chargement impossible', 'error'); return; }
           fillForm(data);
           openPanel();
         } else if (btn.classList.contains('details-btn')) {
-          const { data, error } = await supabaseClient
-            .from('salaries')
-            .select('*, contrats!inner(id, societe_id)')
-            .eq('id', id)
-            .eq('contrats.societe_id', societeId)
-            .single();
+          let query = supabaseClient.from('salaries').select('*').eq('id', id);
+          if (contractIds.length) query = query.in('contrat_id', contractIds);
+          const { data, error } = await query.single();
           if (error || !data) { showToast('Chargement impossible', 'error'); return; }
           showDetails(data);
         }
@@ -640,12 +640,9 @@
       }
       if (card) {
         const id = parseInt(card.dataset.id, 10);
-        const { data, error } = await supabaseClient
-          .from('salaries')
-          .select('*, contrats!inner(id, societe_id)')
-          .eq('id', id)
-          .eq('contrats.societe_id', societeId)
-          .single();
+        let query = supabaseClient.from('salaries').select('*').eq('id', id);
+        if (contractIds.length) query = query.in('contrat_id', contractIds);
+        const { data, error } = await query.single();
         if (error || !data) { showToast('Chargement impossible', 'error'); return; }
         showDetails(data);
       }
@@ -661,6 +658,8 @@
   </script>
 </body>
 </html>
+
+
 
 
 

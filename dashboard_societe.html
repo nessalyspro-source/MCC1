@@ -175,16 +175,20 @@
         });
         return;
       }
-      const [contratsRes, facturesRes, salariesRes] = await Promise.all([
+      const [contratsRes, facturesRes] = await Promise.all([
         supabaseClient.from('contrats').select('*').eq('societe_id', societeId),
-        supabaseClient.from('factures').select('*').eq('societe_id', societeId).order('created_at', { ascending: false }),
-        supabaseClient
-          .from('salaries')
-          .select('id, contrats!inner(id, societe_id)')
-          .eq('contrats.societe_id', societeId)
+        supabaseClient.from('factures').select('*').eq('societe_id', societeId).order('created_at', { ascending: false })
       ]);
       const contrats = contratsRes.data || [];
-      const salaries = salariesRes.data || [];
+      let salaries = [];
+      const contratIds = contrats.map(c => c.id).filter(Boolean);
+      if (contratIds.length) {
+        const { data: salData, error: salError } = await supabaseClient
+          .from('salaries')
+          .select('id, contrat_id')
+          .in('contrat_id', contratIds);
+        if (!salError) salaries = salData || [];
+      }
       const actifs = contrats.filter(c => (c.statut || '').toLowerCase() === 'actif');
       const now = new Date();
       const finProche = contrats.filter(c => {
