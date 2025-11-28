@@ -1,23 +1,22 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Suivi des Pointages - Nessaly's</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <script src="vendor/phosphor/index.js"></script>
-    <style>
-        body { font-family: 'Outfit', sans-serif; background-color: #F0F9FF; color: #1E293B; }
-        .sidebar { background: white; border-right: 1px solid #E2E8F0; }
-        .nav-item.active { background-color: #E0F2FE; color: #0284C7; }
-        :root {
+  <meta charset="UTF-8">
+  <title>Suivi des pointages</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <script src="vendor/phosphor/index.js"></script>
+  <script src="vendor/supabase/supabase.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <style>
+    :root {
       --ink: #0c2f35;
       --navy: #0f304b;
       --red: #ce3c35;
       --sand: #b58a64;
       --bg: #f7f5f2;
     }
-    body { background: radial-gradient(140% 120% at 20% 0%, #f0f7f8 0%, var(--bg) 45%, #fdfdfb 100%); color: #0c2f35; }
+    body { font-family: 'Outfit', sans-serif; background: radial-gradient(140% 120% at 20% 0%, #f0f7f8 0%, var(--bg) 45%, #fdfdfb 100%); color: #0c2f35; }
     .sidebar { background: linear-gradient(180deg, #0f304b, #0c2f35); border-right: 1px solid rgba(255,255,255,0.05); color: #e8eef2; }
     .sidebar a { color: #cfd8dc; }
     .sidebar a:hover { background: rgba(255,255,255,0.06); color: #ffffff; }
@@ -25,62 +24,324 @@
     .pill { background: rgba(12,47,53,0.08); color: #0f304b; }
     .gradient-chip { background: linear-gradient(120deg, var(--red), var(--navy)); box-shadow: 0 10px 30px rgba(12,47,53,0.22); }
     .card-surface { border: 1px solid #e7e5e0; box-shadow: 0 12px 40px rgba(12,47,53,0.08); }
-</style>
+  </style>
 </head>
-<body class="flex h-screen">
-    <aside class="w-64 sidebar flex flex-col p-6">
-        <div class="text-xl font-bold tracking-wide mb-10 text-center text-slate-800">ESPACE <span class="text-sky-500">CLIENT</span></div>
-        <nav class="flex-1 space-y-2">
-            <a href="dashboard_societe.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition">
-                <i class="ph-fill ph-squares-four text-lg"></i>
-                <span>Vue d'ensemble</span>
-            </a>
-            <a href="societe_signalements.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition">
-                <i class="ph ph-warning-circle text-lg"></i>
-                <span>Suivi des signalements</span>
-            </a>
-            <a href="societe_clients.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition">
-                <i class="ph ph-users text-lg"></i>
-                <span>Suivi des clients</span>
-            </a>
-            <a href="societe_contrats.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition">
-                <i class="ph ph-file-text text-lg"></i>
-                <span>Suivi des contrats</span>
-            </a>
-            <a href="societe_rapports.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition">
-                <i class="ph ph-chart-bar text-lg"></i>
-                <span>Rapports</span>
-            </a>
-            <a href="societe_cahier_des_charges.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition">
-                <i class="ph ph-notebook text-lg"></i>
-                <span>Cahier des charges</span>
-            </a>
-            <a href="societe_salaries.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition">
-                <i class="ph ph-currency-eur text-lg"></i>
-                <span>Suivi des salariés</span>
-            </a>
-            <a href="societe_pointages.html" class="flex items-center gap-3 p-3 rounded-xl nav-item active font-medium">
-                <i class="ph ph-timer text-lg"></i>
-                <span>Suivi des pointages</span>
-            </a>
-            <a href="societe_conges.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition">
-                <i class="ph ph-calendar-blank text-lg"></i>
-                <span>Suivi des demandes de congés</span>
-            </a>
-        </nav>
-        <a href="index.html" class="flex items-center gap-2 text-slate-400 hover:text-slate-600 transition mt-auto">
-            <i class="ph ph-sign-out"></i> Déconnexion
-        </a>
-    </aside>
-    <main class="flex-1 p-10 overflow-y-auto">
-        <h1 class="text-3xl font-bold mb-8 text-slate-800">Suivi des pointages</h1>
-        <!-- Contenu de la page ici -->
-        <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
-            <p class="text-slate-500">Le contenu pour le suivi des pointages apparaîtra ici.</p>
+<body class="flex h-screen text-slate-800">
+  <aside class="w-64 sidebar flex flex-col p-6">
+    <div class="text-xl font-bold tracking-wide mb-10 text-center text-slate-800">ESPACE <span class="text-sky-500">CLIENT</span></div>
+    <nav class="flex-1 space-y-2">
+      <a href="dashboard_societe.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition"><i class="ph-fill ph-squares-four text-lg"></i><span>Vue d'ensemble</span></a>
+      <a href="societe_signalements.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition"><i class="ph ph-warning-circle text-lg"></i><span>Suivi des signalements</span></a>
+      <a href="societe_clients.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition"><i class="ph ph-users text-lg"></i><span>Suivi des clients</span></a>
+      <a href="societe_contrats.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition"><i class="ph ph-file-text text-lg"></i><span>Suivi des contrats</span></a>
+      <a href="societe_rapports.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition"><i class="ph ph-chart-bar text-lg"></i><span>Rapports</span></a>
+      <a href="societe_cahier_des_charges.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition"><i class="ph ph-notebook text-lg"></i><span>Cahier des charges</span></a>
+      <a href="societe_salaries.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition"><i class="ph ph-currency-eur text-lg"></i><span>Suivi des salaries</span></a>
+      <a href="societe_pointages.html" class="flex items-center gap-3 p-3 rounded-xl nav-item active font-medium"><i class="ph ph-timer text-lg"></i><span>Suivi des pointages</span></a>
+      <a href="societe_conges.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition"><i class="ph ph-calendar-blank text-lg"></i><span>Suivi des demandes de conges</span></a>
+    </nav>
+    <a href="index.html" class="flex items-center gap-2 text-slate-400 hover:text-slate-600 transition mt-auto"><i class="ph ph-sign-out"></i> Deconnexion</a>
+  </aside>
+
+  <main class="flex-1 px-6 py-8 max-w-7xl mx-auto w-full overflow-y-auto">
+    <header class="card-surface subtle-grid p-5 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border border-slate-100">
+      <div class="space-y-1">
+        <span class="pill inline-flex items-center gap-2"><i class="ph-bold ph-clock"></i> Suivi des pointages</span>
+        <h1 class="text-2xl font-bold text-slate-900">Pointages mensuels</h1>
+        <p class="text-sm text-slate-500">Visualisez et exportez les pointages des agents pour une periode.</p>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+        <input id="month-filter" type="month" class="rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500" />
+        <div class="relative flex-1 sm:w-64">
+          <input id="search-input" type="text" placeholder="Rechercher un agent, site..." class="w-full rounded-lg border border-slate-200 px-4 py-2 pl-10 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 bg-white shadow-sm">
+          <i class="ph-bold ph-magnifying-glass text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
         </div>
-    </main>
+        <div class="flex gap-2">
+          <button id="btn-export-csv" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm font-semibold hover:bg-slate-50"><i class="ph-bold ph-file-xls"></i> Export Excel</button>
+          <button id="btn-export-pdf" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800"><i class="ph-bold ph-file-pdf"></i> Export PDF</button>
+        </div>
+      </div>
+    </header>
+
+    <section class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+      <div class="card-surface rounded-xl p-4 border border-slate-100">
+        <p class="text-xs uppercase text-slate-500">Total pointages</p>
+        <p class="text-2xl font-bold text-slate-900" id="stat-total">--</p>
+      </div>
+      <div class="card-surface rounded-xl p-4 border border-slate-100">
+        <p class="text-xs uppercase text-slate-500">Agents</p>
+        <p class="text-2xl font-bold text-slate-900" id="stat-agents">--</p>
+      </div>
+      <div class="card-surface rounded-xl p-4 border border-slate-100">
+        <p class="text-xs uppercase text-slate-500">Entrees</p>
+        <p class="text-2xl font-bold text-emerald-700" id="stat-entree">--</p>
+      </div>
+      <div class="card-surface rounded-xl p-4 border border-slate-100">
+        <p class="text-xs uppercase text-slate-500">Sorties</p>
+        <p class="text-2xl font-bold text-rose-700" id="stat-sortie">--</p>
+      </div>
+    </section>
+
+    <section class="card-surface rounded-2xl border border-slate-100 p-4">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2 text-sm text-slate-500">
+          <span id="period-label">Periode</span>
+          <span class="px-2 py-1 rounded-full bg-slate-100 text-slate-700" id="count-chip">0 pointage</span>
+        </div>
+        <span class="text-xs text-slate-400" id="last-refresh"></span>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-sm text-left">
+          <thead class="text-xs uppercase text-slate-500 border-b border-slate-200">
+            <tr>
+              <th class="py-2 pr-4">Date</th>
+              <th class="py-2 pr-4">Heure</th>
+              <th class="py-2 pr-4">Agent</th>
+              <th class="py-2 pr-4">Type</th>
+              <th class="py-2 pr-4">Mode</th>
+              <th class="py-2 pr-4">Site</th>
+              <th class="py-2 pr-4">Note</th>
+            </tr>
+          </thead>
+          <tbody id="table-body" class="divide-y divide-slate-100">
+            <tr><td colspan="7" class="py-4 text-center text-slate-500">Chargement...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const supabaseUrl = 'https://fmfylsykljkvyurcprij.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZtZnlsc3lrbGprdnl1cmNwcmlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1ODQ3OTgsImV4cCI6MjA3OTE2MDc5OH0.hfgBflnh-nr1Ljfl5Chkp0y1EbZbm5XiyyDhsQcdSqE';
+    const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey, { auth: { persistSession: true, autoRefreshToken: true, storage: localStorage } });
+
+    const monthFilter = document.getElementById('month-filter');
+    const searchInput = document.getElementById('search-input');
+    const tableBody = document.getElementById('table-body');
+    const countChip = document.getElementById('count-chip');
+    const periodLabel = document.getElementById('period-label');
+    const lastRefresh = document.getElementById('last-refresh');
+    const statTotal = document.getElementById('stat-total');
+    const statAgents = document.getElementById('stat-agents');
+    const statEntree = document.getElementById('stat-entree');
+    const statSortie = document.getElementById('stat-sortie');
+
+    let societeId = null;
+    let contractsCache = [];
+    let salariesCache = [];
+    let pointagesCache = [];
+
+    function formatDateTime(iso) {
+      if (!iso) return { date:'', time:'' };
+      const d = new Date(iso);
+      return { date: d.toLocaleDateString(), time: d.toLocaleTimeString() };
+    }
+
+    function showToast(msg, type='info') {
+      console[type === 'error' ? 'error' : 'log'](msg);
+    }
+
+    async function requireSession() {
+      const { data } = await supabaseClient.auth.getSession();
+      if (data?.session) {
+        localStorage.setItem('supabaseSession', JSON.stringify(data.session));
+        return data.session;
+      }
+      const stored = localStorage.getItem('supabaseSession');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          const { data: setData } = await supabaseClient.auth.setSession({
+            access_token: parsed?.access_token,
+            refresh_token: parsed?.refresh_token
+          });
+          if (setData?.session) return setData.session;
+        } catch (e) { console.warn('Session locale invalide', e); }
+      }
+      return null;
+    }
+
+    async function ensureSociete() {
+      const session = await requireSession();
+      const userId = session?.user?.id || null;
+      if (!userId) { showToast('Session requise', 'error'); return null; }
+      const { data, error } = await supabaseClient.from('societes').select('id').eq('auth_id', userId).single();
+      if (error || !data) { showToast('Societe introuvable', 'error'); return null; }
+      societeId = data.id;
+      return societeId;
+    }
+
+    async function loadContracts() {
+      const { data, error } = await supabaseClient.from('contrats').select('id, residence, address').eq('societe_id', societeId);
+      if (error) { console.error(error); return []; }
+      contractsCache = data || [];
+      return contractsCache;
+    }
+
+    async function loadSalaries(contractIds) {
+      if (!contractIds.length) { salariesCache = []; return []; }
+      const { data, error } = await supabaseClient
+        .from('salaries')
+        .select('id, prenom, nom, ref, contrat_id')
+        .in('contrat_id', contractIds);
+      if (error) { console.error(error); salariesCache = []; return []; }
+      salariesCache = data || [];
+      return salariesCache;
+    }
+
+    function filteredPointages() {
+      const q = (searchInput.value || '').toLowerCase();
+      if (!q) return pointagesCache;
+      return pointagesCache.filter(p =>
+        (p.agent || '').toLowerCase().includes(q) ||
+        (p.site || '').toLowerCase().includes(q) ||
+        (p.type || '').toLowerCase().includes(q) ||
+        (p.mode || '').toLowerCase().includes(q)
+      );
+    }
+
+    function renderTable() {
+      const list = filteredPointages();
+      countChip.textContent = `${list.length} pointage${list.length>1?'s':''}`;
+      if (!list.length) { tableBody.innerHTML = '<tr><td colspan="7" class="py-4 text-center text-slate-500">Aucun pointage</td></tr>'; return; }
+      tableBody.innerHTML = list.map(p => {
+        const dt = formatDateTime(p.created_at);
+        const badge = p.type === 'sortie' ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700';
+        const typeLabel = p.type === 'sortie' ? 'Sortie' : 'Entree';
+        return `<tr class="hover:bg-slate-50">
+          <td class="py-2 pr-4 whitespace-nowrap">${dt.date}</td>
+          <td class="py-2 pr-4 whitespace-nowrap text-slate-600">${dt.time}</td>
+          <td class="py-2 pr-4 font-semibold text-slate-900">${p.agent || 'Inconnu'}</td>
+          <td class="py-2 pr-4"><span class="px-2 py-1 rounded-full text-xs font-semibold ${badge}">${typeLabel}</span></td>
+          <td class="py-2 pr-4 text-slate-600 uppercase">${p.mode || ''}</td>
+          <td class="py-2 pr-4 text-slate-700">${p.site || ''}</td>
+          <td class="py-2 pr-4 text-slate-500">${p.note || ''}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function updateStats() {
+      const list = filteredPointages();
+      const agents = new Set(list.map(p => p.salarie_id).filter(Boolean));
+      const entree = list.filter(p => p.type === 'entree').length;
+      const sortie = list.filter(p => p.type === 'sortie').length;
+      statTotal.textContent = list.length;
+      statAgents.textContent = agents.size;
+      statEntree.textContent = entree;
+      statSortie.textContent = sortie;
+    }
+
+    function exportCsv() {
+      const list = filteredPointages();
+      if (!list.length) { showToast('Aucune donnee a exporter', 'error'); return; }
+      const header = ['Date','Heure','Agent','Type','Mode','Site','Note'];
+      const rows = list.map(p => {
+        const dt = formatDateTime(p.created_at);
+        return [dt.date, dt.time, p.agent || '', p.type || '', p.mode || '', p.site || '', (p.note || '').replace(/\\r?\\n/g, ' ')];
+      });
+      const csv = [header, ...rows].map(r => r.map(val => `"${(val||'').toString().replace(/\"/g,'\"\"')}"`).join(';')).join('\\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `pointages-${monthFilter.value || 'periode'}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function exportPdf() {
+      const list = filteredPointages();
+      if (!list.length) { showToast('Aucune donnee a exporter', 'error'); return; }
+      const doc = new window.jspdf.jsPDF({ orientation: 'landscape' });
+      doc.setFontSize(12);
+      doc.text(`Pointages ${periodLabel.textContent}`, 14, 14);
+      doc.setFontSize(9);
+      const headers = ['Date','Heure','Agent','Type','Mode','Site','Note'];
+      let y = 22;
+      const lineHeight = 6;
+      const maxWidth = [25,20,45,20,20,50,90];
+      const drawRow = (cols) => {
+        let x = 14;
+        cols.forEach((txt, idx) => {
+          const str = (txt || '').toString();
+          doc.text(str.length > 60 ? str.slice(0,60)+'…' : str, x, y, { maxWidth: maxWidth[idx] });
+          x += maxWidth[idx];
+        });
+        y += lineHeight;
+        if (y > 190) { doc.addPage(); y = 20; }
+      };
+      drawRow(headers);
+      list.forEach(p => {
+        const dt = formatDateTime(p.created_at);
+        drawRow([dt.date, dt.time, p.agent || '', p.type || '', p.mode || '', p.site || '', p.note || '']);
+      });
+      doc.save(`pointages-${monthFilter.value || 'periode'}.pdf`);
+    }
+
+    async function loadPointages() {
+      const contractIds = contractsCache.map(c => c.id).filter(Boolean);
+      const salarieIds = salariesCache.map(s => s.id).filter(Boolean);
+      if (!contractIds.length && !salarieIds.length) {
+        tableBody.innerHTML = '<tr><td colspan="7" class="py-4 text-center text-slate-500">Aucun contrat/salarie associe.</td></tr>';
+        return;
+      }
+      const periodVal = monthFilter.value;
+      const now = new Date();
+      const [y,m] = periodVal ? periodVal.split('-').map(n => parseInt(n,10)) : [now.getFullYear(), now.getMonth()+1];
+      const start = new Date(y, m-1, 1).toISOString();
+      const end = new Date(y, m, 1).toISOString();
+      periodLabel.textContent = `Periode : ${m.toString().padStart(2,'0')}/${y}`;
+      tableBody.innerHTML = '<tr><td colspan="7" class="py-4 text-center text-slate-500">Chargement...</td></tr>';
+
+      let query = supabaseClient
+        .from('pointages')
+        .select('id, type, mode, note, site, salarie_id, contrat_id, created_at')
+        .gte('created_at', start)
+        .lt('created_at', end)
+        .order('created_at', { ascending: false });
+
+      const ors = [];
+      if (contractIds.length) ors.push(`contrat_id.in.(${contractIds.join(',')})`);
+      if (salarieIds.length) ors.push(`salarie_id.in.(${salarieIds.join(',')})`);
+      if (ors.length) query = query.or(ors.join(','));
+
+      const { data, error } = await query;
+      if (error) { console.error(error); tableBody.innerHTML = '<tr><td colspan="7" class="py-4 text-center text-red-500">Erreur de chargement.</td></tr>'; return; }
+      const salarieMap = new Map(salariesCache.map(s => [s.id, s]));
+      pointagesCache = (data || []).map(p => {
+        const s = salarieMap.get(p.salarie_id);
+        const agent = s ? `${s.prenom || ''} ${s.nom || ''}`.trim() || s.ref || '' : '';
+        return { ...p, agent };
+      });
+      renderTable();
+      updateStats();
+      lastRefresh.textContent = 'Mis a jour a ' + new Date().toLocaleTimeString();
+    }
+
+    async function bootstrap() {
+      const ok = await ensureSociete();
+      if (!ok) {
+        tableBody.innerHTML = '<tr><td colspan="7" class="py-4 text-center text-red-500">Session requise.</td></tr>';
+        setTimeout(() => { window.location.href = 'societes_login.html'; }, 900);
+        return;
+      }
+      await loadContracts();
+      const contractIds = contractsCache.map(c => c.id).filter(Boolean);
+      await loadSalaries(contractIds);
+      const now = new Date();
+      monthFilter.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+      await loadPointages();
+    }
+
+    document.getElementById('btn-export-csv')?.addEventListener('click', exportCsv);
+    document.getElementById('btn-export-pdf')?.addEventListener('click', exportPdf);
+    searchInput.addEventListener('input', () => { renderTable(); updateStats(); });
+    monthFilter.addEventListener('change', () => loadPointages());
+
+    document.addEventListener('DOMContentLoaded', bootstrap);
+  </script>
 </body>
 </html>
-
-
-
