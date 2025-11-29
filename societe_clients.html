@@ -15,7 +15,7 @@
       .toast-notification.show { transform: translateY(0); opacity: 1; pointer-events: auto; }
       .client-card { border-radius: 20px; border: 1px solid #e5e7eb; box-shadow: 0 8px 24px rgba(15,23,42,0.08); }
       .client-card:hover { transform: translateY(-4px); box-shadow: 0 14px 30px rgba(15,23,42,0.12); }
-      .logo-fallback { width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; color: #0f172a; font-weight: 700; position: absolute; top: 16px; right: 16px; opacity: 0.9; }
+      .logo-fallback { width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; color: #0f172a; font-weight: 700; position: absolute; bottom: 12px; right: 12px; opacity: 0.9; }
       .logo-watermark { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0.08; border-radius: 20px; }
     </style>
 </head>
@@ -843,7 +843,8 @@ function renderClientsPage(container) {
         const logoUrl = client.logo_url;
         const phone = isMandataire ? (client.telephone_contact || client.telephone_standard) : client.telephone;
         const watermark = logoUrl
-            ? `<div class="logo-watermark" style="background-image:url('${logoUrl}')"></div>`
+            ? `<div class="logo-watermark" style="background-image:url('${logoUrl}');"></div>
+               <div class="logo-fallback" style="background-color:${computeColor(name)}">${computeInitials(name)}</div>`
             : `<div class="logo-fallback" style="background-color:${computeColor(name)}">${computeInitials(name)}</div>`;
         card.innerHTML = `
             ${watermark}
