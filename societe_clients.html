@@ -13,10 +13,37 @@
       body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f9fafb; color: #1e293b; }
       .toast-notification { transform: translateY(-120%); opacity: 0; pointer-events: none; transition: transform .3s ease, opacity .3s ease; }
       .toast-notification.show { transform: translateY(0); opacity: 1; pointer-events: auto; }
-      .client-card { border-radius: 20px; border: 1px solid #e5e7eb; box-shadow: 0 8px 24px rgba(15,23,42,0.08); }
+      .client-card { border-radius: 20px; border: 1px solid #e5e7eb; box-shadow: 0 8px 24px rgba(15,23,42,0.08); padding-bottom: 70px; }
       .client-card:hover { transform: translateY(-4px); box-shadow: 0 14px 30px rgba(15,23,42,0.12); }
-      .logo-fallback { width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; color: #0f172a; font-weight: 700; position: absolute; bottom: 12px; right: 12px; opacity: 0.9; }
+      .logo-fallback { width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; color: #0f172a; font-weight: 700; position: absolute; top: 16px; right: 16px; opacity: 0.95; border: 1px solid rgba(255,255,255,0.4); }
       .logo-watermark { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0.08; border-radius: 20px; }
+      .client-type-chip {
+        position: absolute;
+        bottom: 18px;
+        right: 20px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 600;
+        background: rgba(15,23,42,0.04);
+        color: #0f172a;
+      }
+      .card-actions {
+        position: absolute;
+        bottom: 18px;
+        left: 20px;
+        display: flex;
+        gap: 12px;
+        opacity: 0.9;
+      }
+      .card-actions button {
+        color: #94a3b8;
+        font-size: 18px;
+        background: transparent;
+      }
+      .client-card:hover .card-actions button {
+        color: #059669;
+      }
     </style>
 </head>
 <body class="flex h-screen">
@@ -849,24 +876,24 @@ function renderClientsPage(container) {
         card.innerHTML = `
             ${watermark}
             <div class="flex-1 relative z-[1]">
-                <div class="flex justify-between items-start mb-4">
-                    <div>
-                        <h3 class="font-bold text-lg text-slate-800">${name}</h3>
-                        <p class="text-sm text-slate-500">${contact || 'N/A'}</p>
-                        <p class="text-sm text-slate-500">${phone || 'N/A'}</p>
-                    </div>
-                    <span class="text-xs font-semibold ${isMandataire ? 'bg-amber-100 text-amber-800' : 'bg-sky-100 text-sky-800'} px-2 py-1 rounded-full self-start flex-shrink-0">${client.type}</span>
+                <div class="mb-6">
+                    <h3 class="font-bold text-lg text-slate-800">${name}</h3>
+                    <p class="text-sm text-slate-500">${contact || 'N/A'}</p>
+                    <p class="text-sm text-slate-500">${phone || 'N/A'}</p>
                 </div>
             </div>
-            <div class="card-actions border-t border-slate-100 pt-4 mt-auto flex justify-end items-center gap-2 opacity-0 transition-opacity duration-300">
-                <button title="Modifier" class="action-btn edit-btn text-slate-400 hover:text-sky-600" data-id="${client.id}" data-table="${client.table}" data-type="${client.formType}">
-                    <i class="ph-bold ph-pencil-simple text-xl"></i>
+            <div class="client-type-chip ${isMandataire ? 'bg-amber-100 text-amber-800' : 'bg-sky-100 text-sky-800'}">
+                ${client.type}
+            </div>
+            <div class="card-actions">
+                <button title="Modifier" class="action-btn edit-btn" data-id="${client.id}" data-table="${client.table}" data-type="${client.formType}">
+                    <i class="ph-bold ph-pencil-simple"></i>
                 </button>
-                <button title="Détails" class="action-btn details-btn text-slate-400 hover:text-blue-600" data-id="${client.id}" data-table="${client.table}" data-type="${client.formType}">
-                    <i class="ph-bold ph-eye text-xl"></i>
+                <button title="Détails" class="action-btn details-btn" data-id="${client.id}" data-table="${client.table}" data-type="${client.formType}">
+                    <i class="ph-bold ph-eye"></i>
                 </button>
-                <button title="Supprimer" class="action-btn delete-btn text-slate-400 hover:text-red-600" data-id="${client.id}" data-table="${client.table}" data-type="${client.formType}">
-                    <i class="ph-bold ph-trash text-xl"></i>
+                <button title="Supprimer" class="action-btn delete-btn" data-id="${client.id}" data-table="${client.table}" data-type="${client.formType}">
+                    <i class="ph-bold ph-trash"></i>
                 </button>
             </div>
         `;
