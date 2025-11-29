@@ -3,11 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <title>Suivi des Clients - Nessaly's</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1' y1='0' y2='1'%3E%3Cstop stop-color='%2310b981'/%3E%3Cstop offset='.8' stop-color='%23059'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='url(%23g)'/%3E%3Cpath fill='%23fff' d='M44 22c0 9-7.3 20-15 20-4.6 0-9-4-9-9 0-8.5 10-15 17-15 2 0 4 2 4 4Z'/%3E%3C/svg%3E">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="vendor/phosphor/index.js"></script>
     <script src="vendor/supabase/supabase.js"></script>
     <link rel="stylesheet" href="societe_theme.css">
+    <style>
+      body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f9fafb; color: #1e293b; }
+      .toast-notification { transform: translateY(-120%); opacity: 0; pointer-events: none; transition: transform .3s ease, opacity .3s ease; }
+      .toast-notification.show { transform: translateY(0); opacity: 1; pointer-events: auto; }
+      .client-card { border-radius: 20px; border: 1px solid #e5e7eb; box-shadow: 0 8px 24px rgba(15,23,42,0.08); }
+      .client-card:hover { transform: translateY(-4px); box-shadow: 0 14px 30px rgba(15,23,42,0.12); }
+      .logo-fallback { width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; color: #0f172a; font-weight: 700; position: absolute; top: 16px; right: 16px; opacity: 0.9; }
+      .logo-watermark { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0.08; border-radius: 20px; }
+    </style>
 </head>
 <body class="flex h-screen">
     <aside class="w-64 sidebar flex flex-col p-6">
@@ -50,7 +60,7 @@
             <i class="ph ph-sign-out"></i> Déconnexion
         </a>
     </aside>
-    <main class="flex-1 p-10 overflow-y-auto">
+    <main class="flex-1 p-10 overflow-y-auto bg-gray-50">
         <div class="flex justify-between items-center mb-8">
             <h1 class="text-3xl font-bold text-slate-800">Suivi des clients</h1>
         </div>
@@ -60,7 +70,7 @@
                 <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
                 <input type="text" placeholder="Rechercher un client..." class="w-full bg-white border border-slate-200 rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-sky-300 transition">
             </div>
-            <button id="open-panel-button" class="flex items-center gap-2 bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded-lg shadow-sm transition-colors">
+            <button id="open-panel-button" class="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition-colors">
                 <i class="ph-fill ph-plus-circle text-lg"></i>
                 <span>Créer un client</span>
             </button>
@@ -341,29 +351,37 @@
 
 
         // --- Gestion de la notification ---
-        function showNotification(message) {
+        let toastTimerSuccess = null;
+        let toastTimerError = null;
+        function hideToasts() {
+            const success = document.getElementById('success-notification');
             const error = document.getElementById('error-notification');
-            if (error) { error.style.transform = 'translateY(-100%)'; error.style.opacity = '0'; }
+            if (success) { success.classList.remove('show'); success.style.transform = 'translateY(-120%)'; success.style.opacity = '0'; }
+            if (error) { error.classList.remove('show'); error.style.transform = 'translateY(-120%)'; error.style.opacity = '0'; }
+            if (toastTimerSuccess) clearTimeout(toastTimerSuccess);
+            if (toastTimerError) clearTimeout(toastTimerError);
+        }
+        function showNotification(message) {
+            hideToasts();
             const notification = document.getElementById('success-notification');
             document.getElementById('notification-message').textContent = message;
-            notification.style.transform = 'translateY(0)';
-            notification.style.opacity = '1';
-            setTimeout(() => {
-                notification.style.transform = 'translateY(-100%)';
+            notification.classList.add('show');
+            toastTimerSuccess = setTimeout(() => {
+                notification.classList.remove('show');
+                notification.style.transform = 'translateY(-120%)';
                 notification.style.opacity = '0';
-            }, 4000);
+            }, 3000);
         }
         function showError(message) {
-            const success = document.getElementById('success-notification');
-            if (success) { success.style.transform = 'translateY(-100%)'; success.style.opacity = '0'; }
+            hideToasts();
             const notification = document.getElementById('error-notification');
             document.getElementById('error-message').textContent = message;
-            notification.style.transform = 'translateY(0)';
-            notification.style.opacity = '1';
-            setTimeout(() => {
-                notification.style.transform = 'translateY(-100%)';
+            notification.classList.add('show');
+            toastTimerError = setTimeout(() => {
+                notification.classList.remove('show');
+                notification.style.transform = 'translateY(-120%)';
                 notification.style.opacity = '0';
-            }, 4500);
+            }, 3500);
         }
 
         function computeInitials(name = '') {
@@ -1025,6 +1043,8 @@ function renderPagination(parent) {
         });
     </script>
 </body>
+
+
 
 
 
