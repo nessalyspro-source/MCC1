@@ -131,7 +131,7 @@
       if (!societe?.id) return;
       const { data, error } = await supabaseClient
         .from('contrats')
-        .select('id, ref, residence, address, contact_email, contact_nom')
+        .select('id, ref, residence, address')
         .eq('societe_id', societe.id);
       if (error) return;
       contracts = data || [];
