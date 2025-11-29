@@ -13,7 +13,7 @@
       body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f9fafb; color: #1e293b; }
       .toast-notification { transform: translateY(-120%); opacity: 0; pointer-events: none; transition: transform .3s ease, opacity .3s ease; }
       .toast-notification.show { transform: translateY(0); opacity: 1; pointer-events: auto; }
-      .client-card { border-radius: 20px; border: 1px solid #e5e7eb; box-shadow: 0 8px 24px rgba(15,23,42,0.08); padding-bottom: 70px; }
+      .client-card { border-radius: 20px; border: 1px solid #e5e7eb; box-shadow: 0 8px 24px rgba(15,23,42,0.08); padding-bottom: 70px; cursor: pointer; }
       .client-card:hover { transform: translateY(-4px); box-shadow: 0 14px 30px rgba(15,23,42,0.12); }
       .logo-fallback { width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; color: #0f172a; font-weight: 700; position: absolute; top: 16px; right: 16px; opacity: 0.95; border: 1px solid rgba(255,255,255,0.4); }
       .logo-watermark { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0.08; border-radius: 20px; }
@@ -34,15 +34,21 @@
         left: 20px;
         display: flex;
         gap: 12px;
-        opacity: 0.9;
+        opacity: 0;
+        transition: opacity .2s ease;
       }
       .card-actions button {
         color: #94a3b8;
         font-size: 18px;
         background: transparent;
+        border: none;
+        cursor: pointer;
       }
-      .client-card:hover .card-actions button {
+      .card-actions button:hover {
         color: #059669;
+      }
+      .client-card:hover .card-actions {
+        opacity: 1;
       }
     </style>
 </head>
