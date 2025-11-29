@@ -8,6 +8,18 @@
   --shadow: 0 12px 40px rgba(12, 47, 53, 0.08);
 }
 
+:root {
+  --ink: #0c2f35;
+  --navy: #0f304b;
+  --red: #ce3c35;
+  --sand: #b58a64;
+  --bg: #f7f5f2;
+  --card-border: #e5e7eb;
+  --shadow: 0 12px 40px rgba(12, 47, 53, 0.08);
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Outfit:wght@300;400;600;700&display=swap');
+
 body {
   font-family: 'Outfit', sans-serif;
   background: radial-gradient(140% 120% at 20% 0%, #f0f7f8 0%, var(--bg) 45%, #fdfdfb 100%);
