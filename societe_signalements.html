@@ -131,7 +131,7 @@
       if (!societe?.id) return;
       const { data, error } = await supabaseClient
         .from('contrats')
-        .select('id, ref, site_nom, adresse_site, contact_email, contact_nom')
+        .select('id, ref, residence, address, contact_email, contact_nom')
         .eq('societe_id', societe.id);
       if (error) return;
       contracts = data || [];
@@ -198,7 +198,7 @@
               <div>
                 <p class="text-xs text-slate-500 uppercase">Contrat ${s.contrat_ref || ''}</p>
                 <h3 class="text-xl font-semibold text-slate-900">${s.titre || 'Signalement'}</h3>
-                <p class="text-sm text-slate-600">${s.site || contract.site_nom || ''}${s.adresse || contract.adresse_site ? ' · ' + (s.adresse || contract.adresse_site) : ''}</p>
+                <p class="text-sm text-slate-600">${s.site || contract.residence || ''}${s.adresse || contract.address ? ' · ' + (s.adresse || contract.address) : ''}</p>
               </div>
               <span class="px-3 py-1 rounded-full text-xs font-semibold ${statusChip(st)}">${st}</span>
             </div>
@@ -275,13 +275,13 @@
       const contract = contractMap[sig.contrat_id] || {};
       const to = contract.contact_email || userEmail || '';
       if (!to) return alert('Pas d email client defini');
-      const subject = encodeURIComponent(`Signalement ${sig.titre || ''} - ${sig.site || contract.site_nom || ''}`);
+      const subject = encodeURIComponent(`Signalement ${sig.titre || ''} - ${sig.site || contract.residence || ''}`);
       const bodyLines = [
         'Bonjour,',
         '',
         'Un signalement vous est transmis :',
-        `- Site : ${sig.site || contract.site_nom || ''}`,
-        `- Adresse : ${sig.adresse || contract.adresse_site || ''}`,
+        `- Site : ${sig.site || contract.residence || ''}`,
+        `- Adresse : ${sig.adresse || contract.address || ''}`,
         `- Contrat : ${sig.contrat_ref || ''}`,
         `- Statut : ${(sig.statut || 'nouveau')}`,
         `- Detail : ${sig.description || ''}`,
@@ -303,3 +303,4 @@
   </script>
 </body>
 </html>
+
