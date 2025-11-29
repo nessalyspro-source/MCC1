@@ -356,8 +356,8 @@
         function hideToasts() {
             const success = document.getElementById('success-notification');
             const error = document.getElementById('error-notification');
-            if (success) { success.classList.remove('show'); success.style.transform = 'translateY(-120%)'; success.style.opacity = '0'; }
-            if (error) { error.classList.remove('show'); error.style.transform = 'translateY(-120%)'; error.style.opacity = '0'; }
+            if (success) { success.classList.remove('show'); success.style.transform = 'translateY(-120%)'; success.style.opacity = '0'; success.style.display = 'none'; }
+            if (error) { error.classList.remove('show'); error.style.transform = 'translateY(-120%)'; error.style.opacity = '0'; error.style.display = 'none'; }
             if (toastTimerSuccess) clearTimeout(toastTimerSuccess);
             if (toastTimerError) clearTimeout(toastTimerError);
         }
@@ -365,23 +365,27 @@
             hideToasts();
             const notification = document.getElementById('success-notification');
             document.getElementById('notification-message').textContent = message;
+            notification.style.display = 'flex';
             notification.classList.add('show');
             toastTimerSuccess = setTimeout(() => {
                 notification.classList.remove('show');
                 notification.style.transform = 'translateY(-120%)';
                 notification.style.opacity = '0';
-            }, 3000);
+                notification.style.display = 'none';
+            }, 2500);
         }
         function showError(message) {
             hideToasts();
             const notification = document.getElementById('error-notification');
             document.getElementById('error-message').textContent = message;
+            notification.style.display = 'flex';
             notification.classList.add('show');
             toastTimerError = setTimeout(() => {
                 notification.classList.remove('show');
                 notification.style.transform = 'translateY(-120%)';
                 notification.style.opacity = '0';
-            }, 3500);
+                notification.style.display = 'none';
+            }, 3000);
         }
 
         function computeInitials(name = '') {
@@ -1043,6 +1047,9 @@ function renderPagination(parent) {
         });
     </script>
 </body>
+
+
+
 
 
 
