@@ -14,6 +14,9 @@
       .toast-notification { transform: translateY(-120%); opacity: 0; pointer-events: none; transition: transform .3s ease, opacity .3s ease; }
       .toast-notification.show { transform: translateY(0); opacity: 1; pointer-events: auto; }
       .client-card { border-radius: 20px; border: 1px solid #e5e7eb; box-shadow: 0 8px 24px rgba(15,23,42,0.08); padding-bottom: 70px; cursor: pointer; }
+      .open-client-btn {
+        background: linear-gradient(180deg, #0f172a, #042f2e);
+      }
       .client-card:hover { transform: translateY(-4px); box-shadow: 0 14px 30px rgba(15,23,42,0.12); }
       .logo-fallback { width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; color: #0f172a; font-weight: 700; position: absolute; top: 16px; right: 16px; opacity: 0.95; border: 1px solid rgba(255,255,255,0.4); }
       .logo-watermark { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0.08; border-radius: 20px; }
@@ -103,7 +106,7 @@
                 <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
                 <input type="text" placeholder="Rechercher un client..." class="w-full bg-white border border-slate-200 rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-sky-300 transition">
             </div>
-            <button id="open-panel-button" class="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition-colors">
+            <button id="open-panel-button" class="flex items-center gap-2 open-client-btn text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition-colors">
                 <i class="ph-fill ph-plus-circle text-lg"></i>
                 <span>Créer un client</span>
             </button>
