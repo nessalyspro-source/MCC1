@@ -17,26 +17,30 @@ body {
 }
 
 .sidebar {
-  background: linear-gradient(180deg, #0f172a, #042f2e);
+  background: linear-gradient(180deg, #0b1324, #032026 55%, #053c33 100%);
   border-right: 1px solid rgba(255, 255, 255, 0.08);
   color: #e8eef2;
   font-family: 'Plus Jakarta Sans', 'Outfit', sans-serif;
 }
+.sidebar nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
 .sidebar nav a {
-  color: #cfd8dc;
+  color: #c5cbd8;
   transition: all .2s ease;
   font-family: 'Plus Jakarta Sans', 'Outfit', sans-serif;
+  padding: 12px 14px;
+  border-radius: 999px;
+  border: 1px solid transparent;
 }
-.sidebar nav a:hover { background: rgba(255, 255, 255, 0.06); color: #ffffff; }
+.sidebar nav a:hover { color: #ffffff; background: rgba(255, 255, 255, 0.04); }
 .nav-item.active {
-  background: #f8fafc;
-  color: #059669;
-  border-top-left-radius: 999px;
-  border-bottom-left-radius: 999px;
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-  margin-right: -12px;
-  box-shadow: inset 3px 0 0 #059669, 0 10px 30px rgba(4, 47, 46, 0.16);
+  background: #e8f1ee;
+  color: #0ea76b;
+  box-shadow: 0 12px 32px rgba(4, 47, 46, 0.28);
+  border: 1px solid rgba(14, 167, 107, 0.25);
 }
 
 .sidebar > div:first-child {
