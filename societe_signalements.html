@@ -147,7 +147,7 @@
       const ids = contracts.map(c => c.id);
       const { data, error } = await supabaseClient
         .from('signalements')
-        .select('id, titre, description, site, adresse, statut, priorite, created_at, contrat_ref, contrat_id, updated_at, contact, phone')
+        .select('id, titre, type, description, status, site, created_at, contrat_ref, contrat_id, contact_email')
         .in('contrat_id', ids)
         .order('created_at', { ascending: false });
       if (error) { listEl.innerHTML = '<p class="text-red-600 text-sm">Erreur de chargement.</p>'; return; }
