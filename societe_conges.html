@@ -1,31 +1,12 @@
-ï»¿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Suivi des CongÃ©s - Nessaly's</title>
+    <title>Suivi des Congés - Nessaly's</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="vendor/phosphor/index.js"></script>
-    <style>
-        body { font-family: 'Outfit', sans-serif; background-color: #F0F9FF; color: #1E293B; }
-        .sidebar { background: white; border-right: 1px solid #E2E8F0; }
-        .nav-item.active { background-color: #E0F2FE; color: #0284C7; }
-        :root {
-      --ink: #0c2f35;
-      --navy: #0f304b;
-      --red: #ce3c35;
-      --sand: #b58a64;
-      --bg: #f7f5f2;
-    }
-    body { background: radial-gradient(140% 120% at 20% 0%, #f0f7f8 0%, var(--bg) 45%, #fdfdfb 100%); color: #0c2f35; }
-    .sidebar { background: linear-gradient(180deg, #0f304b, #0c2f35); border-right: 1px solid rgba(255,255,255,0.05); color: #e8eef2; }
-    .sidebar a { color: #cfd8dc; }
-    .sidebar a:hover { background: rgba(255,255,255,0.06); color: #ffffff; }
-    .nav-item.active { background: rgba(255,255,255,0.12); color: #ffffff; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); }
-    .pill { background: rgba(12,47,53,0.08); color: #0f304b; }
-    .gradient-chip { background: linear-gradient(120deg, var(--red), var(--navy)); box-shadow: 0 10px 30px rgba(12,47,53,0.22); }
-    .card-surface { border: 1px solid #e7e5e0; box-shadow: 0 12px 40px rgba(12,47,53,0.08); }
-</style>
+    <link rel="stylesheet" href="societe_theme.css">
 </head>
 <body class="flex h-screen">
     <aside class="w-64 sidebar flex flex-col p-6">
@@ -53,7 +34,7 @@
             </a>
             <a href="societe_salaries.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition">
                 <i class="ph ph-currency-eur text-lg"></i>
-                <span>Suivi des salariÃ©s</span>
+                <span>Suivi des salariés</span>
             </a>
             <a href="societe_pointages.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-500 transition">
                 <i class="ph ph-timer text-lg"></i>
@@ -61,22 +42,23 @@
             </a>
             <a href="societe_conges.html" class="flex items-center gap-3 p-3 rounded-xl nav-item active font-medium">
                 <i class="ph ph-calendar-blank text-lg"></i>
-                <span>Suivi des demandes de congÃ©s</span>
+                <span>Suivi des demandes de congés</span>
             </a>
         </nav>
         <a href="index.html" class="flex items-center gap-2 text-slate-400 hover:text-slate-600 transition mt-auto">
-            <i class="ph ph-sign-out"></i> DÃ©connexion
+            <i class="ph ph-sign-out"></i> Déconnexion
         </a>
     </aside>
     <main class="flex-1 p-10 overflow-y-auto">
-        <h1 class="text-3xl font-bold mb-8 text-slate-800">Suivi des demandes de congÃ©s</h1>
+        <h1 class="text-3xl font-bold mb-8 text-slate-800">Suivi des demandes de congés</h1>
         <!-- Contenu de la page ici -->
         <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
-            <p class="text-slate-500">Le contenu pour le suivi des demandes de congÃ©s apparaÃ®tra ici.</p>
+            <p class="text-slate-500">Le contenu pour le suivi des demandes de congés apparaîtra ici.</p>
         </div>
     </main>
 </body>
 </html>
+
 
 
 
