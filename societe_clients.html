@@ -51,6 +51,14 @@
       .card-actions button:hover {
         color: #059669;
       }
+      .icon-button {
+        width: 34px;
+        height: 34px;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
       .client-card:hover .card-actions {
         opacity: 1;
       }
@@ -896,13 +904,10 @@ function renderClientsPage(container) {
                 ${client.type}
             </div>
             <div class="card-actions">
-                <button title="Modifier" class="action-btn edit-btn" data-id="${client.id}" data-table="${client.table}" data-type="${client.formType}">
+                <button title="Modifier" class="action-btn edit-btn icon-button" data-id="${client.id}" data-table="${client.table}" data-type="${client.formType}">
                     <i class="ph-bold ph-pencil-simple"></i>
                 </button>
-                <button title="Détails" class="action-btn details-btn" data-id="${client.id}" data-table="${client.table}" data-type="${client.formType}">
-                    <i class="ph-bold ph-eye"></i>
-                </button>
-                <button title="Supprimer" class="action-btn delete-btn" data-id="${client.id}" data-table="${client.table}" data-type="${client.formType}">
+                <button title="Supprimer" class="action-btn delete-btn icon-button" data-id="${client.id}" data-table="${client.table}" data-type="${client.formType}">
                     <i class="ph-bold ph-trash"></i>
                 </button>
             </div>
